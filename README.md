@@ -4,6 +4,14 @@ A tiny tracker for your **PSA-graded Pokémon TCG collection** that lives in you
 browser. Log what you bought and what you paid, follow live market prices, and
 watch your collection's value over time — no account, no server, no build step.
 
+The UI is a **Hebrew, RTL, mobile-first app** (390px design width) built to the
+Pocketfolio design system (Leumi Trade language): four bottom-nav views —
+בית (home), אחזקות (holdings), שוק (market) and הגדרות (settings) — plus a
+card-detail drill-down and an add flow, all routed by URL hash
+(`#home`, `#holdings`, `#market`, `#settings`, `#card/<uid>`, `#add`).
+The full brief lives in the design artifacts referenced by
+`POCKETFOLIO-REDESIGN.md` (tokens, mockups, component specs).
+
 ![status](https://img.shields.io/badge/status-MVP-blue)
 
 ## Features
@@ -51,12 +59,12 @@ the same Wi-Fi.
 ## Project layout
 
 ```
-index.html        markup + app shell
-css/styles.css    design tokens (light/dark) and layout
-js/api.js         Pokémon TCG API client with caching + rate-limit handling
+index.html        RTL app shell: views, bottom nav, inline SVG icon set
+css/styles.css    design-system tokens (light), type scale, components
+js/api.js         card/price API clients with caching + rate-limit handling
 js/store.js       localStorage persistence: positions + daily value snapshots
-js/charts.js      hand-rolled SVG charts (value-over-time line, allocation bar)
-js/app.js         search, add/edit/remove flow, refresh, rendering
+js/charts.js      hand-rolled SVG trend chart (full + compact 96px mode)
+js/app.js         hash router, view renderers, search/add/edit flows, i18n
 ```
 
 No dependencies, no framework, no build.
