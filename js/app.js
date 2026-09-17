@@ -728,8 +728,23 @@
 
   els.refreshBtn.addEventListener("click", () => refresh());
 
-  /* --- settings: free PokemonPriceTracker API key for real PSA sale prices --- */
-  document.getElementById("settings-btn").addEventListener("click", () => {
+  /* --- settings menu: API key + clear-all --- */
+  const settingsMenu = document.getElementById("settings-menu");
+
+  document.getElementById("settings-btn").addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    settingsMenu.hidden = !settingsMenu.hidden;
+  });
+
+  document.addEventListener("click", (ev) => {
+    if (!settingsMenu.hidden && !settingsMenu.contains(ev.target)) settingsMenu.hidden = true;
+  });
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") settingsMenu.hidden = true;
+  });
+
+  document.getElementById("menu-api-key").addEventListener("click", () => {
+    settingsMenu.hidden = true;
     let current = "";
     try { current = localStorage.getItem("pocketfolio.pptApiKey") || ""; } catch { /* ok */ }
     const input = window.prompt(
@@ -749,6 +764,22 @@
         graded.clear();
       }
     } catch { /* storage unavailable */ }
+    refresh();
+  });
+
+  document.getElementById("menu-clear").addEventListener("click", () => {
+    settingsMenu.hidden = true;
+    const ok = window.confirm(
+      "Remove ALL card data from this browser?\n\n" +
+      "This deletes every position, the value-history chart, and cached prices. " +
+      "Your API key is kept. This cannot be undone."
+    );
+    if (!ok) return;
+    Store.clearAll();
+    try { localStorage.removeItem("pocketfolio.gradedCache.v1"); } catch { /* ok */ }
+    cards.clear();
+    graded.clear();
+    hideBanner();
     refresh();
   });
 

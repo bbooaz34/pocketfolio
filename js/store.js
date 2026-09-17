@@ -118,5 +118,15 @@
     return snapshots.slice();
   }
 
-  window.PocketfolioStore = { getAll, upsert, remove, setValueOverride, recordSnapshot, getSnapshots };
+  /** Wipe all collection data (holdings + value-history snapshots). */
+  function clearAll() {
+    holdings = [];
+    snapshots = [];
+    try {
+      localStorage.removeItem(KEY);
+      localStorage.removeItem(SNAP_KEY);
+    } catch { /* storage unavailable */ }
+  }
+
+  window.PocketfolioStore = { getAll, upsert, remove, setValueOverride, recordSnapshot, getSnapshots, clearAll };
 })();
