@@ -310,8 +310,9 @@
      Stored per browser; without a key the app falls back to estimates. */
 
   const PPT = "https://www.pokemonpricetracker.com/api/v2";
-  const GRADED_CACHE_KEY = "pocketfolio.gradedCache.v1";
+  const GRADED_CACHE_KEY = "pocketfolio.gradedCache.v2"; // v2: v1 wrongly cached misses for 12h
   const GRADED_TTL_MS = 12 * 3600 * 1000; // conserve the daily credit budget
+  const GRADED_MISS_TTL_MS = 10 * 60 * 1000; // retry misses quickly
 
   function pptKey() {
     try { return localStorage.getItem("pocketfolio.pptApiKey") || null; } catch { return null; }
@@ -333,21 +334,34 @@
     try { localStorage.setItem(GRADED_CACHE_KEY, JSON.stringify(obj)); } catch { /* ok */ }
   }
 
-  /* The response shape is probed defensively: grade buckets live under
-     ebay.salesByGrade (or similar), keyed psa10/psa9/…, each carrying a
-     median/average price and a sale count under a few possible names. */
+  /* The response shape is probed defensively: somewhere in the row there is an
+     object keyed psa10/psa9/… (docs say ebay.salesByGrade) whose values carry a
+     median/average price and a sale count under a few possible names. Rather
+     than assume the nesting, scan the row for the first psaN-keyed object. */
+  function findGradeBuckets(obj, depth) {
+    if (!obj || typeof obj !== "object" || (depth || 0) > 5) return null;
+    const keys = Object.keys(obj);
+    if (keys.some((k) => /^psa[\s_-]?(10|[1-9])$/i.test(k))) return obj;
+    for (const k of keys) {
+      const found = findGradeBuckets(obj[k], (depth || 0) + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+
   function extractGrades(row) {
-    const buckets = row?.ebay?.salesByGrade ?? row?.salesByGrade ?? row?.ebay?.grades ?? null;
-    if (!buckets || typeof buckets !== "object") return null;
+    const buckets = findGradeBuckets(row, 0);
+    if (!buckets) return null;
     const out = {};
     for (const [k, v] of Object.entries(buckets)) {
-      const m = k.toLowerCase().match(/^psa\s*(10|[1-9])$/);
+      const m = k.toLowerCase().match(/^psa[\s_-]?(10|[1-9])$/);
       if (!m) continue;
       let price = null, count = null;
-      if (typeof v === "number") price = v;
+      if (typeof v === "number") price = v > 0 ? v : null;
       else if (v && typeof v === "object") {
-        price = firstPositive(v.medianPrice, v.median, v.averagePrice, v.avgPrice,
-                              v.average, v.marketPrice, v.price, v.lastSoldPrice, v.latestPrice);
+        price = firstPositive(v.medianPrice, v.median, v.median_price, v.averagePrice,
+                              v.avgPrice, v.average, v.avgSoldPrice, v.marketPrice,
+                              v.market, v.price, v.lastSoldPrice, v.latestPrice, v.value);
         count = typeof v.count === "number" ? v.count :
                 typeof v.sales === "number" ? v.sales :
                 typeof v.salesCount === "number" ? v.salesCount : null;
@@ -358,15 +372,75 @@
   }
 
   function pptRowMatches(row, card) {
-    const num = row.number ?? row.cardNumber ?? row.localId;
+    const num = row.number ?? row.cardNumber ?? row.localId ?? row.card?.number;
     if (num != null && card.number != null) {
       return normNumber(num) === normNumber(card.number);
     }
-    return (row.name || "").toLowerCase() === card.name.toLowerCase();
+    const rn = (row.name ?? row.card?.name ?? "").toLowerCase();
+    return rn === card.name.toLowerCase();
+  }
+
+  async function pptFetch(params, key) {
+    const res = await fetch(PPT + "/cards?" + new URLSearchParams(params), {
+      headers: { accept: "application/json", Authorization: "Bearer " + key },
+    });
+    if (res.status === 401 || res.status === 403) {
+      const err = new Error("graded prices API key rejected (" + res.status + ")");
+      err.unauthorized = true;
+      throw err;
+    }
+    if (res.status === 429) {
+      const err = new Error("graded prices API daily limit reached (429)");
+      err.rateLimited = true;
+      throw err;
+    }
+    if (!res.ok) throw new Error("graded prices API HTTP " + res.status);
+    const data = await res.json();
+    const rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? data.results ?? []);
+    return Array.isArray(rows) ? rows : [];
+  }
+
+  function pptAttempts(card) {
+    const first = card.name.split(/\s+/)[0];
+    const setId = card.id.includes("-") ? card.id.split("-")[0] : null;
+    const attempts = [];
+    if (setId) attempts.push({ search: first, setId });
+    attempts.push({ search: card.name });
+    return attempts.map((p) => ({ includeEbay: "true", ...p }));
+  }
+
+  /* Core lookup shared by gradedFor and the ⚙ self-test. `diag`, when given,
+     collects what happened for a human-readable report. Never returns another
+     card's prices: only rows matching this card's number (or name) are used. */
+  async function gradedLookup(card, key, diag) {
+    for (const params of pptAttempts(card)) {
+      let rows;
+      try {
+        rows = await pptFetch(params, key);
+      } catch (err) {
+        if (err.unauthorized || err.rateLimited) throw err;
+        if (diag) diag.errors.push(String(err.message || err));
+        continue;
+      }
+      if (diag) diag.attempts.push({ params, rows: rows.length });
+      if (!rows.length) continue;
+      const candidates = [
+        ...rows.filter((r) => pptRowMatches(r, card)),
+        ...rows.filter((r) =>
+          (r.name ?? r.card?.name ?? "").toLowerCase().includes(card.name.toLowerCase())),
+      ];
+      for (const row of candidates) {
+        const grades = extractGrades(row);
+        if (grades) return grades;
+      }
+      if (diag && candidates.length) diag.errors.push("matching rows had no PSA sale buckets");
+      if (diag && !candidates.length) diag.errors.push("no row matched " + card.name + " #" + (card.number || "?"));
+    }
+    return null;
   }
 
   /** eBay sold prices per PSA grade for one card, or null (no key / no data).
-      Cached for 12h per card in localStorage to stay inside the free tier. */
+      Hits cache 12h; misses retry after 10 min (so a fixed key recovers fast). */
   async function gradedFor(card) {
     const key = pptKey();
     if (!key || !card) return null;
@@ -374,36 +448,33 @@
     const cacheId = "g:" + card.id;
     const cache = loadGradedCache();
     const hit = cache[cacheId];
-    if (hit && Date.now() - hit.at < GRADED_TTL_MS) return hit.grades;
-
-    const params = new URLSearchParams({ includeEbay: "true" });
-    const firstWord = card.name.split(/\s+/)[0];
-    if (firstWord) params.set("search", firstWord);
-    if (card.id.includes("-")) params.set("setId", card.id.split("-")[0]);
-
-    const res = await fetch(PPT + "/cards?" + params, {
-      headers: { accept: "application/json", Authorization: "Bearer " + key },
-    });
-    if (res.status === 401 || res.status === 403) {
-      const err = new Error("graded prices API key rejected");
-      err.unauthorized = true;
-      throw err;
+    if (hit && Date.now() - hit.at < (hit.grades ? GRADED_TTL_MS : GRADED_MISS_TTL_MS)) {
+      return hit.grades;
     }
-    if (res.status === 429) {
-      const err = new Error("graded prices API daily limit reached");
-      err.rateLimited = true;
-      throw err;
-    }
-    if (!res.ok) throw new Error("graded prices API HTTP " + res.status);
-    const data = await res.json();
-    const rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? []);
-    const row = (Array.isArray(rows) ? rows : []).find((r) => pptRowMatches(r, card)) ||
-                (Array.isArray(rows) && rows.length === 1 ? rows[0] : null);
-    const grades = row ? extractGrades(row) : null;
 
+    const grades = await gradedLookup(card, key, null);
     cache[cacheId] = { at: Date.now(), grades };
     saveGradedCache(cache);
     return grades;
+  }
+
+  /** One uncached live check with a structured verdict, for the ⚙ self-test. */
+  async function gradedTest(card) {
+    const key = pptKey();
+    if (!key) return { ok: false, reason: "no-key" };
+    const diag = { attempts: [], errors: [] };
+    try {
+      const grades = await gradedLookup(card, key, diag);
+      if (grades) return { ok: true, grades, diag };
+      if (!diag.attempts.length && diag.errors.length) {
+        return { ok: false, reason: "network", message: diag.errors[0], diag };
+      }
+      return { ok: false, reason: "no-data", diag };
+    } catch (err) {
+      if (err.unauthorized) return { ok: false, reason: "unauthorized", message: String(err.message) };
+      if (err.rateLimited) return { ok: false, reason: "rate-limited", message: String(err.message) };
+      return { ok: false, reason: "network", message: String(err.message || err), diag };
+    }
   }
 
   /* ---------------- PSA cert lookup ---------------- */
@@ -515,6 +586,6 @@
 
   window.PocketfolioAPI = {
     searchCards, getCard, getCards, lookupCert, certCardQuery,
-    gradedFor, hasGradedKey,
+    gradedFor, gradedTest, hasGradedKey,
   };
 })();

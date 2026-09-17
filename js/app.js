@@ -466,9 +466,11 @@
       // eBay sold prices per grade (only with the free PokemonPriceTracker key)
       if (API.hasGradedKey()) {
         let keyRejected = false;
+        let attempted = 0;
         await Promise.all(refs.map(async (r) => {
           const card = cards.get(r.id);
           if (!card) return;
+          attempted++;
           try {
             const g = await API.gradedFor(card);
             if (g) graded.set(r.id, g);
@@ -479,6 +481,8 @@
         }));
         if (keyRejected) {
           showBanner("Your graded-prices API key was rejected — update it via the ⚙ button (pokemonpricetracker.com).");
+        } else if (attempted > 0 && graded.size === 0) {
+          showBanner("No eBay graded prices came back for any card — run ⚙ → “Test PSA prices API” to see why. Values fall back to estimates meanwhile.");
         }
       }
     } catch (err) {
@@ -759,10 +763,41 @@
       if (key) localStorage.setItem("pocketfolio.pptApiKey", key);
       else {
         localStorage.removeItem("pocketfolio.pptApiKey");
-        localStorage.removeItem("pocketfolio.gradedCache.v1");
+        localStorage.removeItem("pocketfolio.gradedCache.v2");
         graded.clear();
       }
     } catch { /* storage unavailable */ }
+    refresh();
+  });
+
+  document.getElementById("menu-test-api").addEventListener("click", async () => {
+    settingsMenu.hidden = true;
+    if (!API.hasGradedKey()) {
+      window.alert("No API key set yet.\n\nGet a free key at pokemonpricetracker.com → API, then add it via ⚙ → “PSA prices API key”.");
+      return;
+    }
+    const holding = Store.getAll().find((h) => (h.provider || "ptcgio") !== "manual" && cards.get(h.cardId));
+    if (!holding) {
+      window.alert("Add a card to your collection first, then run the test — it checks the API with one of your own cards.");
+      return;
+    }
+    const card = cards.get(holding.cardId);
+    const r = await API.gradedTest(card);
+    if (r.ok) {
+      const gradesList = Object.entries(r.grades)
+        .map(([g, v]) => `PSA ${g}: $${v.price}${v.count ? ` (${v.count} sales)` : ""}`).join("\n");
+      window.alert(`✓ API working! eBay sale medians for ${card.name} #${card.number || "?"}:\n\n${gradesList}`);
+    } else if (r.reason === "unauthorized") {
+      window.alert("✗ The API rejected your key (401/403).\n\nCheck it at pokemonpricetracker.com and re-enter it via ⚙ → “PSA prices API key”.");
+    } else if (r.reason === "rate-limited") {
+      window.alert("✗ Daily limit reached (429) — the free tier allows 100 lookups/day. Try again tomorrow.");
+    } else if (r.reason === "network") {
+      window.alert(`✗ The browser could not reach the prices API.\n\nError: ${r.message}\n\nThis usually means the API blocks calls from other websites (CORS). Tell Claude this exact message and a workaround will be added.`);
+    } else {
+      const tried = (r.diag?.attempts || []).map((a) => `${JSON.stringify(a.params)} → ${a.rows} rows`).join("\n");
+      const errs = (r.diag?.errors || []).join("\n");
+      window.alert(`✗ API reachable and key accepted, but no PSA sale data matched ${card.name} #${card.number || "?"}.\n\nQueries tried:\n${tried}\n${errs}\n\nTell Claude this message so the matching can be adjusted.`);
+    }
     refresh();
   });
 
@@ -775,7 +810,7 @@
     );
     if (!ok) return;
     Store.clearAll();
-    try { localStorage.removeItem("pocketfolio.gradedCache.v1"); } catch { /* ok */ }
+    try { localStorage.removeItem("pocketfolio.gradedCache.v2"); } catch { /* ok */ }
     cards.clear();
     graded.clear();
     hideBanner();
