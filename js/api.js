@@ -304,6 +304,108 @@
     return out;
   }
 
+  /* ---------------- graded prices (PokemonPriceTracker) ----------------
+     Real eBay SOLD prices per PSA grade, from pokemonpricetracker.com —
+     free API key (100 credits/day): https://www.pokemonpricetracker.com/api
+     Stored per browser; without a key the app falls back to estimates. */
+
+  const PPT = "https://www.pokemonpricetracker.com/api/v2";
+  const GRADED_CACHE_KEY = "pocketfolio.gradedCache.v1";
+  const GRADED_TTL_MS = 12 * 3600 * 1000; // conserve the daily credit budget
+
+  function pptKey() {
+    try { return localStorage.getItem("pocketfolio.pptApiKey") || null; } catch { return null; }
+  }
+
+  function hasGradedKey() {
+    return !!pptKey();
+  }
+
+  function loadGradedCache() {
+    try {
+      const raw = localStorage.getItem(GRADED_CACHE_KEY);
+      const obj = raw ? JSON.parse(raw) : {};
+      return obj && typeof obj === "object" ? obj : {};
+    } catch { return {}; }
+  }
+
+  function saveGradedCache(obj) {
+    try { localStorage.setItem(GRADED_CACHE_KEY, JSON.stringify(obj)); } catch { /* ok */ }
+  }
+
+  /* The response shape is probed defensively: grade buckets live under
+     ebay.salesByGrade (or similar), keyed psa10/psa9/…, each carrying a
+     median/average price and a sale count under a few possible names. */
+  function extractGrades(row) {
+    const buckets = row?.ebay?.salesByGrade ?? row?.salesByGrade ?? row?.ebay?.grades ?? null;
+    if (!buckets || typeof buckets !== "object") return null;
+    const out = {};
+    for (const [k, v] of Object.entries(buckets)) {
+      const m = k.toLowerCase().match(/^psa\s*(10|[1-9])$/);
+      if (!m) continue;
+      let price = null, count = null;
+      if (typeof v === "number") price = v;
+      else if (v && typeof v === "object") {
+        price = firstPositive(v.medianPrice, v.median, v.averagePrice, v.avgPrice,
+                              v.average, v.marketPrice, v.price, v.lastSoldPrice, v.latestPrice);
+        count = typeof v.count === "number" ? v.count :
+                typeof v.sales === "number" ? v.sales :
+                typeof v.salesCount === "number" ? v.salesCount : null;
+      }
+      if (price) out[m[1]] = { price, count };
+    }
+    return Object.keys(out).length ? out : null;
+  }
+
+  function pptRowMatches(row, card) {
+    const num = row.number ?? row.cardNumber ?? row.localId;
+    if (num != null && card.number != null) {
+      return normNumber(num) === normNumber(card.number);
+    }
+    return (row.name || "").toLowerCase() === card.name.toLowerCase();
+  }
+
+  /** eBay sold prices per PSA grade for one card, or null (no key / no data).
+      Cached for 12h per card in localStorage to stay inside the free tier. */
+  async function gradedFor(card) {
+    const key = pptKey();
+    if (!key || !card) return null;
+
+    const cacheId = "g:" + card.id;
+    const cache = loadGradedCache();
+    const hit = cache[cacheId];
+    if (hit && Date.now() - hit.at < GRADED_TTL_MS) return hit.grades;
+
+    const params = new URLSearchParams({ includeEbay: "true" });
+    const firstWord = card.name.split(/\s+/)[0];
+    if (firstWord) params.set("search", firstWord);
+    if (card.id.includes("-")) params.set("setId", card.id.split("-")[0]);
+
+    const res = await fetch(PPT + "/cards?" + params, {
+      headers: { accept: "application/json", Authorization: "Bearer " + key },
+    });
+    if (res.status === 401 || res.status === 403) {
+      const err = new Error("graded prices API key rejected");
+      err.unauthorized = true;
+      throw err;
+    }
+    if (res.status === 429) {
+      const err = new Error("graded prices API daily limit reached");
+      err.rateLimited = true;
+      throw err;
+    }
+    if (!res.ok) throw new Error("graded prices API HTTP " + res.status);
+    const data = await res.json();
+    const rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? []);
+    const row = (Array.isArray(rows) ? rows : []).find((r) => pptRowMatches(r, card)) ||
+                (Array.isArray(rows) && rows.length === 1 ? rows[0] : null);
+    const grades = row ? extractGrades(row) : null;
+
+    cache[cacheId] = { at: Date.now(), grades };
+    saveGradedCache(cache);
+    return grades;
+  }
+
   /* ---------------- PSA cert lookup ---------------- */
 
   /* PSA's cert page (psacard.com/cert/N) has no CORS headers and its API needs
@@ -411,5 +513,8 @@
       .replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-  window.PocketfolioAPI = { searchCards, getCard, getCards, lookupCert, certCardQuery };
+  window.PocketfolioAPI = {
+    searchCards, getCard, getCards, lookupCert, certCardQuery,
+    gradedFor, hasGradedKey,
+  };
 })();

@@ -51,6 +51,7 @@
 
   let selectedCard = null; // normalized card from the API layer
   let cards = new Map(); // cardId -> latest normalized card
+  let graded = new Map(); // cardId -> { "10": {price, count}, "9": … } from eBay sales
   let refreshTimer = null;
 
   /* ---------- formatting ---------- */
@@ -78,12 +79,22 @@
     return bits.join(" · ");
   }
 
-  /* Value of one card in a position: manual override wins, otherwise the raw
-     market price times the grade multiplier (an estimate). */
+  /* Value of one card in a position, best source first:
+     1. a manual override you set,
+     2. the eBay sold-price median for this card AT this grade (needs the free
+        PokemonPriceTracker API key — see the gear button),
+     3. the raw market price times a rough grade multiplier (an estimate). */
   function valueEach(h) {
-    if (h.value != null) return { each: h.value, est: false };
+    if (h.value != null) return { each: h.value, src: "manual" };
+    if (h.grade !== "raw") {
+      const g = graded.get(h.cardId)?.[h.grade];
+      if (g) return { each: g.price, src: "ebay", count: g.count };
+    }
     const price = cards.get(h.cardId)?.price;
-    if (price) return { each: price.value * (GRADE_MULT[h.grade] ?? 1), est: true };
+    if (price) {
+      if (h.grade === "raw") return { each: price.value, src: "raw" };
+      return { each: price.value * (GRADE_MULT[h.grade] ?? 1), src: "est" };
+    }
     return null;
   }
 
@@ -443,6 +454,7 @@
       }
       const fresh = refs.length ? await API.getCards(refs) : [];
       for (const c of fresh) cards.set(c.id, c);
+
       if (fresh.length || !refs.length) {
         hideBanner();
         els.lastUpdated.textContent = "Updated " + new Intl.DateTimeFormat(undefined, {
@@ -450,6 +462,25 @@
         }).format(new Date());
       } else {
         showBanner("Could not reach the card price services — showing the last loaded prices. It retries automatically.");
+      }
+
+      // eBay sold prices per grade (only with the free PokemonPriceTracker key)
+      if (API.hasGradedKey()) {
+        let keyRejected = false;
+        await Promise.all(refs.map(async (r) => {
+          const card = cards.get(r.id);
+          if (!card) return;
+          try {
+            const g = await API.gradedFor(card);
+            if (g) graded.set(r.id, g);
+          } catch (err) {
+            if (err.unauthorized) keyRejected = true;
+            /* limit reached or endpoint change: estimates keep working */
+          }
+        }));
+        if (keyRejected) {
+          showBanner("Your graded-prices API key was rejected — update it via the ⚙ button (pokemonpricetracker.com).");
+        }
       }
     } catch (err) {
       showBanner(
@@ -479,13 +510,15 @@
     /* --- KPIs --- */
     const valued = positions.filter((p) => p.val);
     const total = valued.reduce((s, p) => s + p.total, 0);
-    const estCount = valued.filter((p) => p.val.est).length;
+    const estCount = valued.filter((p) => p.val.src === "est").length;
+    const ebayCount = valued.filter((p) => p.val.src === "ebay").length;
     const unvalued = positions.length - valued.length;
 
     els.kpiTotal.textContent = fmtUSD(total, false);
     els.kpiTotalNote.textContent =
       unvalued > 0 ? `${unvalued} position${unvalued > 1 ? "s" : ""} missing a value — use ✎` :
-      estCount > 0 ? `${estCount} of ${positions.length} estimated from raw price` :
+      estCount > 0 ? `${estCount} of ${positions.length} estimated` + (API.hasGradedKey() ? "" : " — add an API key (⚙) for real PSA sale prices") :
+      ebayCount > 0 ? `${ebayCount} of ${positions.length} from real eBay PSA sales` :
       "all values set manually";
 
     const withCost = positions.filter((p) => p.h.cost != null);
@@ -608,12 +641,14 @@
       valWrap.className = "val-wrap";
       const valText = document.createElement("span");
       if (p.val) {
-        valText.textContent = (p.val.est ? "~" : "") + fmtUSD(p.val.each, false);
+        valText.textContent = (p.val.src === "est" ? "~" : "") + fmtUSD(p.val.each, false);
         const vsub = document.createElement("span");
         vsub.className = "sub";
-        vsub.textContent = p.val.est
-          ? `est. ×${GRADE_MULT[h.grade] ?? 1} of raw`
-          : "manual";
+        vsub.textContent =
+          p.val.src === "ebay" ? "eBay sales median" + (p.val.count ? ` · ${p.val.count} sales` : "") :
+          p.val.src === "est" ? `est. ×${GRADE_MULT[h.grade] ?? 1} of raw` :
+          p.val.src === "raw" ? "raw market" :
+          "manual";
         valText.appendChild(vsub);
       } else {
         valText.textContent = "–";
@@ -692,6 +727,30 @@
   }
 
   els.refreshBtn.addEventListener("click", () => refresh());
+
+  /* --- settings: free PokemonPriceTracker API key for real PSA sale prices --- */
+  document.getElementById("settings-btn").addEventListener("click", () => {
+    let current = "";
+    try { current = localStorage.getItem("pocketfolio.pptApiKey") || ""; } catch { /* ok */ }
+    const input = window.prompt(
+      "API key for real PSA graded sale prices (eBay sold medians).\n" +
+      "Get a free key (100 lookups/day, no credit card) at:\n" +
+      "pokemonpricetracker.com → API\n\n" +
+      "Paste your key below — leave empty to remove it.",
+      current
+    );
+    if (input === null) return;
+    try {
+      const key = input.trim();
+      if (key) localStorage.setItem("pocketfolio.pptApiKey", key);
+      else {
+        localStorage.removeItem("pocketfolio.pptApiKey");
+        localStorage.removeItem("pocketfolio.gradedCache.v1");
+        graded.clear();
+      }
+    } catch { /* storage unavailable */ }
+    refresh();
+  });
 
   function startAutoRefresh() {
     clearInterval(refreshTimer);

@@ -11,7 +11,8 @@ watch your collection's value over time — no account, no server, no build step
 - **Card search with live prices** from the free [Pokémon TCG API](https://docs.pokemontcg.io) (no key required) — card images, sets, rarities, and TCGplayer market prices — with **automatic failover to [TCGdex](https://tcgdex.dev)** (also free and keyless) when it's down or rate-limited
 - **Graded positions** — every holding is a card *at a PSA grade* (PSA 1–10 or raw); the same card in two grades is two positions
 - **Purchase tracking** — record quantity and what you paid per card; P/L is computed against it
-- **Graded value** — each position's value comes from a rough per-grade multiplier on the card's raw TCGplayer market price (clearly labeled *est.*), or from a **manual value you set** (✎ button) based on real PSA sales, which always wins
+- **Real graded prices** — add a free API key from [PokemonPriceTracker](https://www.pokemonpricetracker.com/api) (100 lookups/day, no credit card) via the ⚙ button and each position's value becomes the **actual eBay sold-price median for its PSA grade**; responses are cached 12h per card to stay inside the free tier
+- **Graceful fallbacks** — without a key (or for grades with no sales data) the value is estimated from the raw TCGplayer market price with a rough per-grade multiplier (labeled *est.*); a **manual value you set** (✎ button) always wins over both
 - **PSA cert numbers** — store the cert with a position; it links straight to [PSA's certificate verification](https://www.psacard.com/cert/)
 - **Search by cert number** — paste a PSA cert number (6–10 digits) into the search box and the app reads the slab's details (subject, grade, year, set, card number) from PSA's cert page, pre-fills the grade + cert, and matches the card in the price catalogs; if PSA can't be reached it falls back to a direct link. PSA has no CORS/open API, so the page is fetched directly and then through public read-through proxies (allorigins.win, r.jina.ai) — only the cert number is sent, and PSA's bot protection may still block automated reads
 - **Dashboard KPIs** — collection value, cost basis, profit/loss, card count
@@ -67,6 +68,7 @@ No dependencies, no framework, no build.
 | pokemontcg.io | `GET /v2/cards?q=name:…` | card search in the add form |
 | pokemontcg.io | `GET /v2/cards?q=(id:… OR id:…)` | batch price refresh |
 | TCGdex (fallback) | `GET /v2/en/cards?name=…` + `GET /v2/en/cards/{id}` | search + prices when pokemontcg.io is unavailable |
+| PokemonPriceTracker (optional key) | `GET /api/v2/cards?search=…&setId=…&includeEbay=true` | real eBay sold prices per PSA grade |
 
 The client fails over automatically per request and remembers which provider
 last worked. Responses are cached client-side and requests deduped.
@@ -77,15 +79,17 @@ it once via the browser console:
 TCGdex prices come from TCGplayer (USD) or, when that's missing, Cardmarket
 (shown in €).
 
-## Why estimated graded values?
+## Where graded values come from
 
-There is no free, keyless API for graded-card sale prices — PSA's own API and
-eBay's sold-listings API both require registered tokens, and services like
-PriceCharting are paid. So the MVP pulls the **raw** TCGplayer market price
-live and applies a rough per-grade multiplier (PSA 10 ×3.0, PSA 9 ×1.4,
-PSA 8 ×1.0, …) as a starting point, with a per-position manual override for
-real sale prices. Plugging in a keyed source (PSA API, eBay Finding API,
-PriceCharting) is the natural next step.
+There is no free **keyless** API for graded-card sale prices — PSA's own API
+exposes cert data but not prices, eBay's sold-listings API requires a
+registered app, and services like PriceCharting are paid. The best free
+option is [PokemonPriceTracker](https://www.pokemonpricetracker.com/api):
+sign up, grab the free API key (100 credits/day), and paste it into the app
+via ⚙ — values then come from eBay completed-sale medians per PSA grade.
+Without a key, the app falls back to the raw TCGplayer market price times a
+rough per-grade multiplier (PSA 10 ×3.0, PSA 9 ×1.4, PSA 8 ×1.0, …), and the
+per-position ✎ manual value always wins.
 
 ## Limitations (it's an MVP)
 

@@ -25,6 +25,7 @@
         <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 1.5v3h-3"/></svg>
         Refresh
       </button>
+      <button id="settings-btn" class="btn btn-ghost" type="button" title="Settings — API key for real PSA sale prices" aria-label="Settings">&#9881;</button>
     </div>
   </header>
 
@@ -137,7 +138,7 @@
             <tbody id="holdings-body"></tbody>
           </table>
         </div>
-        <p class="muted hint">Values marked <strong>est.</strong> are estimated from the card's raw TCGplayer market price with a rough per-grade multiplier — set a real value with the ✎ button (recent PSA sales are the best source). Cert numbers link to PSA's verification page.</p>
+        <p class="muted hint">Best value source wins per position: a manual value you set (✎) → the <strong>real eBay sold-price median for the grade</strong> (free API key from <a href="https://www.pokemonpricetracker.com/api" target="_blank" rel="noopener">pokemonpricetracker.com</a>, added via the ⚙ button — 100 lookups/day) → an <strong>est.</strong> from the raw market price with a rough per-grade multiplier. Cert numbers link to PSA's verification page.</p>
       </section>
     </div>
   </main>
