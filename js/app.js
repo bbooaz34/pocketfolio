@@ -482,7 +482,9 @@
         if (keyRejected) {
           showBanner("Your graded-prices API key was rejected — update it via the ⚙ button (pokemonpricetracker.com).");
         } else if (attempted > 0 && graded.size === 0) {
-          showBanner("No eBay graded prices came back for any card — run ⚙ → “Test PSA prices API” to see why. Values fall back to estimates meanwhile.");
+          showBanner(API.hasGradedProxy()
+            ? "No eBay graded prices came back for any card — run ⚙ → “Test PSA prices API” to see why. Values fall back to estimates meanwhile."
+            : "The graded-prices API blocks browser calls — a free 5-minute proxy fixes it: run ⚙ → “Test PSA prices API” for the steps. Values fall back to estimates meanwhile.");
         }
       }
     } catch (err) {
@@ -770,6 +772,29 @@
     refresh();
   });
 
+  document.getElementById("menu-proxy").addEventListener("click", () => {
+    settingsMenu.hidden = true;
+    let current = "";
+    try { current = localStorage.getItem("pocketfolio.pptProxy") || ""; } catch { /* ok */ }
+    const input = window.prompt(
+      "Prices proxy URL.\n\n" +
+      "The graded-prices API blocks calls from web pages, so the app needs a tiny " +
+      "personal proxy (free Cloudflare Worker, ~5 min setup — see the README's " +
+      "“Graded prices proxy” section, proxy/prices-proxy.js in the repo).\n\n" +
+      "Paste your worker URL below (https://….workers.dev) — leave empty to remove it.",
+      current
+    );
+    if (input === null) return;
+    try {
+      const proxyUrl = input.trim();
+      if (proxyUrl) localStorage.setItem("pocketfolio.pptProxy", proxyUrl);
+      else localStorage.removeItem("pocketfolio.pptProxy");
+      localStorage.removeItem("pocketfolio.gradedCache.v2"); // retry lookups through the new route
+      graded.clear();
+    } catch { /* storage unavailable */ }
+    refresh();
+  });
+
   document.getElementById("menu-test-api").addEventListener("click", async () => {
     settingsMenu.hidden = true;
     if (!API.hasGradedKey()) {
@@ -792,7 +817,9 @@
     } else if (r.reason === "rate-limited") {
       window.alert("✗ Daily limit reached (429) — the free tier allows 100 lookups/day. Try again tomorrow.");
     } else if (r.reason === "network") {
-      window.alert(`✗ The browser could not reach the prices API.\n\nError: ${r.message}\n\nThis usually means the API blocks calls from other websites (CORS). Tell Claude this exact message and a workaround will be added.`);
+      window.alert(API.hasGradedProxy()
+        ? `✗ Could not reach the prices API through your proxy.\n\nError: ${r.message}\n\nCheck that your Cloudflare Worker is deployed and its URL is correct (⚙ → “Prices proxy URL”).`
+        : `✗ The prices API blocks calls from web pages (CORS), so it needs your own free proxy — a one-time ~5 minute setup:\n\n1. Sign up at dash.cloudflare.com (free)\n2. Workers & Pages → Create → Worker → Deploy\n3. Edit code → paste the file proxy/prices-proxy.js from the Pocketfolio repo → Deploy\n4. Copy the worker URL and add it here via ⚙ → “Prices proxy URL”\n\nFull steps are in the README's “Graded prices proxy” section.`);
     } else {
       const tried = (r.diag?.attempts || []).map((a) => `${JSON.stringify(a.params)} → ${a.rows} rows`).join("\n");
       const errs = (r.diag?.errors || []).join("\n");

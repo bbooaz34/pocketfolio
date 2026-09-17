@@ -309,7 +309,7 @@
      free API key (100 credits/day): https://www.pokemonpricetracker.com/api
      Stored per browser; without a key the app falls back to estimates. */
 
-  const PPT = "https://www.pokemonpricetracker.com/api/v2";
+  const PPT_HOST = "https://www.pokemonpricetracker.com";
   const GRADED_CACHE_KEY = "pocketfolio.gradedCache.v2"; // v2: v1 wrongly cached misses for 12h
   const GRADED_TTL_MS = 12 * 3600 * 1000; // conserve the daily credit budget
   const GRADED_MISS_TTL_MS = 10 * 60 * 1000; // retry misses quickly
@@ -320,6 +320,20 @@
 
   function hasGradedKey() {
     return !!pptKey();
+  }
+
+  /* The price API blocks browser calls (no CORS headers), so a personal proxy
+     (see proxy/prices-proxy.js — a free Cloudflare Worker) forwards requests
+     when its URL is set. Without one, the direct call is still attempted. */
+  function pptProxy() {
+    try {
+      const p = (localStorage.getItem("pocketfolio.pptProxy") || "").trim().replace(/\/+$/, "");
+      return p || null;
+    } catch { return null; }
+  }
+
+  function hasGradedProxy() {
+    return !!pptProxy();
   }
 
   function loadGradedCache() {
@@ -381,7 +395,8 @@
   }
 
   async function pptFetch(params, key) {
-    const res = await fetch(PPT + "/cards?" + new URLSearchParams(params), {
+    const base = pptProxy() || PPT_HOST;
+    const res = await fetch(base + "/api/v2/cards?" + new URLSearchParams(params), {
       headers: { accept: "application/json", Authorization: "Bearer " + key },
     });
     if (res.status === 401 || res.status === 403) {
@@ -586,6 +601,6 @@
 
   window.PocketfolioAPI = {
     searchCards, getCard, getCards, lookupCert, certCardQuery,
-    gradedFor, gradedTest, hasGradedKey,
+    gradedFor, gradedTest, hasGradedKey, hasGradedProxy,
   };
 })();

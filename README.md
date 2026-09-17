@@ -79,6 +79,24 @@ it once via the browser console:
 TCGdex prices come from TCGplayer (USD) or, when that's missing, Cardmarket
 (shown in €).
 
+## Graded prices proxy (required for eBay PSA prices)
+
+The PokemonPriceTracker API doesn't allow calls from web pages (no CORS
+headers), so the app can't reach it directly from GitHub Pages. The fix is a
+tiny personal proxy on Cloudflare's free tier (~5 minutes, no credit card),
+which forwards the app's requests with CORS enabled. Your API key travels
+only from your browser through **your own** worker to the API.
+
+1. Sign up at [dash.cloudflare.com](https://dash.cloudflare.com) (free).
+2. **Workers & Pages → Create → Worker**, name it (e.g. `pocketfolio-prices`), **Deploy**.
+3. **Edit code**, replace everything with [`proxy/prices-proxy.js`](proxy/prices-proxy.js), **Deploy**.
+4. Copy the worker URL (`https://pocketfolio-prices.<your-name>.workers.dev`).
+5. In the app: **⚙ → Prices proxy URL…** → paste it. Done — run **⚙ → Test PSA prices API** to confirm.
+
+The worker only forwards `GET /api/v2/*` to pokemonpricetracker.com and
+nothing else. Cloudflare's free tier allows 100k requests/day — far beyond
+the API's own 100/day free budget.
+
 ## Where graded values come from
 
 There is no free **keyless** API for graded-card sale prices — PSA's own API
