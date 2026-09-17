@@ -233,6 +233,8 @@ input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); ou
 }
 .cert-head .name { font-weight: 650; }
 .cert-head .sub { font-size: 11px; color: var(--text-muted); }
+.search-item.cert-primary { background: var(--accent-wash); }
+.search-item.cert-primary .name { color: var(--accent); font-weight: 650; }
 
 .search-col { display: flex; flex-direction: column; min-width: 0; }
 .search-col .name { font-weight: 550; }

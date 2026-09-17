@@ -244,48 +244,60 @@
 
     const loading = document.createElement("div");
     loading.className = "search-empty";
-    loading.textContent = "Matching printings with live prices…";
+    loading.textContent = "Matching this printing in the price catalogs…";
     els.results.appendChild(loading);
     els.results.hidden = false;
 
-    // match against the card catalogs so live prices attach
+    // match against the card catalogs, restricted to the slab's card number —
+    // a "Charmander" from a different set is noise, so wrong numbers never show
     let matches = [];
     const q = API.certCardQuery(info);
     if (q) {
       try {
-        matches = await API.searchCards(q);
+        matches = await API.searchCards(q, { number: info.cardNumber || undefined });
       } catch { /* catalogs unreachable — manual add still works */ }
     }
     if (seq !== searchSeq) return;
     loading.remove();
 
-    if (info.cardNumber) {
-      const want = String(info.cardNumber).toLowerCase();
-      matches = matches.slice().sort((a, b) =>
-        (String(b.number).toLowerCase() === want) - (String(a.number).toLowerCase() === want));
-    }
-    for (const c of matches.slice(0, 6)) {
-      const btn = buildResultItem(c, () => selectCertCard(c, info));
-      els.results.appendChild(btn);
-    }
+    const addManual = (label) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "search-item" + (matches.length ? "" : " cert-primary");
+      const col = document.createElement("span");
+      col.className = "search-col";
+      const nm = document.createElement("span");
+      nm.className = "name";
+      nm.textContent = label;
+      const msub = document.createElement("span");
+      msub.className = "sub";
+      msub.textContent = "grade and cert filled in — set its value with the ✎ button";
+      col.append(nm, msub);
+      btn.appendChild(col);
+      btn.addEventListener("click", () => selectCertCard(manualCard, info));
+      return btn;
+    };
 
-    const manualBtn = document.createElement("button");
-    manualBtn.type = "button";
-    manualBtn.className = "search-item";
-    const col = document.createElement("span");
-    col.className = "search-col";
-    const nm = document.createElement("span");
-    nm.className = "name";
-    nm.textContent = matches.length
-      ? "None of these — add the slab without live prices"
-      : "Add this slab without live prices";
-    const msub = document.createElement("span");
-    msub.className = "sub";
-    msub.textContent = "you set its value with the ✎ button";
-    col.append(nm, msub);
-    manualBtn.appendChild(col);
-    manualBtn.addEventListener("click", () => selectCertCard(manualCard, info));
-    els.results.appendChild(manualBtn);
+    if (matches.length) {
+      const note = document.createElement("div");
+      note.className = "search-empty";
+      note.textContent = matches.length === 1
+        ? "Tap to add it with live prices:"
+        : "Tap the exact printing to add it with live prices:";
+      els.results.appendChild(note);
+      for (const c of matches.slice(0, 6)) {
+        els.results.appendChild(buildResultItem(c, () => selectCertCard(c, info)));
+      }
+      els.results.appendChild(addManual("Not one of these — add the slab anyway"));
+    } else {
+      const note = document.createElement("div");
+      note.className = "search-empty";
+      note.textContent = q
+        ? `No catalog printing matches ${info.subject || "this card"}${info.cardNumber ? " #" + info.cardNumber : ""}.`
+        : "";
+      if (note.textContent) els.results.appendChild(note);
+      els.results.appendChild(addManual("➕ Add this slab to your collection"));
+    }
     els.results.hidden = false;
   }
 

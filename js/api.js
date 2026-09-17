@@ -100,14 +100,15 @@
     };
   }
 
-  async function ptcgioSearch(namePart) {
-    const q = namePart
+  async function ptcgioSearch(namePart, number) {
+    let q = namePart
       .replace(/["\\]/g, "")
       .split(/\s+/)
       .filter(Boolean)
       .map((t) => `name:${t}*`)
       .join(" ");
     if (!q) return [];
+    if (number) q += ` number:"${String(number).split("/")[0].replace(/[^\w]/g, "")}"`;
     const url = PTCGIO + "/cards?" + new URLSearchParams({
       q, pageSize: "20", orderBy: "-set.releaseDate", select: PTCGIO_SELECT,
     });
@@ -174,10 +175,20 @@
     return data && data.id ? tcgdexNormalize(data) : null;
   }
 
-  async function tcgdexSearch(namePart) {
+  /* "46", "046" and "46/102" all mean card number 46. */
+  function normNumber(n) {
+    return String(n).split("/")[0].toLowerCase()
+      .replace(/[^a-z0-9]/g, "").replace(/^0+(?=.)/, "");
+  }
+
+  async function tcgdexSearch(namePart, number) {
     const url = TCGDEX + "/cards?" + new URLSearchParams({ name: namePart });
-    const briefs = await getJSON(url, { accept: "application/json" }, 30 * 60 * 1000);
+    let briefs = await getJSON(url, { accept: "application/json" }, 30 * 60 * 1000);
     if (!Array.isArray(briefs)) return [];
+    if (number != null && briefs.some((b) => b.localId != null)) {
+      const want = normNumber(number);
+      briefs = briefs.filter((b) => b.localId != null && normNumber(b.localId) === want);
+    }
     // Briefs carry only id/name/image — fetch details so the dropdown can show
     // set, number, and price. Rank exact name matches first, then take 20.
     const wanted = namePart.trim().toLowerCase();
@@ -218,21 +229,23 @@
     return out.length ? out : cards;
   }
 
-  async function providerSearch(name, query) {
+  async function providerSearch(name, query, number) {
     const tokens = query.trim().split(/\s+/).filter(Boolean).slice(0, 5);
     for (let k = tokens.length; k >= 1; k--) {
-      const cards = await providers[name].search(tokens.slice(0, k).join(" "));
+      const cards = await providers[name].search(tokens.slice(0, k).join(" "), number);
       if (cards.length) return filterByTerms(cards, tokens.slice(k));
     }
     return [];
   }
 
-  /** Search cards, failing over between providers (also when one has no match). */
-  async function searchCards(query) {
+  /** Search cards, failing over between providers (also when one has no match).
+      opts.number restricts results to that card number (for slab matching). */
+  async function searchCards(query, opts) {
+    const number = opts && opts.number != null ? opts.number : undefined;
     let lastErr = null;
     for (const name of order()) {
       try {
-        const cards = await providerSearch(name, query);
+        const cards = await providerSearch(name, query, number);
         if (cards.length) {
           preferred = name;
           return cards;
