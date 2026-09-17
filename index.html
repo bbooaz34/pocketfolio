@@ -33,7 +33,7 @@
       <form id="add-form" autocomplete="off">
         <div class="field search-field">
           <label for="card-search">Card</label>
-          <input id="card-search" type="text" placeholder="Search cards — charizard, pikachu, lugia…" required />
+          <input id="card-search" type="text" placeholder="Search cards — or paste a PSA cert #" required />
           <div id="search-results" class="search-results" hidden></div>
         </div>
         <div class="field">
@@ -65,7 +65,7 @@
           <input id="value-input" type="number" step="any" min="0" placeholder="USD, optional" />
         </div>
         <div class="field">
-          <label for="cert-input">PSA cert #</label>
+          <label for="cert-input">PSA cert # <span class="muted">(or paste it in the search box)</span></label>
           <input id="cert-input" type="text" inputmode="numeric" placeholder="optional" />
         </div>
         <button class="btn btn-primary" type="submit" id="add-btn" disabled>Add card</button>

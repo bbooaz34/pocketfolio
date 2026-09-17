@@ -248,6 +248,7 @@
   /** Fetch one card by (provider, id), failing over to the other provider —
       ids for classic sets (e.g. base1-4) match across both. */
   async function getCard(provider, id) {
+    if (provider === "manual") return null; // slab added without a catalog match
     const first = providers[provider] ? provider : "ptcgio";
     const second = first === "ptcgio" ? "tcgdex" : "ptcgio";
     for (const name of [first, second]) {
@@ -267,7 +268,10 @@
   async function getCards(refs) {
     const out = [];
     const byProvider = { ptcgio: [], tcgdex: [] };
-    for (const r of refs) (byProvider[r.provider] || byProvider.ptcgio).push(r.id);
+    for (const r of refs) {
+      if (r.provider === "manual") continue; // no live source for these
+      (byProvider[r.provider] || byProvider.ptcgio).push(r.id);
+    }
 
     if (byProvider.ptcgio.length) {
       try {
@@ -287,5 +291,112 @@
     return out;
   }
 
-  window.PocketfolioAPI = { searchCards, getCard, getCards };
+  /* ---------------- PSA cert lookup ---------------- */
+
+  /* PSA's cert page (psacard.com/cert/N) has no CORS headers and its API needs
+     a token, so we try the page directly (works if PSA ever enables CORS),
+     then through public read-through proxies. Parsed fields drive the add
+     form; on total failure the UI falls back to a link to the page itself. */
+
+  const PSA_LABELS = [
+    "Certification Number", "Cert Number", "Label Type",
+    "Reverse Cert Number/Barcode", "Reverse Cert Number", "Year",
+    "Brand/Title", "Brand", "Subject", "Category", "Card Number",
+    "Variety/Pedigree", "Item Grade", "Autograph Grade", "Grade",
+  ];
+
+  function certPageLines(raw) {
+    return raw
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]*>/g, "\n")
+      .replace(/&amp;/g, "&").replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"')
+      .split(/\n+/)
+      .map((s) => s.replace(/[|*_#`]+/g, " ").replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+  }
+
+  function parseCertPage(raw, cert) {
+    const lines = certPageLines(raw);
+    const labelOf = (line) => {
+      const low = line.toLowerCase();
+      return PSA_LABELS.find((l) => low === l.toLowerCase() ||
+        low.startsWith(l.toLowerCase() + " ") || low.startsWith(l.toLowerCase() + ":"));
+    };
+    const fields = {};
+    for (let i = 0; i < lines.length; i++) {
+      const label = labelOf(lines[i]);
+      if (!label || fields[label] != null) continue;
+      let value = lines[i].slice(label.length).replace(/^[:\s]+/, "").trim();
+      if (!value && lines[i + 1] && !labelOf(lines[i + 1])) value = lines[i + 1];
+      if (value) fields[label] = value;
+    }
+    const gradeText = fields["Item Grade"] || fields["Grade"] || null;
+    const gradeNum = gradeText ? (gradeText.match(/\b(10|[1-9])(?:\.5)?\b/) || [])[1] : null;
+    const subject = fields["Subject"] || null;
+    if (!subject && !gradeText) return null; // page didn't parse as a cert
+    return {
+      cert,
+      url: "https://www.psacard.com/cert/" + cert,
+      subject,
+      gradeText,
+      grade: gradeNum || null,
+      year: fields["Year"] || null,
+      brand: fields["Brand/Title"] || fields["Brand"] || null,
+      cardNumber: fields["Card Number"] || null,
+      category: fields["Category"] || null,
+      variety: fields["Variety/Pedigree"] || null,
+    };
+  }
+
+  const certCache = new Map();
+
+  async function lookupCert(cert) {
+    if (certCache.has(cert)) return certCache.get(cert);
+    const target = "https://www.psacard.com/cert/" + encodeURIComponent(cert);
+    const sources = [
+      target,
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(target),
+      "https://r.jina.ai/" + target,
+    ];
+    let lastErr = null;
+    for (const url of sources) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      try {
+        const res = await fetch(url, { signal: ctrl.signal });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const info = parseCertPage(await res.text(), cert);
+        if (!info) throw new Error("unparseable cert page");
+        certCache.set(cert, info);
+        return info;
+      } catch (err) {
+        lastErr = err;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    const err = new Error("PSA cert lookup failed");
+    err.cause = lastErr;
+    throw err;
+  }
+
+  /* Turn a PSA "Subject" like "CHARIZARD-HOLO" into a searchable card name. */
+  const SUBJECT_NOISE = new Set([
+    "holo", "holofoil", "foil", "reverse", "1st", "edition", "ed",
+    "shadowless", "promo", "no", "japanese", "korean", "the",
+  ]);
+
+  function certCardQuery(info) {
+    if (!info.subject) return null;
+    const words = info.subject
+      .replace(/[-–/]+/g, " ")
+      .split(/\s+/)
+      .filter((w) => w && !SUBJECT_NOISE.has(w.toLowerCase()) && !/^\d+$/.test(w));
+    if (!words.length) return null;
+    return words.slice(0, 3).join(" ").toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  window.PocketfolioAPI = { searchCards, getCard, getCards, lookupCert, certCardQuery };
 })();

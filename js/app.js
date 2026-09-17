@@ -121,6 +121,39 @@
     els.qty.focus();
   }
 
+  function buildResultItem(c, onClick) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "search-item";
+    if (c.image) {
+      const img = document.createElement("img");
+      img.className = "card-thumb";
+      img.src = c.image;
+      img.alt = "";
+      img.loading = "lazy";
+      btn.appendChild(img);
+    }
+    const col = document.createElement("span");
+    col.className = "search-col";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = c.name;
+    const sub = document.createElement("span");
+    sub.className = "sub";
+    sub.textContent = [c.setName, c.number ? "#" + c.number : null, c.rarity]
+      .filter(Boolean).join(" · ");
+    col.append(name, sub);
+    btn.appendChild(col);
+    if (c.price) {
+      const price = document.createElement("span");
+      price.className = "rank";
+      price.textContent = fmtMoney(c.price.value, c.price.currency);
+      btn.appendChild(price);
+    }
+    btn.addEventListener("click", onClick);
+    return btn;
+  }
+
   function renderResults(list) {
     els.results.replaceChildren();
     if (!list.length) {
@@ -130,37 +163,129 @@
       els.results.appendChild(empty);
     }
     for (const c of list) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "search-item";
-      if (c.image) {
-        const img = document.createElement("img");
-        img.className = "card-thumb";
-        img.src = c.image;
-        img.alt = "";
-        img.loading = "lazy";
-        btn.appendChild(img);
-      }
-      const col = document.createElement("span");
-      col.className = "search-col";
-      const name = document.createElement("span");
-      name.className = "name";
-      name.textContent = c.name;
-      const sub = document.createElement("span");
-      sub.className = "sub";
-      sub.textContent = [c.setName, c.number ? "#" + c.number : null, c.rarity]
-        .filter(Boolean).join(" · ");
-      col.append(name, sub);
-      btn.appendChild(col);
-      if (c.price) {
-        const price = document.createElement("span");
-        price.className = "rank";
-        price.textContent = fmtMoney(c.price.value, c.price.currency);
-        btn.appendChild(price);
-      }
-      btn.addEventListener("click", () => selectCard(c));
+      els.results.appendChild(buildResultItem(c, () => selectCard(c)));
+    }
+    els.results.hidden = false;
+  }
+
+  function resultsMessage(text) {
+    const msg = document.createElement("div");
+    msg.className = "search-empty";
+    msg.textContent = text;
+    els.results.replaceChildren(msg);
+    els.results.hidden = false;
+  }
+
+  /* Selecting a printing for a slab also pre-fills the grade and cert. */
+  function selectCertCard(card, info) {
+    selectCard(card);
+    if (info.grade && [...els.grade.options].some((o) => o.value === info.grade)) {
+      els.grade.value = info.grade;
+    }
+    els.cert.value = info.cert;
+  }
+
+  function certSummary(info) {
+    return [info.year, info.brand, info.subject, info.cardNumber ? "#" + info.cardNumber : null]
+      .filter(Boolean).join(" · ");
+  }
+
+  async function certFlow(cert, seq) {
+    resultsMessage(`Looking up PSA cert #${cert}…`);
+    let info;
+    try {
+      info = await API.lookupCert(cert);
+    } catch {
+      if (seq !== searchSeq) return;
+      els.results.replaceChildren();
+      const msg = document.createElement("div");
+      msg.className = "search-empty";
+      msg.appendChild(document.createTextNode(
+        "Couldn't read PSA's cert page from here (PSA blocks most automated lookups). "));
+      const a = document.createElement("a");
+      a.href = "https://www.psacard.com/cert/" + encodeURIComponent(cert);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = "Open cert #" + cert + " on psacard.com";
+      msg.appendChild(a);
+      msg.appendChild(document.createTextNode(
+        " — then search the card by name and paste the cert into the cert field."));
+      els.results.replaceChildren(msg);
+      els.results.hidden = false;
+      return;
+    }
+    if (seq !== searchSeq) return;
+
+    els.results.replaceChildren();
+
+    // slab summary header
+    const head = document.createElement("div");
+    head.className = "cert-head";
+    const title = document.createElement("span");
+    title.className = "name";
+    title.textContent = `PSA #${info.cert}` + (info.gradeText ? ` · ${info.gradeText}` : "");
+    const sub = document.createElement("span");
+    sub.className = "sub";
+    sub.textContent = certSummary(info) || "slab details parsed from psacard.com";
+    head.append(title, sub);
+    els.results.appendChild(head);
+
+    // manual add (always available)
+    const manualCard = {
+      provider: "manual",
+      id: "psa-" + info.cert,
+      name: API.certCardQuery(info) || "PSA slab #" + info.cert,
+      setName: [info.year, info.brand].filter(Boolean).join(" ") || null,
+      number: info.cardNumber || null,
+      rarity: null,
+      image: null,
+      price: null,
+    };
+
+    const loading = document.createElement("div");
+    loading.className = "search-empty";
+    loading.textContent = "Matching printings with live prices…";
+    els.results.appendChild(loading);
+    els.results.hidden = false;
+
+    // match against the card catalogs so live prices attach
+    let matches = [];
+    const q = API.certCardQuery(info);
+    if (q) {
+      try {
+        matches = await API.searchCards(q);
+      } catch { /* catalogs unreachable — manual add still works */ }
+    }
+    if (seq !== searchSeq) return;
+    loading.remove();
+
+    if (info.cardNumber) {
+      const want = String(info.cardNumber).toLowerCase();
+      matches = matches.slice().sort((a, b) =>
+        (String(b.number).toLowerCase() === want) - (String(a.number).toLowerCase() === want));
+    }
+    for (const c of matches.slice(0, 6)) {
+      const btn = buildResultItem(c, () => selectCertCard(c, info));
       els.results.appendChild(btn);
     }
+
+    const manualBtn = document.createElement("button");
+    manualBtn.type = "button";
+    manualBtn.className = "search-item";
+    const col = document.createElement("span");
+    col.className = "search-col";
+    const nm = document.createElement("span");
+    nm.className = "name";
+    nm.textContent = matches.length
+      ? "None of these — add the slab without live prices"
+      : "Add this slab without live prices";
+    const msub = document.createElement("span");
+    msub.className = "sub";
+    msub.textContent = "you set its value with the ✎ button";
+    col.append(nm, msub);
+    manualBtn.appendChild(col);
+    manualBtn.addEventListener("click", () => selectCertCard(manualCard, info));
+    els.results.appendChild(manualBtn);
     els.results.hidden = false;
   }
 
@@ -174,19 +299,18 @@
     }
     searchTimer = setTimeout(async () => {
       const seq = ++searchSeq;
+      if (/^\d{6,10}$/.test(q)) {
+        certFlow(q, seq);
+        return;
+      }
       try {
         const list = await API.searchCards(q);
         if (seq === searchSeq) renderResults(list);
       } catch (err) {
         if (seq === searchSeq) {
-          els.results.replaceChildren();
-          const msg = document.createElement("div");
-          msg.className = "search-empty";
-          msg.textContent = err.rateLimited
+          resultsMessage(err.rateLimited
             ? "Rate limited — wait a moment and type again"
-            : "Both card services are unreachable right now — try again in a minute";
-          els.results.appendChild(msg);
-          els.results.hidden = false;
+            : "Both card services are unreachable right now — try again in a minute");
         }
       }
     }, 350);
@@ -301,13 +425,13 @@
       const seen = new Set();
       const refs = [];
       for (const h of holdings) {
-        if (seen.has(h.cardId)) continue;
+        if (seen.has(h.cardId) || h.provider === "manual") continue;
         seen.add(h.cardId);
         refs.push({ provider: h.provider || "ptcgio", id: h.cardId });
       }
-      const fresh = await API.getCards(refs);
+      const fresh = refs.length ? await API.getCards(refs) : [];
       for (const c of fresh) cards.set(c.id, c);
-      if (fresh.length) {
+      if (fresh.length || !refs.length) {
         hideBanner();
         els.lastUpdated.textContent = "Updated " + new Intl.DateTimeFormat(undefined, {
           hour: "numeric", minute: "2-digit",

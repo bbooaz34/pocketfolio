@@ -13,6 +13,7 @@ watch your collection's value over time — no account, no server, no build step
 - **Purchase tracking** — record quantity and what you paid per card; P/L is computed against it
 - **Graded value** — each position's value comes from a rough per-grade multiplier on the card's raw TCGplayer market price (clearly labeled *est.*), or from a **manual value you set** (✎ button) based on real PSA sales, which always wins
 - **PSA cert numbers** — store the cert with a position; it links straight to [PSA's certificate verification](https://www.psacard.com/cert/)
+- **Search by cert number** — paste a PSA cert number (6–10 digits) into the search box and the app reads the slab's details (subject, grade, year, set, card number) from PSA's cert page, pre-fills the grade + cert, and matches the card in the price catalogs; if PSA can't be reached it falls back to a direct link. PSA has no CORS/open API, so the page is fetched directly and then through public read-through proxies (allorigins.win, r.jina.ai) — only the cert number is sent, and PSA's bot protection may still block automated reads
 - **Dashboard KPIs** — collection value, cost basis, profit/loss, card count
 - **Value-over-time chart** — a snapshot of your collection's value is saved once a day you open the app, so the chart grows with use
 - **Allocation bar** showing how your value splits across positions
