@@ -312,7 +312,9 @@
   const PPT_HOST = "https://www.pokemonpricetracker.com";
   const GRADED_CACHE_KEY = "pocketfolio.gradedCache.v2"; // v2: v1 wrongly cached misses for 12h
   const GRADED_TTL_MS = 12 * 3600 * 1000; // conserve the daily credit budget
-  const GRADED_MISS_TTL_MS = 10 * 60 * 1000; // retry misses quickly
+  const GRADED_MISS_TTL_MS = 60 * 60 * 1000; // retry misses hourly (each retry is a billed credit)
+  const GRADED_BACKOFF_KEY = "pocketfolio.gradedBackoffUntil";
+  const GRADED_BACKOFF_MS = 60 * 60 * 1000; // after a 429, pause all lookups for an hour
 
   function pptKey() {
     try { return localStorage.getItem("pocketfolio.pptApiKey") || null; } catch { return null; }
@@ -334,6 +336,19 @@
 
   function hasGradedProxy() {
     return !!pptProxy();
+  }
+
+  /* After the API answers 429 (rate/daily limit), every extra request is a
+     wasted credit — pause all lookups for an hour and serve cached values. */
+  function gradedBackoffUntil() {
+    try {
+      const t = parseInt(localStorage.getItem(GRADED_BACKOFF_KEY) || "0", 10);
+      return Number.isFinite(t) && t > Date.now() ? t : null;
+    } catch { return null; }
+  }
+
+  function startGradedBackoff() {
+    try { localStorage.setItem(GRADED_BACKOFF_KEY, String(Date.now() + GRADED_BACKOFF_MS)); } catch { /* ok */ }
   }
 
   function loadGradedCache() {
@@ -405,7 +420,8 @@
       throw err;
     }
     if (res.status === 429) {
-      const err = new Error("graded prices API daily limit reached (429)");
+      startGradedBackoff();
+      const err = new Error("graded prices API rate/daily limit reached (429)");
       err.rateLimited = true;
       throw err;
     }
@@ -466,11 +482,18 @@
     if (hit && Date.now() - hit.at < (hit.grades ? GRADED_TTL_MS : GRADED_MISS_TTL_MS)) {
       return hit.grades;
     }
+    // During a rate-limit backoff, serve even a stale hit — never spend credits.
+    if (gradedBackoffUntil()) return hit ? hit.grades : null;
 
-    const grades = await gradedLookup(card, key, null);
-    cache[cacheId] = { at: Date.now(), grades };
-    saveGradedCache(cache);
-    return grades;
+    try {
+      const grades = await gradedLookup(card, key, null);
+      cache[cacheId] = { at: Date.now(), grades };
+      saveGradedCache(cache);
+      return grades;
+    } catch (err) {
+      if (hit && hit.grades) return hit.grades; // stale beats nothing
+      throw err;
+    }
   }
 
   /** One uncached live check with a structured verdict, for the ⚙ self-test. */
@@ -601,6 +624,6 @@
 
   window.PocketfolioAPI = {
     searchCards, getCard, getCards, lookupCert, certCardQuery,
-    gradedFor, gradedTest, hasGradedKey, hasGradedProxy,
+    gradedFor, gradedTest, hasGradedKey, hasGradedProxy, gradedBackoffUntil,
   };
 })();

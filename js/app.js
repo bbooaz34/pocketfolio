@@ -479,8 +479,12 @@
             /* limit reached or endpoint change: estimates keep working */
           }
         }));
+        const backoff = API.gradedBackoffUntil();
         if (keyRejected) {
           showBanner("Your graded-prices API key was rejected — update it via the ⚙ button (pokemonpricetracker.com).");
+        } else if (backoff && graded.size === 0) {
+          const until = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(backoff));
+          showBanner(`Graded-prices API limit reached — lookups paused until ${until} to save your daily credits. Cached and estimated values are shown meanwhile.`);
         } else if (attempted > 0 && graded.size === 0) {
           showBanner(API.hasGradedProxy()
             ? "No eBay graded prices came back for any card — run ⚙ → “Test PSA prices API” to see why. Values fall back to estimates meanwhile."
@@ -815,7 +819,7 @@
     } else if (r.reason === "unauthorized") {
       window.alert("✗ The API rejected your key (401/403).\n\nCheck it at pokemonpricetracker.com and re-enter it via ⚙ → “PSA prices API key”.");
     } else if (r.reason === "rate-limited") {
-      window.alert("✗ Daily limit reached (429) — the free tier allows 100 lookups/day. Try again tomorrow.");
+      window.alert("⚠ Rate/daily limit reached (429) — but that's actually good news: your proxy and API key are working end-to-end (a blocked call could never get a 429 back).\n\nThe free tier allows 100 lookups/day. The app now pauses lookups for an hour and reuses cached prices; graded values will fill in automatically once the limit resets.");
     } else if (r.reason === "network") {
       window.alert(API.hasGradedProxy()
         ? `✗ Could not reach the prices API through your proxy.\n\nError: ${r.message}\n\nCheck that your Cloudflare Worker is deployed and its URL is correct (⚙ → “Prices proxy URL”).`
