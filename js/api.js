@@ -1,16 +1,27 @@
-/* Pocketfolio — CoinGecko public API client (no key required).
-   Docs: https://docs.coingecko.com/reference/introduction */
+/* Pocketfolio — Pokémon TCG API client (pokemontcg.io, no key required).
+   Docs: https://docs.pokemontcg.io
+   Card data + live TCGplayer market prices (raw/ungraded, updated daily).
+   An optional API key (free at dev.pokemontcg.io) raises the rate limits:
+   localStorage.setItem("pocketfolio.tcgApiKey", "<key>") */
 
 (function () {
   "use strict";
 
-  const BASE = "https://api.coingecko.com/api/v3";
+  const BASE = "https://api.pokemontcg.io/v2";
+  const SELECT = "id,name,number,rarity,set,images,tcgplayer";
 
-  // The free tier is rate-limited (~5-15 req/min), so cache GETs briefly
-  // and dedupe in-flight requests for the same URL.
   const cache = new Map(); // url -> { at, data }
-  const inflight = new Map(); // url -> Promise
-  const CACHE_TTL_MS = 60 * 1000;
+  const inflight = new Map();
+  const CACHE_TTL_MS = 10 * 60 * 1000; // TCGplayer prices update daily
+
+  function headers() {
+    const h = { accept: "application/json" };
+    try {
+      const key = localStorage.getItem("pocketfolio.tcgApiKey");
+      if (key) h["X-Api-Key"] = key;
+    } catch { /* storage unavailable */ }
+    return h;
+  }
 
   async function get(path, params, { ttl = CACHE_TTL_MS } = {}) {
     const url = new URL(BASE + path);
@@ -24,13 +35,13 @@
     if (inflight.has(key)) return inflight.get(key);
 
     const p = (async () => {
-      const res = await fetch(key, { headers: { accept: "application/json" } });
+      const res = await fetch(key, { headers: headers() });
       if (res.status === 429) {
-        const err = new Error("CoinGecko rate limit reached — try again in a minute.");
+        const err = new Error("Pokémon TCG API rate limit reached — try again in a minute.");
         err.rateLimited = true;
         throw err;
       }
-      if (!res.ok) throw new Error("CoinGecko request failed (" + res.status + ")");
+      if (!res.ok) throw new Error("Pokémon TCG API request failed (" + res.status + ")");
       const data = await res.json();
       cache.set(key, { at: Date.now(), data });
       return data;
@@ -44,25 +55,69 @@
     }
   }
 
-  /** Search coins by name/symbol. Returns [{id, name, symbol, thumb, market_cap_rank}] */
-  async function searchCoins(query) {
-    const data = await get("/search", { query }, { ttl: 5 * 60 * 1000 });
-    return (data.coins || []).slice(0, 8);
+  /** Search cards by name (each word matched as a prefix). Returns card objects. */
+  async function searchCards(query) {
+    const terms = query
+      .replace(/["\\]/g, "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((t) => `name:${t}*`)
+      .join(" ");
+    if (!terms) return [];
+    const data = await get("/cards", {
+      q: terms,
+      pageSize: 12,
+      orderBy: "-set.releaseDate",
+      select: SELECT,
+    }, { ttl: 30 * 60 * 1000 });
+    return data.data || [];
   }
 
-  /** Live market data for a set of coin ids, including 7d hourly sparkline.
-      Returns [{id, symbol, name, image, current_price, price_change_percentage_24h_in_currency,
-                sparkline_in_7d: {price: [...]}, ...}] */
-  async function getMarkets(ids) {
+  /** Fetch a batch of cards by id (one query; falls back to per-card fetches). */
+  async function getCards(ids) {
     if (!ids.length) return [];
-    return get("/coins/markets", {
-      vs_currency: "usd",
-      ids: ids.join(","),
-      sparkline: true,
-      price_change_percentage: "24h,7d",
-      per_page: Math.min(ids.length, 250),
-    });
+    const q = "(" + ids.map((id) => `id:"${id.replace(/["\\]/g, "")}"`).join(" OR ") + ")";
+    try {
+      const data = await get("/cards", { q, pageSize: 250, select: SELECT });
+      if (Array.isArray(data.data) && data.data.length) return data.data;
+    } catch (err) {
+      if (err.rateLimited) throw err;
+      /* fall through to per-card fetches */
+    }
+    const out = [];
+    for (const id of ids) {
+      try {
+        const one = await get("/cards/" + encodeURIComponent(id), { select: SELECT });
+        if (one.data) out.push(one.data);
+      } catch (err) {
+        if (err.rateLimited) throw err;
+      }
+    }
+    return out;
   }
 
-  window.PocketfolioAPI = { searchCoins, getMarkets };
+  /** Best available raw (ungraded) price for a card from TCGplayer, in USD.
+      Returns {price, variant, updatedAt} or null if the card has no price data. */
+  const VARIANT_ORDER = [
+    "holofoil", "1stEditionHolofoil", "unlimitedHolofoil",
+    "normal", "1stEditionNormal", "unlimited", "reverseHolofoil",
+  ];
+
+  function rawPrice(card) {
+    const tp = card.tcgplayer;
+    const prices = tp && tp.prices;
+    if (!prices) return null;
+    const variants = [...VARIANT_ORDER.filter((v) => prices[v]),
+                      ...Object.keys(prices).filter((v) => !VARIANT_ORDER.includes(v))];
+    for (const v of variants) {
+      const p = prices[v];
+      const price = p && (p.market ?? p.mid ?? p.low);
+      if (typeof price === "number" && price > 0) {
+        return { price, variant: v, updatedAt: tp.updatedAt || null };
+      }
+    }
+    return null;
+  }
+
+  window.PocketfolioAPI = { searchCards, getCards, rawPrice };
 })();

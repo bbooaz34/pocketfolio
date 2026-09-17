@@ -1,4 +1,4 @@
-/* Pocketfolio — app wiring: search, holdings, refresh loop, rendering. */
+/* Pocketfolio — app wiring: card search, graded positions, refresh, rendering. */
 
 (function () {
   "use strict";
@@ -7,15 +7,26 @@
   const Store = window.PocketfolioStore;
   const Charts = window.PocketfolioCharts;
 
-  const REFRESH_MS = 120 * 1000; // stay well inside the free-tier rate limit
+  const REFRESH_MS = 30 * 60 * 1000; // TCGplayer prices update daily
+
+  /* Rough grade multipliers applied to the raw TCGplayer market price when a
+     position has no manual value. Clearly labeled "est." in the UI — graded
+     premiums vary wildly per card, so real sale prices always win. */
+  const GRADE_MULT = {
+    "10": 3.0, "9": 1.4, "8": 1.0, "7": 0.85, "6": 0.7,
+    "5": 0.6, "4": 0.5, "3": 0.45, "2": 0.4, "1": 0.35, raw: 1.0,
+  };
 
   const $ = (id) => document.getElementById(id);
   const els = {
     form: $("add-form"),
-    search: $("coin-search"),
+    search: $("card-search"),
     results: $("search-results"),
+    grade: $("grade-select"),
     qty: $("qty-input"),
     cost: $("cost-input"),
+    value: $("value-input"),
+    cert: $("cert-input"),
     addBtn: $("add-btn"),
     hint: $("form-hint"),
     banner: $("banner"),
@@ -25,20 +36,21 @@
     lastUpdated: $("last-updated"),
     refreshBtn: $("refresh-btn"),
     kpiTotal: $("kpi-total"),
-    kpiTotalDelta: $("kpi-total-delta"),
-    kpi24h: $("kpi-24h"),
-    kpi24hPct: $("kpi-24h-pct"),
+    kpiTotalNote: $("kpi-total-note"),
+    kpiCost: $("kpi-cost"),
+    kpiCostNote: $("kpi-cost-note"),
     kpiPl: $("kpi-pl"),
     kpiPlPct: $("kpi-pl-pct"),
     kpiCount: $("kpi-count"),
-    kpiBest: $("kpi-best"),
+    kpiTop: $("kpi-top"),
     trendChart: $("trend-chart"),
+    trendNote: $("trend-note"),
     allocChart: $("alloc-chart"),
     holdingsBody: $("holdings-body"),
   };
 
-  let selectedCoin = null; // {id, name, symbol, thumb}
-  let markets = new Map(); // coin id -> market row
+  let selectedCard = null; // full card object from the API
+  let cards = new Map(); // cardId -> latest card data
   let refreshTimer = null;
 
   /* ---------- formatting ---------- */
@@ -48,35 +60,30 @@
     style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1,
   });
 
-  function fmtUSD(v, compact) {
-    return compact ? usdCompact.format(v) : usdFull.format(v);
+  const fmtUSD = (v, compact) => (compact ? usdCompact.format(v) : usdFull.format(v));
+  const fmtSigned = (v) => (v >= 0 ? "+" : "−") + usdFull.format(Math.abs(v));
+  const fmtPct = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1) + "%";
+  const deltaClass = (v) => (v >= 0 ? "delta-up" : "delta-down");
+  const slotColor = (slot) => (slot ? `var(--series-${slot})` : "var(--other)");
+  const gradeLabel = (g) => (g === "raw" ? "Raw" : "PSA " + g);
+  const prettyVariant = (v) =>
+    v.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).replace(/^1st /i, "1st ");
+
+  function cardSub(c) {
+    const bits = [];
+    if (c.setName) bits.push(c.setName);
+    if (c.number) bits.push("#" + c.number);
+    return bits.join(" · ");
   }
 
-  function fmtPrice(v) {
-    if (v >= 1) return usdFull.format(v);
-    return new Intl.NumberFormat(undefined, {
-      style: "currency", currency: "USD", maximumSignificantDigits: 4,
-    }).format(v);
-  }
-
-  function fmtQty(v) {
-    return new Intl.NumberFormat(undefined, { maximumFractionDigits: 8 }).format(v);
-  }
-
-  function fmtSigned(v, fmt) {
-    return (v >= 0 ? "+" : "−") + fmt(Math.abs(v));
-  }
-
-  function fmtPct(v) {
-    return (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2) + "%";
-  }
-
-  function deltaClass(v) {
-    return v >= 0 ? "delta-up" : "delta-down";
-  }
-
-  function slotColor(slot) {
-    return slot ? `var(--series-${slot})` : "var(--other)";
+  /* Value of one card in a position: manual override wins, otherwise the raw
+     market price times the grade multiplier (an estimate). */
+  function valueEach(h) {
+    if (h.value != null) return { each: h.value, est: false };
+    const card = cards.get(h.cardId);
+    const raw = card ? API.rawPrice(card) : null;
+    if (raw) return { each: raw.price * (GRADE_MULT[h.grade] ?? 1), est: true };
+    return null;
   }
 
   /* ---------- banner ---------- */
@@ -90,13 +97,13 @@
     els.banner.hidden = true;
   }
 
-  /* ---------- coin search ---------- */
+  /* ---------- card search ---------- */
 
   let searchTimer = null;
   let searchSeq = 0;
 
   function clearSelection() {
-    selectedCoin = null;
+    selectedCard = null;
     els.addBtn.disabled = true;
   }
 
@@ -105,45 +112,53 @@
     els.results.replaceChildren();
   }
 
-  function selectCoin(coin) {
-    selectedCoin = coin;
-    els.search.value = `${coin.name} (${coin.symbol.toUpperCase()})`;
+  function selectCard(card) {
+    selectedCard = card;
+    els.search.value = `${card.name} · ${card.set?.name || ""} #${card.number || "?"}`;
     closeResults();
     els.addBtn.disabled = false;
     els.qty.focus();
   }
 
-  function renderResults(coins) {
+  function renderResults(list) {
     els.results.replaceChildren();
-    if (!coins.length) {
+    if (!list.length) {
       const empty = document.createElement("div");
       empty.className = "search-empty";
-      empty.textContent = "No coins found";
+      empty.textContent = "No cards found";
       els.results.appendChild(empty);
     }
-    for (const c of coins) {
+    for (const c of list) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "search-item";
-      if (c.thumb) {
+      if (c.images?.small) {
         const img = document.createElement("img");
-        img.src = c.thumb;
+        img.className = "card-thumb";
+        img.src = c.images.small;
         img.alt = "";
+        img.loading = "lazy";
         btn.appendChild(img);
       }
+      const col = document.createElement("span");
+      col.className = "search-col";
       const name = document.createElement("span");
+      name.className = "name";
       name.textContent = c.name;
-      const sym = document.createElement("span");
-      sym.className = "sym";
-      sym.textContent = c.symbol;
-      btn.append(name, sym);
-      if (c.market_cap_rank) {
-        const rank = document.createElement("span");
-        rank.className = "rank";
-        rank.textContent = "#" + c.market_cap_rank;
-        btn.appendChild(rank);
+      const sub = document.createElement("span");
+      sub.className = "sub";
+      sub.textContent = [c.set?.name, c.number ? "#" + c.number : null, c.rarity]
+        .filter(Boolean).join(" · ");
+      col.append(name, sub);
+      btn.appendChild(col);
+      const raw = API.rawPrice(c);
+      if (raw) {
+        const price = document.createElement("span");
+        price.className = "rank";
+        price.textContent = fmtUSD(raw.price, false);
+        btn.appendChild(price);
       }
-      btn.addEventListener("click", () => selectCoin(c));
+      btn.addEventListener("click", () => selectCard(c));
       els.results.appendChild(btn);
     }
     els.results.hidden = false;
@@ -160,8 +175,8 @@
     searchTimer = setTimeout(async () => {
       const seq = ++searchSeq;
       try {
-        const coins = await API.searchCoins(q);
-        if (seq === searchSeq) renderResults(coins);
+        const list = await API.searchCards(q);
+        if (seq === searchSeq) renderResults(list);
       } catch (err) {
         if (seq === searchSeq) {
           els.results.replaceChildren();
@@ -185,50 +200,73 @@
     if (ev.key === "Escape") closeResults();
   });
 
-  /* ---------- add holding ---------- */
+  /* ---------- add position ---------- */
+
+  function numOrNull(input) {
+    const v = parseFloat(input.value);
+    return Number.isFinite(v) && v > 0 ? v : null;
+  }
 
   els.form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    if (!selectedCoin) {
-      els.hint.textContent = "Pick an asset from the search results first.";
+    if (!selectedCard) {
+      els.hint.textContent = "Pick a card from the search results first.";
       els.hint.hidden = false;
       return;
     }
-    const qty = parseFloat(els.qty.value);
+    const qty = Math.floor(parseFloat(els.qty.value));
     if (!(qty > 0)) return;
-    const costRaw = parseFloat(els.cost.value);
-    const cost = Number.isFinite(costRaw) && costRaw > 0 ? costRaw : null;
 
     Store.upsert({
-      id: selectedCoin.id,
-      symbol: selectedCoin.symbol,
-      name: selectedCoin.name,
-      image: selectedCoin.thumb || null,
+      cardId: selectedCard.id,
+      name: selectedCard.name,
+      setName: selectedCard.set?.name || null,
+      number: selectedCard.number || null,
+      image: selectedCard.images?.small || null,
+      grade: els.grade.value,
       qty,
-      cost,
+      cost: numOrNull(els.cost),
+      value: numOrNull(els.value),
+      cert: els.cert.value.trim().replace(/[^\w-]/g, "") || null,
     });
+    cards.set(selectedCard.id, selectedCard); // render immediately with what we have
 
     els.form.reset();
+    els.qty.value = "1";
     els.hint.hidden = true;
     clearSelection();
-    await refresh(true);
+    await refresh();
   });
 
   els.demoBtn.addEventListener("click", async () => {
     els.demoBtn.disabled = true;
     const demo = [
-      { id: "bitcoin", symbol: "btc", name: "Bitcoin", qty: 0.1 },
-      { id: "ethereum", symbol: "eth", name: "Ethereum", qty: 1.5 },
-      { id: "solana", symbol: "sol", name: "Solana", qty: 20 },
+      { id: "base1-4", name: "Charizard", grade: "9", qty: 1 },
+      { id: "base1-2", name: "Blastoise", grade: "8", qty: 1 },
+      { id: "base1-58", name: "Pikachu", grade: "10", qty: 2 },
     ];
     try {
-      // Seed cost basis at the current price so P/L starts at zero and moves live.
-      const rows = await API.getMarkets(demo.map((d) => d.id));
+      const rows = await API.getCards(demo.map((d) => d.id));
       for (const d of demo) {
-        const row = rows.find((r) => r.id === d.id);
-        Store.upsert({ ...d, image: row?.image || null, cost: row?.current_price ?? null });
+        const card = rows.find((r) => r.id === d.id);
+        if (!card) continue;
+        const raw = API.rawPrice(card);
+        // Seed cost at the estimated value so P/L starts at zero and moves live.
+        const est = raw ? raw.price * (GRADE_MULT[d.grade] ?? 1) : null;
+        Store.upsert({
+          cardId: card.id,
+          name: card.name,
+          setName: card.set?.name || null,
+          number: card.number || null,
+          image: card.images?.small || null,
+          grade: d.grade,
+          qty: d.qty,
+          cost: est != null ? Math.round(est * 100) / 100 : null,
+          value: null,
+          cert: null,
+        });
       }
-      await refresh(true);
+      await refresh();
     } catch (err) {
       showBanner(err.message || "Could not load demo data.");
     } finally {
@@ -238,7 +276,7 @@
 
   /* ---------- refresh + render ---------- */
 
-  async function refresh(force) {
+  async function refresh() {
     const holdings = Store.getAll();
 
     if (!holdings.length) {
@@ -254,8 +292,9 @@
     els.allocChart.classList.add("stale");
 
     try {
-      const rows = await API.getMarkets(holdings.map((h) => h.id));
-      markets = new Map(rows.map((r) => [r.id, r]));
+      const ids = [...new Set(holdings.map((h) => h.cardId))];
+      const rows = await API.getCards(ids);
+      for (const r of rows) cards.set(r.id, r);
       hideBanner();
       els.lastUpdated.textContent = "Updated " + new Intl.DateTimeFormat(undefined, {
         hour: "numeric", minute: "2-digit",
@@ -263,8 +302,8 @@
     } catch (err) {
       showBanner(
         (err.rateLimited
-          ? "CoinGecko rate limit reached — showing the last loaded prices. "
-          : "Could not reach CoinGecko — showing the last loaded prices. ") +
+          ? "Pokémon TCG API rate limit reached — showing the last loaded prices. "
+          : "Could not reach the Pokémon TCG API — showing the last loaded prices. ") +
         "It retries automatically."
       );
     } finally {
@@ -276,194 +315,239 @@
   }
 
   function render(holdings) {
-    const priced = holdings
-      .map((h) => {
-        const m = markets.get(h.id);
-        return m ? { h, m, value: h.qty * m.current_price } : null;
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.value - a.value);
-
     els.dashboard.hidden = false;
 
-    if (!priced.length) return; // nothing fetched yet (e.g. first load offline)
+    const positions = holdings
+      .map((h) => {
+        const v = valueEach(h);
+        return { h, val: v, total: v ? v.each * h.qty : 0 };
+      })
+      .sort((a, b) => b.total - a.total);
 
     /* --- KPIs --- */
-    const total = priced.reduce((s, p) => s + p.value, 0);
-
-    let change24 = 0;
-    for (const p of priced) {
-      const pct = p.m.price_change_percentage_24h_in_currency;
-      if (typeof pct === "number") change24 += p.value - p.value / (1 + pct / 100);
-    }
-    const change24Pct = total - change24 !== 0 ? (change24 / (total - change24)) * 100 : 0;
+    const valued = positions.filter((p) => p.val);
+    const total = valued.reduce((s, p) => s + p.total, 0);
+    const estCount = valued.filter((p) => p.val.est).length;
+    const unvalued = positions.length - valued.length;
 
     els.kpiTotal.textContent = fmtUSD(total, false);
-    els.kpiTotalDelta.textContent = fmtSigned(change24, (v) => fmtUSD(v, false)) + " today";
-    els.kpiTotalDelta.className = "stat-delta " + deltaClass(change24);
+    els.kpiTotalNote.textContent =
+      unvalued > 0 ? `${unvalued} position${unvalued > 1 ? "s" : ""} missing a value — use ✎` :
+      estCount > 0 ? `${estCount} of ${positions.length} estimated from raw price` :
+      "all values set manually";
 
-    els.kpi24h.textContent = fmtSigned(change24, (v) => fmtUSD(v, false));
-    els.kpi24h.className = "stat-value " + deltaClass(change24);
-    els.kpi24hPct.textContent = fmtPct(change24Pct) + " vs yesterday";
-    els.kpi24hPct.className = "stat-delta " + deltaClass(change24);
+    const withCost = positions.filter((p) => p.h.cost != null);
+    const costTotal = withCost.reduce((s, p) => s + p.h.cost * p.h.qty, 0);
+    els.kpiCost.textContent = withCost.length ? fmtUSD(costTotal, false) : "–";
+    els.kpiCostNote.textContent =
+      withCost.length && withCost.length < positions.length
+        ? `${withCost.length} of ${positions.length} positions have a paid price`
+        : withCost.length ? "" : "add what you paid to track P/L";
 
-    const withCost = priced.filter((p) => p.h.cost != null);
-    if (withCost.length) {
-      const costTotal = withCost.reduce((s, p) => s + p.h.cost * p.h.qty, 0);
-      const curTotal = withCost.reduce((s, p) => s + p.value, 0);
-      const pl = curTotal - costTotal;
-      els.kpiPl.textContent = fmtSigned(pl, (v) => fmtUSD(v, false));
+    const plPositions = positions.filter((p) => p.h.cost != null && p.val);
+    if (plPositions.length) {
+      const plCost = plPositions.reduce((s, p) => s + p.h.cost * p.h.qty, 0);
+      const plNow = plPositions.reduce((s, p) => s + p.total, 0);
+      const pl = plNow - plCost;
+      els.kpiPl.textContent = fmtSigned(pl);
       els.kpiPl.className = "stat-value " + deltaClass(pl);
-      els.kpiPlPct.textContent = fmtPct(costTotal ? (pl / costTotal) * 100 : 0) + " vs cost basis";
+      els.kpiPlPct.textContent = fmtPct(plCost ? (pl / plCost) * 100 : 0) + " vs what you paid";
       els.kpiPlPct.className = "stat-delta " + deltaClass(pl);
     } else {
       els.kpiPl.textContent = "–";
       els.kpiPl.className = "stat-value";
-      els.kpiPlPct.textContent = "add buy prices to track P/L";
+      els.kpiPlPct.textContent = "add paid prices to track P/L";
       els.kpiPlPct.className = "stat-delta muted";
     }
 
-    els.kpiCount.textContent = String(priced.length);
-    const best = priced.reduce((a, b) =>
-      (b.m.price_change_percentage_24h_in_currency ?? -Infinity) >
-      (a.m.price_change_percentage_24h_in_currency ?? -Infinity) ? b : a
-    );
-    const bestPct = best.m.price_change_percentage_24h_in_currency;
-    els.kpiBest.textContent = typeof bestPct === "number"
-      ? `best 24h: ${best.h.symbol.toUpperCase()} ${fmtPct(bestPct)}`
+    els.kpiCount.textContent = String(holdings.reduce((s, h) => s + h.qty, 0));
+    els.kpiTop.textContent = positions.length && positions[0].val
+      ? `top: ${positions[0].h.name} (${gradeLabel(positions[0].h.grade)})`
       : "";
 
-    /* --- 7d portfolio trend (sum of qty x hourly sparkline price) --- */
-    const sparks = priced
-      .map((p) => ({ qty: p.h.qty, prices: p.m.sparkline_in_7d?.price || [] }))
-      .filter((s) => s.prices.length > 1);
-    if (sparks.length) {
-      // Series are hourly and end "now"; align them from the end.
-      const n = Math.min(...sparks.map((s) => s.prices.length));
-      const now = Date.now();
-      const stepMs = (7 * 24 * 3600 * 1000) / Math.max(n - 1, 1);
-      const points = [];
-      for (let i = 0; i < n; i++) {
-        let v = 0;
-        for (const s of sparks) v += s.qty * s.prices[s.prices.length - n + i];
-        points.push({ t: now - (n - 1 - i) * stepMs, v });
-      }
-      Charts.renderLineChart(els.trendChart, points, (v, compact) => fmtUSD(v, compact));
+    /* --- value-over-time chart (daily snapshots, grows with use) --- */
+    if (total > 0) {
+      const byUid = {};
+      for (const p of valued) byUid[p.h.uid] = p.total;
+      Store.recordSnapshot(Math.round(total * 100) / 100, byUid);
+    }
+    const snaps = Store.getSnapshots();
+    if (snaps.length >= 2) {
+      els.trendNote.hidden = true;
+      Charts.renderLineChart(
+        els.trendChart,
+        snaps.map((s) => ({ t: s.t, v: s.total })),
+        (v, compact) => fmtUSD(v, compact)
+      );
+    } else {
+      els.trendChart.replaceChildren();
+      els.trendNote.textContent =
+        "First snapshot saved today — the chart appears once you've checked in on two different days. Prices refresh daily (TCGplayer).";
+      els.trendNote.hidden = false;
     }
 
     /* --- allocation --- */
-    const slotted = priced.filter((p) => p.h.slot);
-    const otherValue = priced.filter((p) => !p.h.slot).reduce((s, p) => s + p.value, 0);
+    const slotted = positions.filter((p) => p.h.slot && p.val);
+    const otherValue = positions.filter((p) => !p.h.slot && p.val).reduce((s, p) => s + p.total, 0);
     const allocItems = slotted.map((p) => ({
-      label: p.h.name,
-      value: p.value,
+      label: `${p.h.name} · ${gradeLabel(p.h.grade)}`,
+      value: p.total,
       color: slotColor(p.h.slot),
     }));
     if (otherValue > 0) allocItems.push({ label: "Other", value: otherValue, color: "var(--other)" });
     Charts.renderAllocationBar(els.allocChart, allocItems, total, (v) => fmtUSD(v, false));
 
-    /* --- holdings table --- */
+    /* --- collection table --- */
     els.holdingsBody.replaceChildren();
-    for (const p of priced) {
+    for (const p of positions) {
+      const h = p.h;
       const tr = document.createElement("tr");
 
-      const assetTd = document.createElement("td");
+      const cardTd = document.createElement("td");
       const cell = document.createElement("div");
       cell.className = "asset-cell";
       const dot = document.createElement("span");
       dot.className = "dot";
-      dot.style.background = slotColor(p.h.slot);
+      dot.style.background = slotColor(h.slot);
       cell.appendChild(dot);
-      if (p.m.image) {
+      if (h.image) {
         const img = document.createElement("img");
-        img.src = p.m.image;
+        img.className = "card-thumb";
+        img.src = h.image;
         img.alt = "";
         img.loading = "lazy";
         cell.appendChild(img);
       }
+      const col = document.createElement("span");
+      col.className = "search-col";
       const nm = document.createElement("span");
       nm.className = "name";
-      nm.textContent = p.m.name || p.h.name;
-      const sym = document.createElement("span");
-      sym.className = "sym";
-      sym.textContent = p.h.symbol;
-      cell.append(nm, sym);
-      assetTd.appendChild(cell);
+      nm.textContent = h.name;
+      const sub = document.createElement("span");
+      sub.className = "sub";
+      sub.textContent = cardSub(h);
+      col.append(nm, sub);
+      cell.appendChild(col);
+      cardTd.appendChild(cell);
 
-      const priceTd = document.createElement("td");
-      priceTd.className = "num";
-      priceTd.textContent = fmtPrice(p.m.current_price);
+      const gradeTd = document.createElement("td");
+      const badge = document.createElement("span");
+      badge.className = "grade-badge" + (h.grade === "10" ? " grade-gem" : "");
+      badge.textContent = gradeLabel(h.grade);
+      gradeTd.appendChild(badge);
 
-      const chgTd = document.createElement("td");
-      chgTd.className = "num";
-      const pct24 = p.m.price_change_percentage_24h_in_currency;
-      if (typeof pct24 === "number") {
-        chgTd.textContent = fmtPct(pct24);
-        chgTd.classList.add(deltaClass(pct24));
+      const rawTd = document.createElement("td");
+      rawTd.className = "num";
+      const card = cards.get(h.cardId);
+      const raw = card ? API.rawPrice(card) : null;
+      if (raw) {
+        rawTd.textContent = fmtUSD(raw.price, false);
+        const rsub = document.createElement("span");
+        rsub.className = "sub";
+        rsub.textContent = prettyVariant(raw.variant);
+        rawTd.appendChild(rsub);
       } else {
-        chgTd.textContent = "–";
-      }
-
-      const sparkTd = document.createElement("td");
-      sparkTd.className = "spark-cell";
-      const prices = p.m.sparkline_in_7d?.price || [];
-      if (prices.length > 1) sparkTd.appendChild(Charts.renderSparkline(prices));
-
-      const qtyTd = document.createElement("td");
-      qtyTd.className = "num";
-      qtyTd.textContent = fmtQty(p.h.qty);
-      if (p.h.cost != null) {
-        const sub = document.createElement("span");
-        sub.className = "sub";
-        sub.textContent = "@ " + fmtPrice(p.h.cost);
-        qtyTd.appendChild(sub);
+        rawTd.textContent = "–";
       }
 
       const valTd = document.createElement("td");
       valTd.className = "num";
-      valTd.textContent = fmtUSD(p.value, false);
+      const valWrap = document.createElement("span");
+      valWrap.className = "val-wrap";
+      const valText = document.createElement("span");
+      if (p.val) {
+        valText.textContent = (p.val.est ? "~" : "") + fmtUSD(p.val.each, false);
+        const vsub = document.createElement("span");
+        vsub.className = "sub";
+        vsub.textContent = p.val.est
+          ? `est. ×${GRADE_MULT[h.grade] ?? 1} of raw`
+          : "manual";
+        valText.appendChild(vsub);
+      } else {
+        valText.textContent = "–";
+      }
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "row-edit";
+      editBtn.title = "Set the current per-card value";
+      editBtn.setAttribute("aria-label", "Set value for " + h.name);
+      editBtn.textContent = "✎";
+      editBtn.addEventListener("click", () => {
+        const cur = h.value != null ? String(h.value) : "";
+        const input = window.prompt(
+          `Current value per card for ${h.name} (${gradeLabel(h.grade)}), in USD.\nLeave empty to go back to the automatic estimate.`,
+          cur
+        );
+        if (input === null) return;
+        const v = parseFloat(input);
+        Store.setValueOverride(h.uid, Number.isFinite(v) && v > 0 ? v : null);
+        render(Store.getAll());
+      });
+      valWrap.append(valText, editBtn);
+      valTd.appendChild(valWrap);
+
+      const qtyTd = document.createElement("td");
+      qtyTd.className = "num";
+      qtyTd.textContent = String(h.qty);
+
+      const costTd = document.createElement("td");
+      costTd.className = "num";
+      costTd.textContent = h.cost != null ? fmtUSD(h.cost, false) : "–";
 
       const plTd = document.createElement("td");
       plTd.className = "num";
-      if (p.h.cost != null) {
-        const pl = (p.m.current_price - p.h.cost) * p.h.qty;
-        plTd.textContent = fmtSigned(pl, (v) => fmtUSD(v, false));
+      if (h.cost != null && p.val) {
+        const pl = (p.val.each - h.cost) * h.qty;
+        plTd.textContent = fmtSigned(pl);
         plTd.classList.add(deltaClass(pl));
-        const sub = document.createElement("span");
-        sub.className = "sub";
-        sub.textContent = fmtPct(p.h.cost ? ((p.m.current_price - p.h.cost) / p.h.cost) * 100 : 0);
-        plTd.appendChild(sub);
+        const psub = document.createElement("span");
+        psub.className = "sub";
+        psub.textContent = fmtPct(h.cost ? ((p.val.each - h.cost) / h.cost) * 100 : 0);
+        plTd.appendChild(psub);
       } else {
         plTd.textContent = "–";
+      }
+
+      const certTd = document.createElement("td");
+      if (h.cert) {
+        const a = document.createElement("a");
+        a.href = "https://www.psacard.com/cert/" + encodeURIComponent(h.cert);
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = h.cert;
+        certTd.appendChild(a);
+      } else {
+        certTd.textContent = "–";
+        certTd.className = "muted";
       }
 
       const actTd = document.createElement("td");
       const rm = document.createElement("button");
       rm.type = "button";
       rm.className = "row-remove";
-      rm.title = "Remove " + p.h.name;
-      rm.setAttribute("aria-label", "Remove " + p.h.name);
+      rm.title = "Remove " + h.name;
+      rm.setAttribute("aria-label", "Remove " + h.name);
       rm.textContent = "×";
       rm.addEventListener("click", () => {
-        Store.remove(p.h.id);
-        refresh(true);
+        Store.remove(h.uid);
+        refresh();
       });
       actTd.appendChild(rm);
 
-      tr.append(assetTd, priceTd, chgTd, sparkTd, qtyTd, valTd, plTd, actTd);
+      tr.append(cardTd, gradeTd, rawTd, valTd, qtyTd, costTd, plTd, certTd, actTd);
       els.holdingsBody.appendChild(tr);
     }
   }
 
-  els.refreshBtn.addEventListener("click", () => refresh(true));
+  els.refreshBtn.addEventListener("click", () => refresh());
 
   function startAutoRefresh() {
     clearInterval(refreshTimer);
     refreshTimer = setInterval(() => {
-      if (!document.hidden) refresh(false);
+      if (!document.hidden) refresh();
     }, REFRESH_MS);
   }
 
-  refresh(true);
+  refresh();
   startAutoRefresh();
 })();

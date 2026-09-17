@@ -111,14 +111,23 @@
       label.textContent = fmtValue(tv, true);
     }
 
-    // x tick labels: one per day
-    const dayFmt = new Intl.DateTimeFormat(undefined, { weekday: "short" });
+    // x tick labels: first point of each day, thinned to at most ~7 labels,
+    // weekday names for short spans and month+day beyond a week
+    const spanDays = (t1 - t0) / (24 * 3600 * 1000);
+    const dayFmt = new Intl.DateTimeFormat(undefined,
+      spanDays <= 8 ? { weekday: "short" } : { month: "short", day: "numeric" });
+    const dayFirsts = [];
     const seen = new Set();
     for (const p of points) {
       const day = new Date(p.t).toDateString();
       if (seen.has(day)) continue;
       seen.add(day);
-      if (seen.size === 1) continue; // skip the partial first day
+      dayFirsts.push(p);
+    }
+    const labelled = dayFirsts.length > 1 ? dayFirsts.slice(1) : dayFirsts; // skip a partial first day
+    const step = Math.max(1, Math.ceil(labelled.length / 7));
+    for (let i = 0; i < labelled.length; i += step) {
+      const p = labelled[i];
       const label = el("text", {
         x: x(p.t), y: H - 8, "text-anchor": "middle",
         fill: "var(--text-muted)", "font-size": 10.5,

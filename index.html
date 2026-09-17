@@ -4,23 +4,24 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Pocketfolio</title>
-  <meta name="description" content="A tiny portfolio tracker with live market data. No account, no server — your holdings stay in your browser." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='7' width='26' height='20' rx='5' fill='%232a78d6'/%3E%3Crect x='3' y='13' width='26' height='2.5' fill='%23fcfcfb' opacity='.9'/%3E%3Ccircle cx='23' cy='20' r='2.5' fill='%23fcfcfb'/%3E%3C/svg%3E" />
+  <meta name="description" content="Track your PSA-graded Pokémon TCG collection: purchases, live market prices, and value over time. No account, no server — everything stays in your browser." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='3' width='20' height='26' rx='3' fill='%232a78d6'/%3E%3Crect x='9' y='6' width='14' height='11' rx='1.5' fill='%23fcfcfb' opacity='.9'/%3E%3Crect x='9' y='20' width='9' height='2.5' rx='1' fill='%23fcfcfb' opacity='.7'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
       <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-        <rect x="3" y="7" width="26" height="20" rx="5" fill="var(--accent)"/>
-        <rect x="3" y="13" width="26" height="2.5" fill="var(--surface-1)" opacity=".9"/>
-        <circle cx="23" cy="20" r="2.5" fill="var(--surface-1)"/>
+        <rect x="6" y="3" width="20" height="26" rx="3" fill="var(--accent)"/>
+        <rect x="9" y="6" width="14" height="11" rx="1.5" fill="var(--surface-1)" opacity=".9"/>
+        <rect x="9" y="20" width="9" height="2.5" rx="1" fill="var(--surface-1)" opacity=".7"/>
       </svg>
       <h1>Pocketfolio</h1>
+      <span class="tagline muted">PSA-graded Pokémon TCG tracker</span>
     </div>
     <div class="topbar-right">
       <span id="last-updated" class="muted"></span>
-      <button id="refresh-btn" class="btn btn-ghost" type="button" title="Refresh prices">
+      <button id="refresh-btn" class="btn btn-ghost" type="button" title="Refresh market prices">
         <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 1.5v3h-3"/></svg>
         Refresh
       </button>
@@ -28,22 +29,46 @@
   </header>
 
   <main>
-    <section class="card add-card" aria-label="Add a holding">
+    <section class="card add-card" aria-label="Add a card">
       <form id="add-form" autocomplete="off">
         <div class="field search-field">
-          <label for="coin-search">Asset</label>
-          <input id="coin-search" type="text" placeholder="Search coins — bitcoin, eth, sol…" required />
+          <label for="card-search">Card</label>
+          <input id="card-search" type="text" placeholder="Search cards — charizard, pikachu, lugia…" required />
           <div id="search-results" class="search-results" hidden></div>
         </div>
         <div class="field">
-          <label for="qty-input">Quantity</label>
-          <input id="qty-input" type="number" step="any" min="0" placeholder="0.5" required />
+          <label for="grade-select">Grade</label>
+          <select id="grade-select">
+            <option value="10">PSA 10</option>
+            <option value="9" selected>PSA 9</option>
+            <option value="8">PSA 8</option>
+            <option value="7">PSA 7</option>
+            <option value="6">PSA 6</option>
+            <option value="5">PSA 5</option>
+            <option value="4">PSA 4</option>
+            <option value="3">PSA 3</option>
+            <option value="2">PSA 2</option>
+            <option value="1">PSA 1</option>
+            <option value="raw">Raw (ungraded)</option>
+          </select>
         </div>
         <div class="field">
-          <label for="cost-input">Buy price <span class="muted">(optional, per unit)</span></label>
-          <input id="cost-input" type="number" step="any" min="0" placeholder="USD" />
+          <label for="qty-input">Quantity</label>
+          <input id="qty-input" type="number" step="1" min="1" placeholder="1" value="1" required />
         </div>
-        <button class="btn btn-primary" type="submit" id="add-btn" disabled>Add holding</button>
+        <div class="field">
+          <label for="cost-input">Paid <span class="muted">(per card)</span></label>
+          <input id="cost-input" type="number" step="any" min="0" placeholder="USD, optional" />
+        </div>
+        <div class="field">
+          <label for="value-input">Current value <span class="muted">(per card)</span></label>
+          <input id="value-input" type="number" step="any" min="0" placeholder="USD, optional" />
+        </div>
+        <div class="field">
+          <label for="cert-input">PSA cert #</label>
+          <input id="cert-input" type="text" inputmode="numeric" placeholder="optional" />
+        </div>
+        <button class="btn btn-primary" type="submit" id="add-btn" disabled>Add card</button>
       </form>
       <p id="form-hint" class="muted hint" hidden></p>
     </section>
@@ -51,39 +76,40 @@
     <div id="banner" class="banner" hidden></div>
 
     <section id="empty-state" class="card empty-state" hidden>
-      <h2>Your portfolio is empty</h2>
-      <p class="muted">Search for an asset above and add how much you hold — everything is saved locally in your browser.</p>
-      <button id="demo-btn" class="btn btn-ghost" type="button">Or try a demo portfolio</button>
+      <h2>Your collection is empty</h2>
+      <p class="muted">Search for a card above, pick its PSA grade, and add what you paid — everything is saved locally in your browser.</p>
+      <button id="demo-btn" class="btn btn-ghost" type="button">Or try a demo collection</button>
     </section>
 
     <div id="dashboard" hidden>
-      <section class="kpi-row" aria-label="Portfolio summary">
+      <section class="kpi-row" aria-label="Collection summary">
         <div class="stat-tile hero-tile">
-          <div class="stat-label">Total value</div>
+          <div class="stat-label">Collection value</div>
           <div class="stat-value hero" id="kpi-total">–</div>
-          <div class="stat-delta" id="kpi-total-delta"></div>
+          <div class="stat-delta muted" id="kpi-total-note"></div>
         </div>
         <div class="stat-tile">
-          <div class="stat-label">24h change</div>
-          <div class="stat-value" id="kpi-24h">–</div>
-          <div class="stat-delta" id="kpi-24h-pct"></div>
+          <div class="stat-label">Cost basis</div>
+          <div class="stat-value" id="kpi-cost">–</div>
+          <div class="stat-delta muted" id="kpi-cost-note"></div>
         </div>
         <div class="stat-tile">
-          <div class="stat-label">Total profit / loss</div>
+          <div class="stat-label">Profit / loss</div>
           <div class="stat-value" id="kpi-pl">–</div>
           <div class="stat-delta" id="kpi-pl-pct"></div>
         </div>
         <div class="stat-tile">
-          <div class="stat-label">Assets</div>
+          <div class="stat-label">Cards</div>
           <div class="stat-value" id="kpi-count">–</div>
-          <div class="stat-delta muted" id="kpi-best"></div>
+          <div class="stat-delta muted" id="kpi-top"></div>
         </div>
       </section>
 
       <div class="grid-2">
         <section class="card chart-card">
-          <h2>Portfolio value <span class="muted">· last 7 days</span></h2>
+          <h2>Collection value <span class="muted">· over time</span></h2>
           <div id="trend-chart" class="chart-host"></div>
+          <p id="trend-note" class="muted hint" hidden></p>
         </section>
         <section class="card alloc-card">
           <h2>Allocation <span class="muted">· by value</span></h2>
@@ -92,30 +118,32 @@
       </div>
 
       <section class="card table-card">
-        <h2>Holdings</h2>
+        <h2>Collection</h2>
         <div class="table-wrap">
           <table id="holdings-table">
             <thead>
               <tr>
-                <th>Asset</th>
-                <th class="num">Price</th>
-                <th class="num">24h</th>
-                <th class="spark-col">7d</th>
-                <th class="num">Quantity</th>
-                <th class="num">Value</th>
+                <th>Card</th>
+                <th>Grade</th>
+                <th class="num">Raw market</th>
+                <th class="num">Value <span class="th-sub">each</span></th>
+                <th class="num">Qty</th>
+                <th class="num">Paid <span class="th-sub">each</span></th>
                 <th class="num">P/L</th>
+                <th>Cert</th>
                 <th class="actions-col"><span class="sr-only">Actions</span></th>
               </tr>
             </thead>
             <tbody id="holdings-body"></tbody>
           </table>
         </div>
+        <p class="muted hint">Values marked <strong>est.</strong> are estimated from the card's raw TCGplayer market price with a rough per-grade multiplier — set a real value with the ✎ button (recent PSA sales are the best source). Cert numbers link to PSA's verification page.</p>
       </section>
     </div>
   </main>
 
   <footer>
-    <span class="muted">Market data by <a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a> · prices in USD · holdings stored only in this browser</span>
+    <span class="muted">Card data &amp; raw prices by the <a href="https://pokemontcg.io" target="_blank" rel="noopener">Pokémon TCG API</a> (TCGplayer market) · prices in USD · collection stored only in this browser · not affiliated with PSA</span>
   </footer>
 
   <div id="tooltip" class="tooltip" hidden></div>
