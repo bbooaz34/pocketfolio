@@ -31,6 +31,7 @@
     changeDay: "שינוי יומי",
     changeBuy: "שינוי מקנייה",
     graded: (n) => `קלפים מדורגים (${n})`,
+    fanLabel: (n) => `הקלפים המובילים בתיק, ${n} קלפים`,
     singles: (n) => `סינגלים (${n})`,
     srcEbay: "חציון מכירות eBay",
     srcEbayGrade: (g) => `חציון מכירות eBay לדירוג ${g}`,
@@ -323,6 +324,21 @@
         { amt: plNow - plCost, pct: plCost ? ((plNow - plCost) / plCost) * 100 : 0 });
     } else {
       setPillPair($("kpi-pl-pct"), $("kpi-pl"), null);
+    }
+
+    const fan = $("card-fan");
+    const top = [...pos].sort((a, b) => b.total - a.total).slice(0, 3);
+    fan.hidden = !top.length;
+    if (top.length) {
+      const stack = fan.querySelector(".fan");
+      stack.replaceChildren();
+      for (const p of top) stack.appendChild(thumbEl(p.h.cardId, null, "fan-card"));
+      const totalQty = pos.reduce((s, p) => s + p.h.qty, 0);
+      const rest = totalQty - top.length;
+      const chip = fan.querySelector(".fan-count");
+      chip.hidden = rest <= 0;
+      chip.textContent = rest > 0 ? `+${rest}` : "";
+      fan.setAttribute("aria-label", T.fanLabel(totalQty));
     }
 
     const gradedPos = pos.filter((p) => p.h.grade !== "raw");
