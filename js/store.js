@@ -72,6 +72,7 @@
       holdings.push({
         uid,
         cardId: pos.cardId,
+        provider: pos.provider || "ptcgio",
         name: pos.name,
         setName: pos.setName || null,
         number: pos.number || null,

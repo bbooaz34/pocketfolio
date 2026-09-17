@@ -8,7 +8,7 @@ watch your collection's value over time — no account, no server, no build step
 
 ## Features
 
-- **Card search with live prices** from the free [Pokémon TCG API](https://docs.pokemontcg.io) (no key required) — card images, sets, rarities, and TCGplayer market prices
+- **Card search with live prices** from the free [Pokémon TCG API](https://docs.pokemontcg.io) (no key required) — card images, sets, rarities, and TCGplayer market prices — with **automatic failover to [TCGdex](https://tcgdex.dev)** (also free and keyless) when it's down or rate-limited
 - **Graded positions** — every holding is a card *at a PSA grade* (PSA 1–10 or raw); the same card in two grades is two positions
 - **Purchase tracking** — record quantity and what you paid per card; P/L is computed against it
 - **Graded value** — each position's value comes from a rough per-grade multiplier on the card's raw TCGplayer market price (clearly labeled *est.*), or from a **manual value you set** (✎ button) based on real PSA sales, which always wins
@@ -61,15 +61,20 @@ No dependencies, no framework, no build.
 
 ## API usage
 
-| Endpoint | Used for |
-|---|---|
-| `GET /v2/cards?q=name:…` | card search in the add form |
-| `GET /v2/cards?q=(id:… OR id:…)` | batch price refresh for your collection |
+| Provider | Endpoint | Used for |
+|---|---|---|
+| pokemontcg.io | `GET /v2/cards?q=name:…` | card search in the add form |
+| pokemontcg.io | `GET /v2/cards?q=(id:… OR id:…)` | batch price refresh |
+| TCGdex (fallback) | `GET /v2/en/cards?name=…` + `GET /v2/en/cards/{id}` | search + prices when pokemontcg.io is unavailable |
 
-Responses are cached client-side and requests deduped. The API works without a
-key; a free key from [dev.pokemontcg.io](https://dev.pokemontcg.io) raises the
-rate limits — store it once via the browser console:
+The client fails over automatically per request and remembers which provider
+last worked. Responses are cached client-side and requests deduped.
+pokemontcg.io works without a key; a free key from
+[dev.pokemontcg.io](https://dev.pokemontcg.io) raises its rate limits — store
+it once via the browser console:
 `localStorage.setItem("pocketfolio.tcgApiKey", "<your key>")`.
+TCGdex prices come from TCGplayer (USD) or, when that's missing, Cardmarket
+(shown in €).
 
 ## Why estimated graded values?
 

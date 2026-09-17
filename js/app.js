@@ -7,11 +7,11 @@
   const Store = window.PocketfolioStore;
   const Charts = window.PocketfolioCharts;
 
-  const REFRESH_MS = 30 * 60 * 1000; // TCGplayer prices update daily
+  const REFRESH_MS = 30 * 60 * 1000; // market prices update ~daily
 
-  /* Rough grade multipliers applied to the raw TCGplayer market price when a
-     position has no manual value. Clearly labeled "est." in the UI — graded
-     premiums vary wildly per card, so real sale prices always win. */
+  /* Rough grade multipliers applied to the raw market price when a position
+     has no manual value. Clearly labeled "est." in the UI — graded premiums
+     vary wildly per card, so real sale prices always win. */
   const GRADE_MULT = {
     "10": 3.0, "9": 1.4, "8": 1.0, "7": 0.85, "6": 0.7,
     "5": 0.6, "4": 0.5, "3": 0.45, "2": 0.4, "1": 0.35, raw: 1.0,
@@ -49,8 +49,8 @@
     holdingsBody: $("holdings-body"),
   };
 
-  let selectedCard = null; // full card object from the API
-  let cards = new Map(); // cardId -> latest card data
+  let selectedCard = null; // normalized card from the API layer
+  let cards = new Map(); // cardId -> latest normalized card
   let refreshTimer = null;
 
   /* ---------- formatting ---------- */
@@ -59,8 +59,10 @@
   const usdCompact = new Intl.NumberFormat(undefined, {
     style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1,
   });
+  const eurFull = new Intl.NumberFormat(undefined, { style: "currency", currency: "EUR" });
 
   const fmtUSD = (v, compact) => (compact ? usdCompact.format(v) : usdFull.format(v));
+  const fmtMoney = (v, currency) => (currency === "EUR" ? eurFull.format(v) : usdFull.format(v));
   const fmtSigned = (v) => (v >= 0 ? "+" : "−") + usdFull.format(Math.abs(v));
   const fmtPct = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1) + "%";
   const deltaClass = (v) => (v >= 0 ? "delta-up" : "delta-down");
@@ -80,9 +82,8 @@
      market price times the grade multiplier (an estimate). */
   function valueEach(h) {
     if (h.value != null) return { each: h.value, est: false };
-    const card = cards.get(h.cardId);
-    const raw = card ? API.rawPrice(card) : null;
-    if (raw) return { each: raw.price * (GRADE_MULT[h.grade] ?? 1), est: true };
+    const price = cards.get(h.cardId)?.price;
+    if (price) return { each: price.value * (GRADE_MULT[h.grade] ?? 1), est: true };
     return null;
   }
 
@@ -114,7 +115,7 @@
 
   function selectCard(card) {
     selectedCard = card;
-    els.search.value = `${card.name} · ${card.set?.name || ""} #${card.number || "?"}`;
+    els.search.value = `${card.name} · ${card.setName || ""} #${card.number || "?"}`;
     closeResults();
     els.addBtn.disabled = false;
     els.qty.focus();
@@ -132,10 +133,10 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "search-item";
-      if (c.images?.small) {
+      if (c.image) {
         const img = document.createElement("img");
         img.className = "card-thumb";
-        img.src = c.images.small;
+        img.src = c.image;
         img.alt = "";
         img.loading = "lazy";
         btn.appendChild(img);
@@ -147,15 +148,14 @@
       name.textContent = c.name;
       const sub = document.createElement("span");
       sub.className = "sub";
-      sub.textContent = [c.set?.name, c.number ? "#" + c.number : null, c.rarity]
+      sub.textContent = [c.setName, c.number ? "#" + c.number : null, c.rarity]
         .filter(Boolean).join(" · ");
       col.append(name, sub);
       btn.appendChild(col);
-      const raw = API.rawPrice(c);
-      if (raw) {
+      if (c.price) {
         const price = document.createElement("span");
         price.className = "rank";
-        price.textContent = fmtUSD(raw.price, false);
+        price.textContent = fmtMoney(c.price.value, c.price.currency);
         btn.appendChild(price);
       }
       btn.addEventListener("click", () => selectCard(c));
@@ -182,7 +182,9 @@
           els.results.replaceChildren();
           const msg = document.createElement("div");
           msg.className = "search-empty";
-          msg.textContent = err.rateLimited ? "Rate limited — wait a moment" : "Search failed — check your connection";
+          msg.textContent = err.rateLimited
+            ? "Rate limited — wait a moment and type again"
+            : "Both card services are unreachable right now — try again in a minute";
           els.results.appendChild(msg);
           els.results.hidden = false;
         }
@@ -219,10 +221,11 @@
 
     Store.upsert({
       cardId: selectedCard.id,
+      provider: selectedCard.provider,
       name: selectedCard.name,
-      setName: selectedCard.set?.name || null,
-      number: selectedCard.number || null,
-      image: selectedCard.images?.small || null,
+      setName: selectedCard.setName,
+      number: selectedCard.number,
+      image: selectedCard.image,
       grade: els.grade.value,
       qty,
       cost: numOrNull(els.cost),
@@ -241,31 +244,34 @@
   els.demoBtn.addEventListener("click", async () => {
     els.demoBtn.disabled = true;
     const demo = [
-      { id: "base1-4", name: "Charizard", grade: "9", qty: 1 },
-      { id: "base1-2", name: "Blastoise", grade: "8", qty: 1 },
-      { id: "base1-58", name: "Pikachu", grade: "10", qty: 2 },
+      { id: "base1-4", grade: "9", qty: 1 },
+      { id: "base1-2", grade: "8", qty: 1 },
+      { id: "base1-58", grade: "10", qty: 2 },
     ];
     try {
-      const rows = await API.getCards(demo.map((d) => d.id));
+      let added = 0;
       for (const d of demo) {
-        const card = rows.find((r) => r.id === d.id);
+        const card = await API.getCard("ptcgio", d.id);
         if (!card) continue;
-        const raw = API.rawPrice(card);
         // Seed cost at the estimated value so P/L starts at zero and moves live.
-        const est = raw ? raw.price * (GRADE_MULT[d.grade] ?? 1) : null;
+        const est = card.price ? card.price.value * (GRADE_MULT[d.grade] ?? 1) : null;
         Store.upsert({
           cardId: card.id,
+          provider: card.provider,
           name: card.name,
-          setName: card.set?.name || null,
-          number: card.number || null,
-          image: card.images?.small || null,
+          setName: card.setName,
+          number: card.number,
+          image: card.image,
           grade: d.grade,
           qty: d.qty,
           cost: est != null ? Math.round(est * 100) / 100 : null,
           value: null,
           cert: null,
         });
+        cards.set(card.id, card);
+        added++;
       }
+      if (!added) throw new Error("Could not load demo cards — the card services may be down.");
       await refresh();
     } catch (err) {
       showBanner(err.message || "Could not load demo data.");
@@ -292,18 +298,28 @@
     els.allocChart.classList.add("stale");
 
     try {
-      const ids = [...new Set(holdings.map((h) => h.cardId))];
-      const rows = await API.getCards(ids);
-      for (const r of rows) cards.set(r.id, r);
-      hideBanner();
-      els.lastUpdated.textContent = "Updated " + new Intl.DateTimeFormat(undefined, {
-        hour: "numeric", minute: "2-digit",
-      }).format(new Date());
+      const seen = new Set();
+      const refs = [];
+      for (const h of holdings) {
+        if (seen.has(h.cardId)) continue;
+        seen.add(h.cardId);
+        refs.push({ provider: h.provider || "ptcgio", id: h.cardId });
+      }
+      const fresh = await API.getCards(refs);
+      for (const c of fresh) cards.set(c.id, c);
+      if (fresh.length) {
+        hideBanner();
+        els.lastUpdated.textContent = "Updated " + new Intl.DateTimeFormat(undefined, {
+          hour: "numeric", minute: "2-digit",
+        }).format(new Date());
+      } else {
+        showBanner("Could not reach the card price services — showing the last loaded prices. It retries automatically.");
+      }
     } catch (err) {
       showBanner(
         (err.rateLimited
-          ? "Pokémon TCG API rate limit reached — showing the last loaded prices. "
-          : "Could not reach the Pokémon TCG API — showing the last loaded prices. ") +
+          ? "Card API rate limit reached — showing the last loaded prices. "
+          : "Could not reach the card price services — showing the last loaded prices. ") +
         "It retries automatically."
       );
     } finally {
@@ -382,7 +398,7 @@
     } else {
       els.trendChart.replaceChildren();
       els.trendNote.textContent =
-        "First snapshot saved today — the chart appears once you've checked in on two different days. Prices refresh daily (TCGplayer).";
+        "First snapshot saved today — the chart appears once you've checked in on two different days. Prices refresh daily.";
       els.trendNote.hidden = false;
     }
 
@@ -410,10 +426,11 @@
       dot.className = "dot";
       dot.style.background = slotColor(h.slot);
       cell.appendChild(dot);
-      if (h.image) {
+      const image = cards.get(h.cardId)?.image || h.image;
+      if (image) {
         const img = document.createElement("img");
         img.className = "card-thumb";
-        img.src = h.image;
+        img.src = image;
         img.alt = "";
         img.loading = "lazy";
         cell.appendChild(img);
@@ -438,13 +455,12 @@
 
       const rawTd = document.createElement("td");
       rawTd.className = "num";
-      const card = cards.get(h.cardId);
-      const raw = card ? API.rawPrice(card) : null;
-      if (raw) {
-        rawTd.textContent = fmtUSD(raw.price, false);
+      const price = cards.get(h.cardId)?.price;
+      if (price) {
+        rawTd.textContent = fmtMoney(price.value, price.currency);
         const rsub = document.createElement("span");
         rsub.className = "sub";
-        rsub.textContent = prettyVariant(raw.variant);
+        rsub.textContent = prettyVariant(price.variant);
         rawTd.appendChild(rsub);
       } else {
         rawTd.textContent = "–";
