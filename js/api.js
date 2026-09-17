@@ -409,7 +409,23 @@
     return rn === card.name.toLowerCase();
   }
 
+  /* daily call counter, surfaced in Settings ("שאילתות היום") — §4.5 of the
+     redesign brief sanctions counting calls per day in localStorage */
+  function pptCallsKey() {
+    const d = new Date();
+    return "pocketfolio.pptCalls." + d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function gradedCallsToday() {
+    try {
+      const n = parseInt(localStorage.getItem(pptCallsKey()) || "0", 10);
+      return Number.isFinite(n) ? n : 0;
+    } catch { return 0; }
+  }
+
   async function pptFetch(params, key) {
+    try { localStorage.setItem(pptCallsKey(), String(gradedCallsToday() + 1)); } catch { /* ok */ }
     const base = pptProxy() || PPT_HOST;
     const res = await fetch(base + "/api/v2/cards?" + new URLSearchParams(params), {
       headers: { accept: "application/json", Authorization: "Bearer " + key },
@@ -625,5 +641,6 @@
   window.PocketfolioAPI = {
     searchCards, getCard, getCards, lookupCert, certCardQuery,
     gradedFor, gradedTest, hasGradedKey, hasGradedProxy, gradedBackoffUntil,
+    gradedCallsToday,
   };
 })();

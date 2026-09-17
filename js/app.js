@@ -1,4 +1,8 @@
-/* Pocketfolio — app wiring: card search, graded positions, refresh, rendering. */
+/* Pocketfolio — app wiring: hash router, views, card search, graded positions.
+   Redesign per POCKETFOLIO-REDESIGN.md: RTL Hebrew, views toggled by a hash
+   router (#home, #holdings, #market, #settings, #card/<uid>, #add).
+   Data layer (store.js, api.js) and the value hierarchy are unchanged:
+   manual override → eBay sold median for the grade → raw market × multiplier. */
 
 (function () {
   "use strict";
@@ -9,51 +13,105 @@
 
   const REFRESH_MS = 30 * 60 * 1000; // market prices update ~daily
 
-  /* Rough grade multipliers applied to the raw market price when a position
-     has no manual value. Clearly labeled "est." in the UI — graded premiums
-     vary wildly per card, so real sale prices always win. */
+  /* Rough grade multipliers applied to the raw TCGplayer market price when a
+     position has no manual value and no eBay sales median. */
   const GRADE_MULT = {
     "10": 3.0, "9": 1.4, "8": 1.0, "7": 0.85, "6": 0.7,
     "5": 0.6, "4": 0.5, "3": 0.45, "2": 0.4, "1": 0.35, raw: 1.0,
   };
 
-  const $ = (id) => document.getElementById(id);
-  const els = {
-    form: $("add-form"),
-    search: $("card-search"),
-    results: $("search-results"),
-    grade: $("grade-select"),
-    qty: $("qty-input"),
-    cost: $("cost-input"),
-    cert: $("cert-input"),
-    addBtn: $("add-btn"),
-    hint: $("form-hint"),
-    banner: $("banner"),
-    empty: $("empty-state"),
-    demoBtn: $("demo-btn"),
-    dashboard: $("dashboard"),
-    lastUpdated: $("last-updated"),
-    refreshBtn: $("refresh-btn"),
-    kpiTotal: $("kpi-total"),
-    kpiTotalNote: $("kpi-total-note"),
-    kpiCost: $("kpi-cost"),
-    kpiCostNote: $("kpi-cost-note"),
-    kpiPl: $("kpi-pl"),
-    kpiPlPct: $("kpi-pl-pct"),
-    kpiCount: $("kpi-count"),
-    kpiTop: $("kpi-top"),
-    trendChart: $("trend-chart"),
-    trendNote: $("trend-note"),
-    allocChart: $("alloc-chart"),
-    holdingsBody: $("holdings-body"),
+  /* i18n — Hebrew is the default; an English pack can be added without
+     touching markup (POCKETFOLIO-REDESIGN.md §4). */
+  const T = {
+    asOf: "נכון ל:",
+    today: "היום",
+    units: "יח׳",
+    worth: "שווי:",
+    lastPrice: "שער אחרון",
+    changeDay: "שינוי יומי",
+    changeBuy: "שינוי מקנייה",
+    graded: (n) => `קלפים מדורגים (${n})`,
+    singles: (n) => `סינגלים (${n})`,
+    srcEbay: "חציון מכירות eBay",
+    srcEbayGrade: (g) => `חציון מכירות eBay לדירוג ${g}`,
+    srcEst: "הערכה משער השוק הגולמי",
+    srcManual: "שווי שהוזן ידנית",
+    srcRaw: "שער השוק הגולמי",
+    unavailable: "הנתונים אינם זמינים",
+    sortDesc: "שווי ↓",
+    sortAsc: "שווי ↑",
+    active: "פעיל",
+    backup: "גיבוי",
+    needsKey: "נדרש מפתח",
+    estimated: "שווי משוער",
+    rising: "הכי עולה",
+    falling: "הכי יורדת",
+    notEnoughData: "אין מספיק נתונים עדיין",
+    usedOf: (x, y) => `נוצלו ${x} מתוך ${y}`,
+    queriesOf: (n, m) => `${n} מתוך ${m}`,
+    trendNote: "הגרף נבנה משמירה יומית של השווי — חיזרו מחר לנקודה נוספת.",
+    removeHolding: "הסרה מהתיק",
+    save: "שמירה",
+    cancel: "ביטול",
+    manualValueLabel: "שווי ידני ליחידה (ריק = חזרה למחיר האוטומטי)",
+    holdingValue: "שווי האחזקה",
+    trend: "מגמה",
+    costPerUnit: "עלות רכישה ליחידה",
+    rawMarket: "שער השוק הגולמי",
+    psaCert: "מספר תעודת PSA",
+    certLooking: (c) => `מאתר תעודת PSA ‎#${c}…`,
+    certMatch: "בחירת ההדפסה המדויקת תצרף מחיר שוק:",
+    certNoMatch: (s) => `לא נמצאה הדפסה תואמת בקטלוג עבור ${s}.`,
+    certAddAnyway: "➕ הוספת הסלאב לתיק",
+    certNotThese: "לא אחד מאלה — הוספת הסלאב בכל זאת",
+    certManualSub: "הדירוג והתעודה ימולאו — את השווי מגדירים ידנית",
+    certFail: "לא ניתן לקרוא את דף התעודה של PSA כרגע.",
+    certOpen: (c) => `פתיחת תעודה ‎#${c} באתר PSA`,
+    searchFail: "שירותי הקלפים אינם זמינים כרגע — נסו שוב בעוד דקה",
+    searchLimited: "חריגה ממכסת החיפושים — המתינו רגע ונסו שוב",
+    noCards: "לא נמצאו קלפים",
+    rawMarketShort: "שוק גולמי",
   };
 
-  let selectedCard = null; // normalized card from the API layer
-  let cards = new Map(); // cardId -> latest normalized card
-  let graded = new Map(); // cardId -> { "10": {price, count}, "9": … } from eBay sales
+  const $ = (id) => document.getElementById(id);
+
+  /* ---------- state ---------- */
+
+  let cards = new Map();   // cardId -> latest normalized card
+  let graded = new Map();  // cardId -> { "10": {price, count}, … }
+  let selectedCard = null;
+  let gradeValue = "10";
+  let qtyVal = 1;
+  let currentUid = null;
+  let holdingsTab = "all";
+  let holdingsQuery = "";
+  let sortDesc = true;
+  let cdRange = "3ח";
+  let lastUpdatedAt = null;
   let refreshTimer = null;
 
-  /* ---------- formatting ---------- */
+  /* ---------- settings (localStorage) ---------- */
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch { /* ok */ } }
+  function lsDel(k) { try { localStorage.removeItem(k); } catch { /* ok */ } }
+
+  const refreshOnOpen = () => lsGet("pocketfolio.refreshOnOpen") !== "0";
+  const hideValues = () => lsGet("pocketfolio.hideValues") === "1";
+  const budget = () => {
+    const v = parseFloat(lsGet("pocketfolio.budget"));
+    return Number.isFinite(v) && v > 0 ? v : null;
+  };
+  const monthKey = () => {
+    const d = new Date();
+    return "pocketfolio.spend." + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  };
+  const monthSpend = () => {
+    const v = parseFloat(lsGet(monthKey()));
+    return Number.isFinite(v) && v > 0 ? v : 0;
+  };
+
+  /* ---------- formatters (unchanged contracts) ---------- */
 
   const usdFull = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
   const usdCompact = new Intl.NumberFormat(undefined, {
@@ -65,34 +123,74 @@
   const fmtMoney = (v, currency) => (currency === "EUR" ? eurFull.format(v) : usdFull.format(v));
   const fmtSigned = (v) => (v >= 0 ? "+" : "−") + usdFull.format(Math.abs(v));
   const fmtPct = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1) + "%";
-  const deltaClass = (v) => (v >= 0 ? "delta-up" : "delta-down");
-  const slotColor = (slot) => (slot ? `var(--series-${slot})` : "var(--other)");
+  const deltaClass = (v) => (v > 0 ? "is-up" : v < 0 ? "is-down" : "is-flat");
   const gradeLabel = (g) => (g === "raw" ? "Raw" : "PSA " + g);
   const prettyVariant = (v) =>
     v.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).replace(/^1st /i, "1st ");
 
-  function cardSub(c) {
-    const bits = [];
-    if (c.setName) bits.push(c.setName);
-    if (c.number) bits.push("#" + c.number);
-    return bits.join(" · ");
+  /* change pills carry the percentage without a sign; amounts stay ink */
+  const pctAbs = (v) => Math.abs(v).toFixed(1) + "%";
+  /* "הסתרת סכומים" masks amounts at display time; formatters stay pure */
+  const show = (s) => (hideValues() ? "••••" : s);
+
+  const fmtTime = (d) => new Intl.DateTimeFormat("he-IL", { hour: "numeric", minute: "2-digit" }).format(d);
+  const fmtDateChip = (d) => {
+    const p = (n) => String(n).padStart(2, "0");
+    return `${T.today} ${p(d.getDate())}.${p(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)}`;
+  };
+
+  /* ---------- DOM helper ---------- */
+
+  function h(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
   }
 
-  /* Value of one card in a position, best source first:
-     1. a manual override you set,
-     2. the eBay sold-price median for this card AT this grade (needs the free
-        PokemonPriceTracker API key — see the gear button),
-     3. the raw market price times a rough grade multiplier (an estimate). */
-  function valueEach(h) {
-    if (h.value != null) return { each: h.value, src: "manual" };
-    if (h.grade !== "raw") {
-      const g = graded.get(h.cardId)?.[h.grade];
+  /* ---------- value hierarchy (unchanged) ---------- */
+
+  function valueEach(hh) {
+    if (hh.value != null) return { each: hh.value, src: "manual" };
+    if (hh.grade !== "raw") {
+      const g = graded.get(hh.cardId)?.[hh.grade];
       if (g) return { each: g.price, src: "ebay", count: g.count };
     }
-    const price = cards.get(h.cardId)?.price;
+    const price = cards.get(hh.cardId)?.price;
     if (price) {
-      if (h.grade === "raw") return { each: price.value, src: "raw" };
-      return { each: price.value * (GRADE_MULT[h.grade] ?? 1), src: "est" };
+      if (hh.grade === "raw") return { each: price.value, src: "raw" };
+      return { each: price.value * (GRADE_MULT[hh.grade] ?? 1), src: "est" };
+    }
+    return null;
+  }
+
+  function positions() {
+    return Store.getAll()
+      .map((hh) => {
+        const v = valueEach(hh);
+        return { h: hh, val: v, total: v ? v.each * hh.qty : 0 };
+      })
+      .sort((a, b) => (sortDesc ? b.total - a.total : a.total - b.total));
+  }
+
+  function sourceLabel(src, grade) {
+    if (src === "manual") return T.srcManual;
+    if (src === "ebay") return grade ? T.srcEbayGrade(grade) : T.srcEbay;
+    if (src === "raw") return T.srcRaw;
+    return T.srcEst;
+  }
+
+  /* daily change: live value vs the last snapshot from an earlier day */
+  function dailyDelta(liveVal, getter) {
+    if (liveVal == null) return null;
+    const snaps = Store.getSnapshots();
+    const todayKey = new Date().toDateString();
+    for (let i = snaps.length - 1; i >= 0; i--) {
+      if (new Date(snaps[i].t).toDateString() === todayKey) continue;
+      const prev = getter(snaps[i]);
+      if (prev != null && prev > 0) {
+        return { amt: liveVal - prev, pct: ((liveVal - prev) / prev) * 100 };
+      }
     }
     return null;
   }
@@ -100,166 +198,582 @@
   /* ---------- banner ---------- */
 
   function showBanner(msg) {
-    els.banner.textContent = msg;
-    els.banner.hidden = false;
+    $("banner-msg").textContent = msg;
+    $("banner").hidden = false;
   }
-
   function hideBanner() {
-    els.banner.hidden = true;
+    $("banner").hidden = true;
   }
 
-  /* ---------- card search ---------- */
+  /* ---------- change block / pill helpers ---------- */
+
+  function setPillPair(pillEl, amtEl, delta) {
+    if (!delta) {
+      pillEl.className = "pill is-flat";
+      pillEl.textContent = "0.0%";
+      amtEl.textContent = show("‎$0");
+      return;
+    }
+    pillEl.className = "pill " + deltaClass(delta.amt);
+    pillEl.textContent = pctAbs(delta.pct);
+    amtEl.textContent = show("‎" + usdFull.format(Math.abs(delta.amt)));
+  }
+
+  function changeBlock(label, delta) {
+    const b = h("div", "change-block");
+    b.appendChild(h("div", "label", label));
+    const row = h("div", "row");
+    if (delta === undefined) {
+      row.appendChild(h("span", "t-text2 faint", T.unavailable));
+    } else {
+      const pill = h("span");
+      const amt = h("span", "amount");
+      setPillPair(pill, amt, delta);
+      row.append(pill, amt);
+    }
+    b.appendChild(row);
+    return b;
+  }
+
+  /* ---------- holding card component ---------- */
+
+  function thumbEl(cardId, fallbackCls, imgCls) {
+    const image = cards.get(cardId)?.image;
+    if (image) {
+      const img = h("img", imgCls);
+      img.src = image;
+      img.alt = "";
+      img.loading = "lazy";
+      return img;
+    }
+    return h("span", imgCls);
+  }
+
+  function holdingCard(p) {
+    const hh = p.h;
+    const a = h("a", "holding-card");
+    a.href = "#card/" + encodeURIComponent(hh.uid);
+
+    const r1 = h("span", "r1");
+    r1.appendChild(thumbEl(hh.cardId, null, "thumb"));
+    r1.appendChild(h("span", "name", hh.name));
+    const tag = h("span", "tag " + (hh.grade === "raw" ? "tag--raw" : "tag--psa"), gradeLabel(hh.grade));
+    r1.appendChild(tag);
+    const setBits = [hh.setName, hh.number].filter(Boolean).join(" · ");
+    if (setBits) r1.appendChild(h("span", "setnum num", setBits));
+    a.appendChild(r1);
+
+    const r2 = h("span", "r2");
+    const worth = h("span", "worth");
+    worth.appendChild(document.createTextNode(T.worth + " "));
+    worth.appendChild(h("b", "num", p.val ? show(fmtUSD(p.total, false)) : "— —"));
+    worth.appendChild(document.createTextNode(` · ${hh.qty} ${T.units}`));
+    r2.appendChild(worth);
+    const pill = h("span");
+    const buyDelta = (hh.cost != null && p.val)
+      ? { amt: (p.val.each - hh.cost) * hh.qty, pct: hh.cost ? ((p.val.each - hh.cost) / hh.cost) * 100 : 0 }
+      : null;
+    pill.className = "pill " + (buyDelta ? deltaClass(buyDelta.amt) : "is-flat");
+    pill.textContent = buyDelta ? pctAbs(buyDelta.pct) : "0.0%";
+    r2.appendChild(pill);
+    a.appendChild(r2);
+
+    const r3 = h("span", "r3");
+    const raw = cards.get(hh.cardId)?.price;
+    r3.appendChild(h("span", "num", `${T.lastPrice} ${raw ? show(fmtMoney(raw.value, raw.currency)) : "— —"}`));
+    r3.appendChild(h("span", null, T.changeBuy));
+    a.appendChild(r3);
+    return a;
+  }
+
+  /* ---------- HOME ---------- */
+
+  function renderHome(pos) {
+    $("date-chip").textContent = fmtDateChip(new Date());
+    const empty = !Store.getAll().length;
+    $("dashboard").hidden = empty;
+    $("empty-state").hidden = !empty;
+    if (empty) return;
+
+    const valued = pos.filter((p) => p.val);
+    const total = valued.reduce((s, p) => s + p.total, 0);
+    const ebayCount = valued.filter((p) => p.val.src === "ebay").length;
+    const manualOnly = valued.length && valued.every((p) => p.val.src === "manual");
+
+    $("kpi-total").textContent = valued.length ? show(fmtUSD(total, false)) : "— —";
+    const time = fmtTime(lastUpdatedAt ? new Date(lastUpdatedAt) : new Date());
+    const src = manualOnly ? T.srcManual : ebayCount > 0 ? T.srcEbay : T.srcEst;
+    $("kpi-total-note").textContent = `${T.asOf} ${time} · ${src}`;
+
+    setPillPair($("kpi-day-pill"), $("kpi-day-amount"),
+      valued.length ? dailyDelta(total, (s) => s.total) : null);
+
+    const plPos = pos.filter((p) => p.h.cost != null && p.val);
+    if (plPos.length) {
+      const plCost = plPos.reduce((s, p) => s + p.h.cost * p.h.qty, 0);
+      const plNow = plPos.reduce((s, p) => s + p.total, 0);
+      setPillPair($("kpi-pl-pct"), $("kpi-pl"),
+        { amt: plNow - plCost, pct: plCost ? ((plNow - plCost) / plCost) * 100 : 0 });
+    } else {
+      setPillPair($("kpi-pl-pct"), $("kpi-pl"), null);
+    }
+
+    const gradedPos = pos.filter((p) => p.h.grade !== "raw");
+    $("home-graded-title").textContent = T.graded(gradedPos.length);
+    const host = $("home-holdings");
+    host.replaceChildren();
+    for (const p of gradedPos.slice(0, 2)) host.appendChild(holdingCard(p));
+  }
+
+  /* ---------- HOLDINGS ---------- */
+
+  function matchesQuery(hh) {
+    if (!holdingsQuery) return true;
+    const q = holdingsQuery.toLowerCase();
+    return [hh.name, hh.setName, hh.number, hh.cert]
+      .filter(Boolean).some((s) => String(s).toLowerCase().includes(q));
+  }
+
+  function renderHoldings(pos) {
+    const host = $("holdings-body");
+    host.replaceChildren();
+
+    const all = pos.filter((p) => matchesQuery(p.h));
+    const gradedPos = all.filter((p) => p.h.grade !== "raw");
+    const rawPos = all.filter((p) => p.h.grade === "raw");
+
+    if (!Store.getAll().length) {
+      const c = h("div", "card t-text2 muted", "טרם בוצעה פעילות בתיק. ");
+      const a = h("a", "t-text2-m", "הוספת קלף ראשון");
+      a.href = "#add";
+      c.appendChild(a);
+      host.appendChild(c);
+      return;
+    }
+
+    const showGraded = holdingsTab !== "raw";
+    const showRaw = holdingsTab !== "graded";
+
+    if (showGraded) {
+      const head = h("div", "section-head");
+      head.style.marginTop = "0";
+      head.appendChild(h("h2", null, T.graded(gradedPos.length)));
+      const sort = h("button", "chip num", sortDesc ? T.sortDesc : T.sortAsc);
+      sort.type = "button";
+      sort.setAttribute("aria-label", "מיון לפי שווי");
+      sort.addEventListener("click", () => { sortDesc = !sortDesc; renderAll(); });
+      head.appendChild(sort);
+      host.appendChild(head);
+      for (const p of gradedPos) host.appendChild(holdingCard(p));
+    }
+    if (showRaw) {
+      const head2 = h("div", "section-head");
+      if (!showGraded) head2.style.marginTop = "0";
+      head2.appendChild(h("h2", null, T.singles(rawPos.length)));
+      host.appendChild(head2);
+      for (const p of rawPos) host.appendChild(holdingCard(p));
+    }
+  }
+
+  /* ---------- MARKET ---------- */
+
+  function renderMarket(pos) {
+    $("last-updated").textContent =
+      `${T.asOf} ${fmtTime(lastUpdatedAt ? new Date(lastUpdatedAt) : new Date())}`;
+
+    const movers = $("movers");
+    movers.replaceChildren();
+    const valid = pos
+      .filter((p) => p.h.cost != null && p.val && p.h.cost > 0)
+      .map((p) => ({ p, pct: ((p.val.each - p.h.cost) / p.h.cost) * 100 }));
+    if (!valid.length) {
+      movers.appendChild(h("div", "card mover-card t-text2 muted", T.notEnoughData));
+    } else {
+      const best = valid.reduce((a, b) => (b.pct > a.pct ? b : a));
+      const worst = valid.reduce((a, b) => (b.pct < a.pct ? b : a));
+      const make = (label, item) => {
+        const c = h("div", "card mover-card");
+        c.appendChild(h("div", "t-text4 muted", label));
+        c.appendChild(h("div", "t-text1-m mt8", item.p.h.name));
+        const row = h("div", "m-row");
+        row.appendChild(h("span", "t-text2 num", show(fmtUSD(item.p.val.each, false))));
+        const pill = h("span", "pill " + deltaClass(item.pct), pctAbs(item.pct));
+        row.appendChild(pill);
+        c.appendChild(row);
+        return c;
+      };
+      movers.appendChild(make(T.rising, best));
+      if (worst.p !== best.p) movers.appendChild(make(T.falling, worst));
+    }
+
+    const withCost = pos.filter((p) => p.h.cost != null);
+    const costTotal = withCost.reduce((s, p) => s + p.h.cost * p.h.qty, 0);
+    $("kpi-cost").textContent = withCost.length ? show(fmtUSD(costTotal, false)) : "— —";
+
+    const b = budget();
+    $("budget-value").textContent = b ? show(fmtUSD(b, false)) : "";
+    $("budget-set").hidden = !!b;
+    $("budget-track").hidden = !b;
+    $("budget-note").hidden = !b;
+    if (b) {
+      const spent = monthSpend();
+      $("budget-bar").style.width = Math.min(100, (spent / b) * 100) + "%";
+      $("budget-note").textContent = T.usedOf(show(fmtUSD(spent, false)), show(fmtUSD(b, false)));
+    }
+  }
+
+  /* ---------- CARD DETAIL ---------- */
+
+  const RANGES = [["1ח", 30], ["3ח", 90], ["שנה", 365], ["הכול", null]];
+
+  function renderCardDetail() {
+    const hh = Store.getAll().find((x) => x.uid === currentUid);
+    if (!hh) { location.hash = "#holdings"; return; }
+    const p = { h: hh, val: valueEach(hh) };
+    p.total = p.val ? p.val.each * hh.qty : 0;
+
+    $("cd-name").textContent = hh.name;
+    $("cd-sub").textContent = [hh.setName, hh.number, cards.get(hh.cardId)?.rarity]
+      .filter(Boolean).join(" · ");
+
+    const body = $("cd-body");
+    body.replaceChildren();
+
+    /* value card */
+    const vc = h("section", "card");
+    const head = h("div", "value-head");
+    const txt = h("div", "grow");
+    const lbl = h("div");
+    lbl.style.display = "flex"; lbl.style.alignItems = "center"; lbl.style.gap = "8px";
+    lbl.appendChild(h("span", "t-text2 muted", T.holdingValue));
+    lbl.appendChild(h("span", "tag " + (hh.grade === "raw" ? "tag--raw" : "tag--psa"), gradeLabel(hh.grade)));
+    txt.appendChild(lbl);
+    const vl = h("div", "value-line");
+    vl.appendChild(h("span", "t-value-lg num", p.val ? show(fmtUSD(p.total, false)) : "— —"));
+    vl.appendChild(h("span", "t-text2 muted", `· ${hh.qty} ${T.units}`));
+    txt.appendChild(vl);
+    const time = fmtTime(lastUpdatedAt ? new Date(lastUpdatedAt) : new Date());
+    txt.appendChild(h("div", "t-text4 faint", p.val
+      ? `${T.asOf} ${time} · ${sourceLabel(p.val.src, hh.grade !== "raw" ? hh.grade : null)}`
+      : T.unavailable));
+    const chip = h("span", "chip num", fmtDateChip(new Date()));
+    chip.style.marginTop = "10px";
+    txt.appendChild(chip);
+    head.appendChild(txt);
+    head.appendChild(thumbEl(hh.cardId, null, "detail-figure"));
+    vc.appendChild(head);
+
+    const split = h("div", "change-split divider mt14");
+    split.style.paddingTop = "14px";
+    const daily = p.val ? dailyDelta(p.total, (s) => s.byUid?.[hh.uid]) : undefined;
+    split.appendChild(changeBlock(T.changeDay, daily ?? null));
+    split.appendChild(h("div", "vsep"));
+    const buyDelta = (hh.cost != null && p.val)
+      ? { amt: (p.val.each - hh.cost) * hh.qty, pct: hh.cost ? ((p.val.each - hh.cost) / hh.cost) * 100 : 0 }
+      : undefined;
+    split.appendChild(changeBlock(T.changeBuy, buyDelta));
+    vc.appendChild(split);
+
+    /* inline manual-value editor, opened by the header pencil */
+    const edit = h("div", "inline-edit");
+    edit.hidden = true;
+    edit.id = "cd-edit-row";
+    const wrap = h("div", "input-wrap");
+    const inp = document.createElement("input");
+    inp.type = "number"; inp.step = "any"; inp.min = "0";
+    inp.id = "cd-value-input";
+    inp.setAttribute("aria-label", T.manualValueLabel);
+    inp.placeholder = T.manualValueLabel;
+    if (hh.value != null) inp.value = hh.value;
+    wrap.appendChild(inp);
+    edit.appendChild(wrap);
+    const saveB = h("button", "btn-outline", T.save);
+    saveB.type = "button";
+    saveB.addEventListener("click", () => {
+      const v = parseFloat(inp.value);
+      Store.setValueOverride(hh.uid, Number.isFinite(v) && v > 0 ? v : null);
+      renderAll();
+    });
+    edit.appendChild(saveB);
+    const cancelB = h("button", "text-btn", T.cancel);
+    cancelB.type = "button";
+    cancelB.addEventListener("click", () => { edit.hidden = true; });
+    edit.appendChild(cancelB);
+    vc.appendChild(edit);
+    body.appendChild(vc);
+
+    /* trend card */
+    const tc = h("section", "card mt12");
+    const th = h("div");
+    th.style.display = "flex"; th.style.alignItems = "center"; th.style.justifyContent = "space-between";
+    th.appendChild(h("span", "t-text2-m", T.trend));
+    const pills = h("div");
+    pills.style.display = "flex"; pills.style.gap = "2px";
+    for (const [label] of RANGES) {
+      const b = h("button", "range-pill", label);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(label === cdRange));
+      b.addEventListener("click", () => { cdRange = label; renderCardDetail(); });
+      pills.appendChild(b);
+    }
+    th.appendChild(pills);
+    tc.appendChild(th);
+    const chartHost = h("div", "trend-host mt10");
+    tc.appendChild(chartHost);
+    const days = (RANGES.find((r) => r[0] === cdRange) || [null, null])[1];
+    const cutoff = days ? Date.now() - days * 864e5 : 0;
+    const points = Store.getSnapshots()
+      .filter((s) => s.t >= cutoff && s.byUid && s.byUid[hh.uid] != null)
+      .map((s) => ({ t: s.t, v: s.byUid[hh.uid] }));
+    if (points.length >= 2 && !hideValues()) {
+      Charts.renderLineChart(chartHost, points, (v, compact) => fmtUSD(v, compact),
+        { compact: true, label: `${T.trend} · ${hh.name}` });
+    } else {
+      chartHost.appendChild(h("div", "t-text4 faint", T.trendNote));
+    }
+    body.appendChild(tc);
+
+    /* details card */
+    const dc = h("section", "list-card kv-rows mt12");
+    const kv = (k, vNode) => {
+      const row = h("div", "kv-row");
+      row.appendChild(h("span", "k", k));
+      row.appendChild(vNode);
+      dc.appendChild(row);
+    };
+    kv(T.costPerUnit, h("span", "v", hh.cost != null ? show(fmtUSD(hh.cost, false)) : "— —"));
+    const raw = cards.get(hh.cardId)?.price;
+    kv(T.rawMarket, h("span", "v", raw ? show(fmtMoney(raw.value, raw.currency)) : "— —"));
+    if (hh.cert) {
+      const a = h("a", "v num", hh.cert);
+      a.href = "https://www.psacard.com/cert/" + encodeURIComponent(hh.cert);
+      a.target = "_blank"; a.rel = "noopener";
+      kv(T.psaCert, a);
+    } else {
+      kv(T.psaCert, h("span", "v faint", "—"));
+    }
+    body.appendChild(dc);
+
+    const rm = h("button", "danger-link", T.removeHolding);
+    rm.type = "button";
+    rm.addEventListener("click", () => {
+      if (!window.confirm(`להסיר את ${hh.name} (${gradeLabel(hh.grade)}) מהתיק?`)) return;
+      Store.remove(hh.uid);
+      location.hash = "#holdings";
+      renderAll();
+    });
+    body.appendChild(rm);
+  }
+
+  /* ---------- SETTINGS ---------- */
+
+  function renderSettings() {
+    const keySet = API.hasGradedKey();
+    const ebayState = $("source-ebay-state");
+    const estState = $("source-est-state");
+    ebayState.replaceChildren();
+    if (keySet) {
+      ebayState.appendChild(h("span", "status-pill", T.active));
+      estState.className = "t-text4 faint";
+      estState.textContent = T.backup;
+    } else {
+      ebayState.appendChild(h("span", "t-text4 faint", T.needsKey));
+      estState.replaceChildren(h("span", "status-pill", T.active));
+      estState.className = "";
+    }
+
+    const keyInput = $("api-key-input");
+    const storedKey = lsGet("pocketfolio.pptApiKey") || "";
+    keyInput.placeholder = storedKey
+      ? "מוגדר · ••••" + storedKey.slice(-4)
+      : "הדבקת מפתח מ-pokemonpricetracker.com";
+    $("proxy-input").value = lsGet("pocketfolio.pptProxy") || "";
+
+    const n = (typeof API.gradedCallsToday === "function") ? API.gradedCallsToday() : 0;
+    $("quota-label").textContent = T.queriesOf(n, 100);
+    $("quota-bar").style.width = Math.min(100, n) + "%";
+
+    $("toggle-refresh").setAttribute("aria-pressed", String(refreshOnOpen()));
+    $("toggle-hide").setAttribute("aria-pressed", String(hideValues()));
+  }
+
+  /* ---------- render everything ---------- */
+
+  function renderAll() {
+    const pos = positions();
+    renderHome(pos);
+    renderHoldings(pos);
+    renderMarket(pos);
+    renderSettings();
+    if (activeView() === "card" && currentUid) renderCardDetail();
+  }
+
+  /* ---------- router ---------- */
+
+  function activeView() {
+    const raw = (location.hash || "#home").slice(1);
+    if (raw.startsWith("card/")) return "card";
+    return ["home", "holdings", "market", "settings", "add", "card"].includes(raw) ? raw : "home";
+  }
+
+  function route() {
+    const raw = (location.hash || "#home").slice(1);
+    let view = activeView();
+    if (view === "card") {
+      currentUid = decodeURIComponent(raw.slice(5));
+      if (!Store.getAll().some((x) => x.uid === currentUid)) view = "holdings";
+    }
+    document.querySelectorAll("[data-view]").forEach((s) => {
+      s.classList.toggle("active", s.dataset.view === view);
+    });
+    document.querySelectorAll(".bottom-nav a").forEach((a) => {
+      const on = a.dataset.nav === view ||
+        (a.dataset.nav === "holdings" && view === "card") ||
+        (a.dataset.nav === "home" && view === "add");
+      if (on) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    if (view === "card") renderCardDetail();
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- card search (add view) ---------- */
 
   let searchTimer = null;
   let searchSeq = 0;
 
-  function clearSelection() {
-    selectedCard = null;
-    els.addBtn.disabled = true;
-  }
-
-  function closeResults() {
-    els.results.hidden = true;
-    els.results.replaceChildren();
-  }
-
-  function selectCard(card) {
-    selectedCard = card;
-    els.search.value = `${card.name} · ${card.setName || ""} #${card.number || "?"}`;
-    closeResults();
-    els.addBtn.disabled = false;
-    els.qty.focus();
-  }
-
-  function buildResultItem(c, onClick) {
-    const btn = document.createElement("button");
+  function resultCard(c, onClick, opts) {
+    const btn = h("button", "result-card" + ((opts && opts.selected) ? " selected" : ""));
     btn.type = "button";
-    btn.className = "search-item";
     if (c.image) {
-      const img = document.createElement("img");
-      img.className = "card-thumb";
-      img.src = c.image;
-      img.alt = "";
-      img.loading = "lazy";
+      const img = h("img", "thumb");
+      img.src = c.image; img.alt = ""; img.loading = "lazy";
       btn.appendChild(img);
+    } else {
+      btn.appendChild(h("span", "thumb"));
     }
-    const col = document.createElement("span");
-    col.className = "search-col";
-    const name = document.createElement("span");
-    name.className = "name";
-    name.textContent = c.name;
-    const sub = document.createElement("span");
-    sub.className = "sub";
-    sub.textContent = [c.setName, c.number ? "#" + c.number : null, c.rarity]
-      .filter(Boolean).join(" · ");
-    col.append(name, sub);
+    const col = h("span", "grow");
+    col.appendChild(h("span", "rc-name", c.name));
+    const bits = [c.setName, c.number, c.rarity].filter(Boolean);
+    if (c.price) bits.push(`${T.rawMarketShort} ${fmtMoney(c.price.value, c.price.currency)}`);
+    col.appendChild(h("span", "rc-sub num", bits.join(" · ")));
     btn.appendChild(col);
-    if (c.price) {
-      const price = document.createElement("span");
-      price.className = "rank";
-      price.textContent = fmtMoney(c.price.value, c.price.currency);
-      btn.appendChild(price);
+    if (opts && opts.selected) {
+      const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      check.setAttribute("viewBox", "0 0 24 24");
+      check.setAttribute("width", "20"); check.setAttribute("height", "20");
+      check.setAttribute("aria-hidden", "true");
+      check.innerHTML = '<path d="M20 6L9 17l-5-5" fill="none" stroke="var(--primary)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+      btn.appendChild(check);
     }
     btn.addEventListener("click", onClick);
     return btn;
   }
 
-  function renderResults(list) {
-    els.results.replaceChildren();
-    if (!list.length) {
-      const empty = document.createElement("div");
-      empty.className = "search-empty";
-      empty.textContent = "No cards found";
-      els.results.appendChild(empty);
-    }
-    for (const c of list) {
-      els.results.appendChild(buildResultItem(c, () => selectCard(c)));
-    }
-    els.results.hidden = false;
+  function closeResults() {
+    const r = $("search-results");
+    r.hidden = true;
+    r.replaceChildren();
   }
 
   function resultsMessage(text) {
-    const msg = document.createElement("div");
-    msg.className = "search-empty";
-    msg.textContent = text;
-    els.results.replaceChildren(msg);
-    els.results.hidden = false;
+    const r = $("search-results");
+    r.replaceChildren(h("div", "result-note", text));
+    r.hidden = false;
   }
 
-  /* Selecting a printing for a slab also pre-fills the grade and cert. */
+  function updateAddButton() {
+    $("add-btn").disabled = !selectedCard;
+  }
+
+  function updateEstimate() {
+    const card = $("est-card");
+    if (!selectedCard || !selectedCard.price) { card.hidden = true; return; }
+    const raw = selectedCard.price;
+    let each, note;
+    if (gradeValue === "raw") {
+      each = raw.value;
+      note = T.srcRaw;
+    } else {
+      const mult = GRADE_MULT[gradeValue] ?? 1;
+      each = raw.value * mult;
+      note = `${T.srcEst} · ×${mult} לדירוג ${gradeValue}`;
+    }
+    $("est-value").textContent = fmtMoney(each * qtyVal, raw.currency);
+    $("est-note").textContent = note;
+    card.hidden = false;
+  }
+
+  function selectCard(card) {
+    selectedCard = card;
+    $("card-search").value = card.name;
+    closeResults();
+    const sel = $("selected-card");
+    sel.replaceChildren(resultCard(card, () => { $("card-search").focus(); }, { selected: true }));
+    updateAddButton();
+    updateEstimate();
+  }
+
+  function setGrade(g) {
+    gradeValue = g;
+    document.querySelectorAll("#grade-pills .grade-pill").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.grade === g));
+    });
+    updateEstimate();
+  }
+
   function selectCertCard(card, info) {
     selectCard(card);
-    if (info.grade && [...els.grade.options].some((o) => o.value === info.grade)) {
-      els.grade.value = info.grade;
+    if (info.grade && GRADE_MULT[info.grade] !== undefined) {
+      setGrade(GRADE_MULT[info.grade] !== undefined && ["10", "9", "8", "7"].includes(info.grade) ? info.grade : gradeValue);
     }
-    els.cert.value = info.cert;
-  }
-
-  function certSummary(info) {
-    return [info.year, info.brand, info.subject, info.cardNumber ? "#" + info.cardNumber : null]
-      .filter(Boolean).join(" · ");
+    $("cert-input").value = info.cert;
   }
 
   async function certFlow(cert, seq) {
-    resultsMessage(`Looking up PSA cert #${cert}…`);
+    resultsMessage(T.certLooking(cert));
     let info;
     try {
       info = await API.lookupCert(cert);
     } catch {
       if (seq !== searchSeq) return;
-      els.results.replaceChildren();
-      const msg = document.createElement("div");
-      msg.className = "search-empty";
-      msg.appendChild(document.createTextNode(
-        "Couldn't read PSA's cert page from here (PSA blocks most automated lookups). "));
-      const a = document.createElement("a");
+      const r = $("search-results");
+      r.replaceChildren();
+      const note = h("div", "result-note");
+      note.appendChild(document.createTextNode(T.certFail + " "));
+      const a = h("a", null, T.certOpen(cert));
       a.href = "https://www.psacard.com/cert/" + encodeURIComponent(cert);
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.textContent = "Open cert #" + cert + " on psacard.com";
-      msg.appendChild(a);
-      msg.appendChild(document.createTextNode(
-        " — then search the card by name and paste the cert into the cert field."));
-      els.results.replaceChildren(msg);
-      els.results.hidden = false;
+      a.target = "_blank"; a.rel = "noopener";
+      note.appendChild(a);
+      r.appendChild(note);
+      r.hidden = false;
       return;
     }
     if (seq !== searchSeq) return;
 
-    els.results.replaceChildren();
+    const r = $("search-results");
+    r.replaceChildren();
+    const headB = h("div", "cert-head-block");
+    headB.appendChild(h("div", "name num",
+      `PSA ‎#${info.cert}` + (info.gradeText ? ` · ${info.gradeText}` : "")));
+    const sub = [info.year, info.brand, info.subject, info.cardNumber ? "#" + info.cardNumber : null]
+      .filter(Boolean).join(" · ");
+    if (sub) headB.appendChild(h("div", "sub num", sub));
+    r.appendChild(headB);
+    r.hidden = false;
 
-    // slab summary header
-    const head = document.createElement("div");
-    head.className = "cert-head";
-    const title = document.createElement("span");
-    title.className = "name";
-    title.textContent = `PSA #${info.cert}` + (info.gradeText ? ` · ${info.gradeText}` : "");
-    const sub = document.createElement("span");
-    sub.className = "sub";
-    sub.textContent = certSummary(info) || "slab details parsed from psacard.com";
-    head.append(title, sub);
-    els.results.appendChild(head);
+    const loading = h("div", "result-note", T.certMatch);
+    r.appendChild(loading);
 
-    // manual add (always available)
     const manualCard = {
       provider: "manual",
       id: "psa-" + info.cert,
-      name: API.certCardQuery(info) || "PSA slab #" + info.cert,
+      name: API.certCardQuery(info) || "PSA ‎#" + info.cert,
       setName: [info.year, info.brand].filter(Boolean).join(" ") || null,
       number: info.cardNumber || null,
-      rarity: null,
-      image: null,
-      price: null,
+      rarity: null, image: null, price: null,
     };
 
-    const loading = document.createElement("div");
-    loading.className = "search-empty";
-    loading.textContent = "Matching this printing in the price catalogs…";
-    els.results.appendChild(loading);
-    els.results.hidden = false;
-
-    // match against the card catalogs, restricted to the slab's card number —
-    // a "Charmander" from a different set is noise, so wrong numbers never show
     let matches = [];
     const q = API.certCardQuery(info);
     if (q) {
@@ -270,101 +784,90 @@
     if (seq !== searchSeq) return;
     loading.remove();
 
-    const addManual = (label) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "search-item" + (matches.length ? "" : " cert-primary");
-      const col = document.createElement("span");
-      col.className = "search-col";
-      const nm = document.createElement("span");
-      nm.className = "name";
-      nm.textContent = label;
-      const msub = document.createElement("span");
-      msub.className = "sub";
-      msub.textContent = "grade and cert filled in — set its value with the ✎ button";
-      col.append(nm, msub);
-      btn.appendChild(col);
-      btn.addEventListener("click", () => selectCertCard(manualCard, info));
-      return btn;
-    };
-
     if (matches.length) {
-      const note = document.createElement("div");
-      note.className = "search-empty";
-      note.textContent = matches.length === 1
-        ? "Tap to add it with live prices:"
-        : "Tap the exact printing to add it with live prices:";
-      els.results.appendChild(note);
+      r.appendChild(h("div", "result-note", T.certMatch));
       for (const c of matches.slice(0, 6)) {
-        els.results.appendChild(buildResultItem(c, () => selectCertCard(c, info)));
+        r.appendChild(resultCard(c, () => selectCertCard(c, info)));
       }
-      els.results.appendChild(addManual("Not one of these — add the slab anyway"));
+      const m = resultCard(manualCard, () => selectCertCard(manualCard, info));
+      m.querySelector(".rc-name").textContent = T.certNotThese;
+      m.querySelector(".rc-sub").textContent = T.certManualSub;
+      r.appendChild(m);
     } else {
-      const note = document.createElement("div");
-      note.className = "search-empty";
-      note.textContent = q
-        ? `No catalog printing matches ${info.subject || "this card"}${info.cardNumber ? " #" + info.cardNumber : ""}.`
-        : "";
-      if (note.textContent) els.results.appendChild(note);
-      els.results.appendChild(addManual("➕ Add this slab to your collection"));
+      if (q) r.appendChild(h("div", "result-note",
+        T.certNoMatch(`${info.subject || ""}${info.cardNumber ? " #" + info.cardNumber : ""}`)));
+      const m = resultCard(manualCard, () => selectCertCard(manualCard, info));
+      m.querySelector(".rc-name").textContent = T.certAddAnyway;
+      m.querySelector(".rc-sub").textContent = T.certManualSub;
+      r.appendChild(m);
     }
-    els.results.hidden = false;
   }
 
-  els.search.addEventListener("input", () => {
-    clearSelection();
-    const q = els.search.value.trim();
+  $("card-search").addEventListener("input", () => {
+    selectedCard = null;
+    $("selected-card").replaceChildren();
+    updateAddButton();
+    updateEstimate();
+    const q = $("card-search").value.trim();
     clearTimeout(searchTimer);
-    if (q.length < 2) {
-      closeResults();
-      return;
-    }
+    if (q.length < 2) { closeResults(); return; }
     searchTimer = setTimeout(async () => {
       const seq = ++searchSeq;
-      if (/^\d{6,10}$/.test(q)) {
-        certFlow(q, seq);
-        return;
-      }
+      if (/^\d{6,10}$/.test(q)) { certFlow(q, seq); return; }
       try {
         const list = await API.searchCards(q);
-        if (seq === searchSeq) renderResults(list);
+        if (seq !== searchSeq) return;
+        const r = $("search-results");
+        r.replaceChildren();
+        if (!list.length) r.appendChild(h("div", "result-note", T.noCards));
+        for (const c of list) r.appendChild(resultCard(c, () => selectCard(c)));
+        r.hidden = false;
       } catch (err) {
         if (seq === searchSeq) {
-          resultsMessage(err.rateLimited
-            ? "Rate limited — wait a moment and type again"
-            : "Both card services are unreachable right now — try again in a minute");
+          resultsMessage(err.rateLimited ? T.searchLimited : T.searchFail);
         }
       }
     }, 350);
-  });
-
-  document.addEventListener("click", (ev) => {
-    if (!els.results.hidden && !els.results.contains(ev.target) && ev.target !== els.search) {
-      closeResults();
-    }
   });
 
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape") closeResults();
   });
 
-  /* ---------- add position ---------- */
+  /* ---------- add form ---------- */
+
+  const GRADES = [["10", "PSA 10"], ["9", "PSA 9"], ["8", "PSA 8"], ["7", "PSA 7"], ["raw", "גולמי"]];
+
+  function buildGradePills() {
+    const host = $("grade-pills");
+    for (const [val, label] of GRADES) {
+      const b = h("button", "grade-pill", label);
+      b.type = "button";
+      b.dataset.grade = val;
+      b.setAttribute("aria-pressed", String(val === gradeValue));
+      b.addEventListener("click", () => setGrade(val));
+      host.appendChild(b);
+    }
+  }
+
+  function setQty(n) {
+    qtyVal = Math.min(99, Math.max(1, n));
+    $("qty-input").value = qtyVal;
+    updateEstimate();
+  }
+
+  $("qty-dec").addEventListener("click", () => setQty(qtyVal - 1));
+  $("qty-inc").addEventListener("click", () => setQty(qtyVal + 1));
 
   function numOrNull(input) {
     const v = parseFloat(input.value);
     return Number.isFinite(v) && v > 0 ? v : null;
   }
 
-  els.form.addEventListener("submit", async (ev) => {
+  $("add-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    if (!selectedCard) {
-      els.hint.textContent = "Pick a card from the search results first.";
-      els.hint.hidden = false;
-      return;
-    }
-    const qty = Math.floor(parseFloat(els.qty.value));
-    if (!(qty > 0)) return;
-
+    if (!selectedCard) return;
+    const cost = numOrNull($("cost-input"));
     Store.upsert({
       cardId: selectedCard.id,
       provider: selectedCard.provider,
@@ -372,23 +875,31 @@
       setName: selectedCard.setName,
       number: selectedCard.number,
       image: selectedCard.image,
-      grade: els.grade.value,
-      qty,
-      cost: numOrNull(els.cost),
-      value: null, // value comes from the API (eBay median / estimate); ✎ overrides later
-      cert: els.cert.value.trim().replace(/[^\w-]/g, "") || null,
+      grade: gradeValue,
+      qty: qtyVal,
+      cost,
+      value: null, // the API fills the value (eBay median / estimate); ✎ overrides later
+      cert: $("cert-input").value.trim().replace(/[^\w-]/g, "") || null,
     });
-    cards.set(selectedCard.id, selectedCard); // render immediately with what we have
+    cards.set(selectedCard.id, selectedCard);
+    if (cost) lsSet(monthKey(), String(monthSpend() + cost * qtyVal));
 
-    els.form.reset();
-    els.qty.value = "1";
-    els.hint.hidden = true;
-    clearSelection();
+    selectedCard = null;
+    $("selected-card").replaceChildren();
+    $("card-search").value = "";
+    $("cost-input").value = "";
+    $("cert-input").value = "";
+    setQty(1);
+    updateAddButton();
+    $("est-card").hidden = true;
+    location.hash = "#home";
     await refresh();
   });
 
-  els.demoBtn.addEventListener("click", async () => {
-    els.demoBtn.disabled = true;
+  /* ---------- demo ---------- */
+
+  $("demo-btn").addEventListener("click", async () => {
+    $("demo-btn").disabled = true;
     const demo = [
       { id: "base1-4", grade: "9", qty: 1 },
       { id: "base1-2", grade: "8", qty: 1 },
@@ -399,71 +910,51 @@
       for (const d of demo) {
         const card = await API.getCard("ptcgio", d.id);
         if (!card) continue;
-        // Seed cost at the estimated value so P/L starts at zero and moves live.
         const est = card.price ? card.price.value * (GRADE_MULT[d.grade] ?? 1) : null;
         Store.upsert({
-          cardId: card.id,
-          provider: card.provider,
-          name: card.name,
-          setName: card.setName,
-          number: card.number,
-          image: card.image,
-          grade: d.grade,
-          qty: d.qty,
+          cardId: card.id, provider: card.provider, name: card.name,
+          setName: card.setName, number: card.number, image: card.image,
+          grade: d.grade, qty: d.qty,
           cost: est != null ? Math.round(est * 100) / 100 : null,
-          value: null,
-          cert: null,
+          value: null, cert: null,
         });
         cards.set(card.id, card);
         added++;
       }
-      if (!added) throw new Error("Could not load demo cards — the card services may be down.");
+      if (!added) throw new Error("שירותי הקלפים אינם זמינים כרגע.");
       await refresh();
     } catch (err) {
-      showBanner(err.message || "Could not load demo data.");
+      showBanner(err.message || "טעינת תיק ההדגמה נכשלה.");
+      renderAll();
     } finally {
-      els.demoBtn.disabled = false;
+      $("demo-btn").disabled = false;
     }
   });
 
-  /* ---------- refresh + render ---------- */
+  /* ---------- refresh (data pipeline unchanged) ---------- */
 
   async function refresh() {
     const holdings = Store.getAll();
-
-    if (!holdings.length) {
-      els.dashboard.hidden = true;
-      els.empty.hidden = false;
-      els.lastUpdated.textContent = "";
-      return;
-    }
-    els.empty.hidden = true;
-
-    // Hold the previous render at reduced opacity while data reloads.
-    els.trendChart.classList.add("stale");
-    els.allocChart.classList.add("stale");
+    if (!holdings.length) { renderAll(); return; }
 
     try {
       const seen = new Set();
       const refs = [];
-      for (const h of holdings) {
-        if (seen.has(h.cardId) || h.provider === "manual") continue;
-        seen.add(h.cardId);
-        refs.push({ provider: h.provider || "ptcgio", id: h.cardId });
+      for (const hh of holdings) {
+        if (seen.has(hh.cardId) || hh.provider === "manual") continue;
+        seen.add(hh.cardId);
+        refs.push({ provider: hh.provider || "ptcgio", id: hh.cardId });
       }
       const fresh = refs.length ? await API.getCards(refs) : [];
       for (const c of fresh) cards.set(c.id, c);
 
       if (fresh.length || !refs.length) {
         hideBanner();
-        els.lastUpdated.textContent = "Updated " + new Intl.DateTimeFormat(undefined, {
-          hour: "numeric", minute: "2-digit",
-        }).format(new Date());
+        lastUpdatedAt = Date.now();
       } else {
-        showBanner("Could not reach the card price services — showing the last loaded prices. It retries automatically.");
+        showBanner("מוצגים הערכים האחרונים שנשמרו.");
       }
 
-      // eBay sold prices per grade (only with the free PokemonPriceTracker key)
       if (API.hasGradedKey()) {
         let keyRejected = false;
         let attempted = 0;
@@ -476,385 +967,181 @@
             if (g) graded.set(r.id, g);
           } catch (err) {
             if (err.unauthorized) keyRejected = true;
-            /* limit reached or endpoint change: estimates keep working */
           }
         }));
         const backoff = API.gradedBackoffUntil();
         if (keyRejected) {
-          showBanner("Your graded-prices API key was rejected — update it via the ⚙ button (pokemonpricetracker.com).");
+          showBanner("מפתח ה-API נדחה.");
         } else if (backoff && graded.size === 0) {
-          const until = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(backoff));
-          showBanner(`Graded-prices API limit reached — lookups paused until ${until} to save your daily credits. Cached and estimated values are shown meanwhile.`);
-        } else if (attempted > 0 && graded.size === 0) {
-          showBanner(API.hasGradedProxy()
-            ? "No eBay graded prices came back for any card — run ⚙ → “Test PSA prices API” to see why. Values fall back to estimates meanwhile."
-            : "The graded-prices API blocks browser calls — a free 5-minute proxy fixes it: run ⚙ → “Test PSA prices API” for the steps. Values fall back to estimates meanwhile.");
+          showBanner(`חריגה ממכסת ה-API — ניסיון נוסף ב-${fmtTime(new Date(backoff))}.`);
         }
       }
-    } catch (err) {
-      showBanner(
-        (err.rateLimited
-          ? "Card API rate limit reached — showing the last loaded prices. "
-          : "Could not reach the card price services — showing the last loaded prices. ") +
-        "It retries automatically."
-      );
-    } finally {
-      els.trendChart.classList.remove("stale");
-      els.allocChart.classList.remove("stale");
+    } catch {
+      showBanner("מוצגים הערכים האחרונים שנשמרו.");
     }
 
-    render(holdings);
-  }
-
-  function render(holdings) {
-    els.dashboard.hidden = false;
-
-    const positions = holdings
-      .map((h) => {
-        const v = valueEach(h);
-        return { h, val: v, total: v ? v.each * h.qty : 0 };
-      })
-      .sort((a, b) => b.total - a.total);
-
-    /* --- KPIs --- */
-    const valued = positions.filter((p) => p.val);
+    /* record today's snapshot for the value-over-time data */
+    const pos = positions();
+    const valued = pos.filter((p) => p.val);
     const total = valued.reduce((s, p) => s + p.total, 0);
-    const estCount = valued.filter((p) => p.val.src === "est").length;
-    const ebayCount = valued.filter((p) => p.val.src === "ebay").length;
-    const unvalued = positions.length - valued.length;
-
-    els.kpiTotal.textContent = fmtUSD(total, false);
-    els.kpiTotalNote.textContent =
-      unvalued > 0 ? `${unvalued} position${unvalued > 1 ? "s" : ""} missing a value — use ✎` :
-      estCount > 0 ? `${estCount} of ${positions.length} estimated` + (API.hasGradedKey() ? "" : " — add an API key (⚙) for real PSA sale prices") :
-      ebayCount > 0 ? `${ebayCount} of ${positions.length} from real eBay PSA sales` :
-      "all values set manually";
-
-    const withCost = positions.filter((p) => p.h.cost != null);
-    const costTotal = withCost.reduce((s, p) => s + p.h.cost * p.h.qty, 0);
-    els.kpiCost.textContent = withCost.length ? fmtUSD(costTotal, false) : "–";
-    els.kpiCostNote.textContent =
-      withCost.length && withCost.length < positions.length
-        ? `${withCost.length} of ${positions.length} positions have a paid price`
-        : withCost.length ? "" : "add what you paid to track P/L";
-
-    const plPositions = positions.filter((p) => p.h.cost != null && p.val);
-    if (plPositions.length) {
-      const plCost = plPositions.reduce((s, p) => s + p.h.cost * p.h.qty, 0);
-      const plNow = plPositions.reduce((s, p) => s + p.total, 0);
-      const pl = plNow - plCost;
-      els.kpiPl.textContent = fmtSigned(pl);
-      els.kpiPl.className = "stat-value " + deltaClass(pl);
-      els.kpiPlPct.textContent = fmtPct(plCost ? (pl / plCost) * 100 : 0) + " vs what you paid";
-      els.kpiPlPct.className = "stat-delta " + deltaClass(pl);
-    } else {
-      els.kpiPl.textContent = "–";
-      els.kpiPl.className = "stat-value";
-      els.kpiPlPct.textContent = "add paid prices to track P/L";
-      els.kpiPlPct.className = "stat-delta muted";
-    }
-
-    els.kpiCount.textContent = String(holdings.reduce((s, h) => s + h.qty, 0));
-    els.kpiTop.textContent = positions.length && positions[0].val
-      ? `top: ${positions[0].h.name} (${gradeLabel(positions[0].h.grade)})`
-      : "";
-
-    /* --- value-over-time chart (daily snapshots, grows with use) --- */
     if (total > 0) {
       const byUid = {};
       for (const p of valued) byUid[p.h.uid] = p.total;
       Store.recordSnapshot(Math.round(total * 100) / 100, byUid);
     }
-    const snaps = Store.getSnapshots();
-    if (snaps.length >= 2) {
-      els.trendNote.hidden = true;
-      Charts.renderLineChart(
-        els.trendChart,
-        snaps.map((s) => ({ t: s.t, v: s.total })),
-        (v, compact) => fmtUSD(v, compact)
-      );
-    } else {
-      els.trendChart.replaceChildren();
-      els.trendNote.textContent =
-        "First snapshot saved today — the chart appears once you've checked in on two different days. Prices refresh daily.";
-      els.trendNote.hidden = false;
-    }
-
-    /* --- allocation --- */
-    const slotted = positions.filter((p) => p.h.slot && p.val);
-    const otherValue = positions.filter((p) => !p.h.slot && p.val).reduce((s, p) => s + p.total, 0);
-    const allocItems = slotted.map((p) => ({
-      label: `${p.h.name} · ${gradeLabel(p.h.grade)}`,
-      value: p.total,
-      color: slotColor(p.h.slot),
-    }));
-    if (otherValue > 0) allocItems.push({ label: "Other", value: otherValue, color: "var(--other)" });
-    Charts.renderAllocationBar(els.allocChart, allocItems, total, (v) => fmtUSD(v, false));
-
-    /* --- collection table --- */
-    els.holdingsBody.replaceChildren();
-    for (const p of positions) {
-      const h = p.h;
-      const tr = document.createElement("tr");
-
-      const cardTd = document.createElement("td");
-      const cell = document.createElement("div");
-      cell.className = "asset-cell";
-      const dot = document.createElement("span");
-      dot.className = "dot";
-      dot.style.background = slotColor(h.slot);
-      cell.appendChild(dot);
-      const image = cards.get(h.cardId)?.image || h.image;
-      if (image) {
-        const img = document.createElement("img");
-        img.className = "card-thumb";
-        img.src = image;
-        img.alt = "";
-        img.loading = "lazy";
-        cell.appendChild(img);
-      }
-      const col = document.createElement("span");
-      col.className = "search-col";
-      const nm = document.createElement("span");
-      nm.className = "name";
-      nm.textContent = h.name;
-      const sub = document.createElement("span");
-      sub.className = "sub";
-      sub.textContent = cardSub(h);
-      col.append(nm, sub);
-      cell.appendChild(col);
-      cardTd.appendChild(cell);
-
-      const gradeTd = document.createElement("td");
-      const badge = document.createElement("span");
-      badge.className = "grade-badge" + (h.grade === "10" ? " grade-gem" : "");
-      badge.textContent = gradeLabel(h.grade);
-      gradeTd.appendChild(badge);
-
-      const rawTd = document.createElement("td");
-      rawTd.className = "num";
-      const price = cards.get(h.cardId)?.price;
-      if (price) {
-        rawTd.textContent = fmtMoney(price.value, price.currency);
-        const rsub = document.createElement("span");
-        rsub.className = "sub";
-        rsub.textContent = prettyVariant(price.variant);
-        rawTd.appendChild(rsub);
-      } else {
-        rawTd.textContent = "–";
-      }
-
-      const valTd = document.createElement("td");
-      valTd.className = "num";
-      const valWrap = document.createElement("span");
-      valWrap.className = "val-wrap";
-      const valText = document.createElement("span");
-      if (p.val) {
-        valText.textContent = (p.val.src === "est" ? "~" : "") + fmtUSD(p.val.each, false);
-        const vsub = document.createElement("span");
-        vsub.className = "sub";
-        vsub.textContent =
-          p.val.src === "ebay" ? "eBay sales median" + (p.val.count ? ` · ${p.val.count} sales` : "") :
-          p.val.src === "est" ? `est. ×${GRADE_MULT[h.grade] ?? 1} of raw` :
-          p.val.src === "raw" ? "raw market" :
-          "manual";
-        valText.appendChild(vsub);
-      } else {
-        valText.textContent = "–";
-      }
-      const editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.className = "row-edit";
-      editBtn.title = "Set the current per-card value";
-      editBtn.setAttribute("aria-label", "Set value for " + h.name);
-      editBtn.textContent = "✎";
-      editBtn.addEventListener("click", () => {
-        const cur = h.value != null ? String(h.value) : "";
-        const input = window.prompt(
-          `Current value per card for ${h.name} (${gradeLabel(h.grade)}), in USD.\nLeave empty to go back to the automatic estimate.`,
-          cur
-        );
-        if (input === null) return;
-        const v = parseFloat(input);
-        Store.setValueOverride(h.uid, Number.isFinite(v) && v > 0 ? v : null);
-        render(Store.getAll());
-      });
-      valWrap.append(valText, editBtn);
-      valTd.appendChild(valWrap);
-
-      const qtyTd = document.createElement("td");
-      qtyTd.className = "num";
-      qtyTd.textContent = String(h.qty);
-
-      const costTd = document.createElement("td");
-      costTd.className = "num";
-      costTd.textContent = h.cost != null ? fmtUSD(h.cost, false) : "–";
-
-      const plTd = document.createElement("td");
-      plTd.className = "num";
-      if (h.cost != null && p.val) {
-        const pl = (p.val.each - h.cost) * h.qty;
-        plTd.textContent = fmtSigned(pl);
-        plTd.classList.add(deltaClass(pl));
-        const psub = document.createElement("span");
-        psub.className = "sub";
-        psub.textContent = fmtPct(h.cost ? ((p.val.each - h.cost) / h.cost) * 100 : 0);
-        plTd.appendChild(psub);
-      } else {
-        plTd.textContent = "–";
-      }
-
-      const certTd = document.createElement("td");
-      if (h.cert) {
-        const a = document.createElement("a");
-        a.href = "https://www.psacard.com/cert/" + encodeURIComponent(h.cert);
-        a.target = "_blank";
-        a.rel = "noopener";
-        a.textContent = h.cert;
-        certTd.appendChild(a);
-      } else {
-        certTd.textContent = "–";
-        certTd.className = "muted";
-      }
-
-      const actTd = document.createElement("td");
-      const rm = document.createElement("button");
-      rm.type = "button";
-      rm.className = "row-remove";
-      rm.title = "Remove " + h.name;
-      rm.setAttribute("aria-label", "Remove " + h.name);
-      rm.textContent = "×";
-      rm.addEventListener("click", () => {
-        Store.remove(h.uid);
-        refresh();
-      });
-      actTd.appendChild(rm);
-
-      tr.append(cardTd, gradeTd, rawTd, valTd, qtyTd, costTd, plTd, certTd, actTd);
-      els.holdingsBody.appendChild(tr);
-    }
+    renderAll();
   }
 
-  els.refreshBtn.addEventListener("click", () => refresh());
+  /* ---------- settings events ---------- */
 
-  /* --- settings menu: API key + clear-all --- */
-  const settingsMenu = document.getElementById("settings-menu");
-
-  document.getElementById("settings-btn").addEventListener("click", (ev) => {
-    ev.stopPropagation();
-    settingsMenu.hidden = !settingsMenu.hidden;
-  });
-
-  document.addEventListener("click", (ev) => {
-    if (!settingsMenu.hidden && !settingsMenu.contains(ev.target)) settingsMenu.hidden = true;
-  });
-  document.addEventListener("keydown", (ev) => {
-    if (ev.key === "Escape") settingsMenu.hidden = true;
-  });
-
-  document.getElementById("menu-api-key").addEventListener("click", () => {
-    settingsMenu.hidden = true;
-    let current = "";
-    try { current = localStorage.getItem("pocketfolio.pptApiKey") || ""; } catch { /* ok */ }
-    const input = window.prompt(
-      "API key for real PSA graded sale prices (eBay sold medians).\n" +
-      "Get a free key (100 lookups/day, no credit card) at:\n" +
-      "pokemonpricetracker.com → API\n\n" +
-      "Paste your key below — leave empty to remove it.",
-      current
-    );
-    if (input === null) return;
-    try {
-      const key = input.trim();
-      if (key) localStorage.setItem("pocketfolio.pptApiKey", key);
-      else {
-        localStorage.removeItem("pocketfolio.pptApiKey");
-        localStorage.removeItem("pocketfolio.gradedCache.v2");
-        graded.clear();
-      }
-    } catch { /* storage unavailable */ }
+  $("api-save-btn").addEventListener("click", () => {
+    const key = $("api-key-input").value.trim();
+    const proxy = $("proxy-input").value.trim();
+    if (key) lsSet("pocketfolio.pptApiKey", key);
+    if (proxy) lsSet("pocketfolio.pptProxy", proxy.replace(/\/+$/, ""));
+    else if ($("proxy-input").value === "" && lsGet("pocketfolio.pptProxy")) lsDel("pocketfolio.pptProxy");
+    $("api-key-input").value = "";
+    lsDel("pocketfolio.gradedCache.v2");
+    graded.clear();
+    renderSettings();
     refresh();
   });
 
-  document.getElementById("menu-proxy").addEventListener("click", () => {
-    settingsMenu.hidden = true;
-    let current = "";
-    try { current = localStorage.getItem("pocketfolio.pptProxy") || ""; } catch { /* ok */ }
-    const input = window.prompt(
-      "Prices proxy URL.\n\n" +
-      "The graded-prices API blocks calls from web pages, so the app needs a tiny " +
-      "personal proxy (free Cloudflare Worker, ~5 min setup — see the README's " +
-      "“Graded prices proxy” section, proxy/prices-proxy.js in the repo).\n\n" +
-      "Paste your worker URL below (https://….workers.dev) — leave empty to remove it.",
-      current
-    );
-    if (input === null) return;
-    try {
-      const proxyUrl = input.trim();
-      if (proxyUrl) localStorage.setItem("pocketfolio.pptProxy", proxyUrl);
-      else localStorage.removeItem("pocketfolio.pptProxy");
-      localStorage.removeItem("pocketfolio.gradedCache.v2"); // retry lookups through the new route
-      graded.clear();
-    } catch { /* storage unavailable */ }
-    refresh();
-  });
-
-  document.getElementById("menu-test-api").addEventListener("click", async () => {
-    settingsMenu.hidden = true;
+  $("test-api-btn").addEventListener("click", async () => {
     if (!API.hasGradedKey()) {
-      window.alert("No API key set yet.\n\nGet a free key at pokemonpricetracker.com → API, then add it via ⚙ → “PSA prices API key”.");
+      window.alert("אין עדיין מפתח API.\n\nמפתח חינמי (100 שאילתות ביום) ב-pokemonpricetracker.com → API.");
       return;
     }
-    const holding = Store.getAll().find((h) => (h.provider || "ptcgio") !== "manual" && cards.get(h.cardId));
-    if (!holding) {
-      window.alert("Add a card to your collection first, then run the test — it checks the API with one of your own cards.");
+    const hh = Store.getAll().find((x) => (x.provider || "ptcgio") !== "manual" && cards.get(x.cardId));
+    if (!hh) {
+      window.alert("הוסיפו קלף לתיק ואז הריצו את הבדיקה — היא נעשית עם קלף אמיתי מהתיק.");
       return;
     }
-    const card = cards.get(holding.cardId);
+    const card = cards.get(hh.cardId);
     const r = await API.gradedTest(card);
     if (r.ok) {
-      const gradesList = Object.entries(r.grades)
-        .map(([g, v]) => `PSA ${g}: $${v.price}${v.count ? ` (${v.count} sales)` : ""}`).join("\n");
-      window.alert(`✓ API working! eBay sale medians for ${card.name} #${card.number || "?"}:\n\n${gradesList}`);
+      const lines = Object.entries(r.grades)
+        .map(([g, v]) => `PSA ${g}: $${v.price}${v.count ? ` (${v.count} מכירות)` : ""}`).join("\n");
+      window.alert(`✓ ה-API עובד! חציוני מכירות eBay עבור ${card.name} #${card.number || "?"}:\n\n${lines}`);
     } else if (r.reason === "unauthorized") {
-      window.alert("✗ The API rejected your key (401/403).\n\nCheck it at pokemonpricetracker.com and re-enter it via ⚙ → “PSA prices API key”.");
+      window.alert("✗ המפתח נדחה (401/403). בדקו אותו ב-pokemonpricetracker.com והזינו מחדש.");
     } else if (r.reason === "rate-limited") {
-      window.alert("⚠ Rate/daily limit reached (429) — but that's actually good news: your proxy and API key are working end-to-end (a blocked call could never get a 429 back).\n\nThe free tier allows 100 lookups/day. The app now pauses lookups for an hour and reuses cached prices; graded values will fill in automatically once the limit resets.");
+      window.alert("⚠ חריגה ממכסה (429) — אבל זה סימן טוב: ה-Proxy והמפתח עובדים. המכסה מתאפסת יומית.");
     } else if (r.reason === "network") {
       window.alert(API.hasGradedProxy()
-        ? `✗ Could not reach the prices API through your proxy.\n\nError: ${r.message}\n\nCheck that your Cloudflare Worker is deployed and its URL is correct (⚙ → “Prices proxy URL”).`
-        : `✗ The prices API blocks calls from web pages (CORS), so it needs your own free proxy — a one-time ~5 minute setup:\n\n1. Sign up at dash.cloudflare.com (free)\n2. Workers & Pages → Create → Worker → Deploy\n3. Edit code → paste the file proxy/prices-proxy.js from the Pocketfolio repo → Deploy\n4. Copy the worker URL and add it here via ⚙ → “Prices proxy URL”\n\nFull steps are in the README's “Graded prices proxy” section.`);
+        ? `✗ לא ניתן להגיע ל-API דרך ה-Proxy.\n\nשגיאה: ${r.message}\n\nבדקו שה-Worker פעיל ושהכתובת נכונה.`
+        : "✗ ה-API חוסם קריאות מדפדפן (CORS) ולכן דרוש Proxy אישי חינמי (~5 דקות הקמה).\n\nההוראות המלאות בסעיף Graded prices proxy ב-README של המאגר.");
     } else {
-      const tried = (r.diag?.attempts || []).map((a) => `${JSON.stringify(a.params)} → ${a.rows} rows`).join("\n");
-      const errs = (r.diag?.errors || []).join("\n");
-      window.alert(`✗ API reachable and key accepted, but no PSA sale data matched ${card.name} #${card.number || "?"}.\n\nQueries tried:\n${tried}\n${errs}\n\nTell Claude this message so the matching can be adjusted.`);
+      window.alert(`✗ ה-API זמין והמפתח תקין, אבל לא נמצאו נתוני מכירות עבור ${card.name} #${card.number || "?"}.`);
     }
     refresh();
   });
 
-  document.getElementById("menu-clear").addEventListener("click", () => {
-    settingsMenu.hidden = true;
-    const ok = window.confirm(
-      "Remove ALL card data from this browser?\n\n" +
-      "This deletes every position, the value-history chart, and cached prices. " +
-      "Your API key is kept. This cannot be undone."
-    );
+  $("toggle-refresh").addEventListener("click", () => {
+    lsSet("pocketfolio.refreshOnOpen", refreshOnOpen() ? "0" : "1");
+    renderSettings();
+  });
+
+  $("toggle-hide").addEventListener("click", () => {
+    lsSet("pocketfolio.hideValues", hideValues() ? "0" : "1");
+    renderAll();
+  });
+
+  $("export-btn").addEventListener("click", () => {
+    const data = {
+      holdings: JSON.parse(lsGet("pocketfolio.tcg.holdings.v1") || "[]"),
+      snapshots: JSON.parse(lsGet("pocketfolio.tcg.snapshots.v1") || "[]"),
+      budget: lsGet("pocketfolio.budget") || null,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "pocketfolio-backup.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  $("import-btn").addEventListener("click", () => $("import-file").click());
+  $("import-file").addEventListener("change", async (ev) => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!Array.isArray(data.holdings)) throw new Error("bad file");
+      lsSet("pocketfolio.tcg.holdings.v1", JSON.stringify(data.holdings));
+      if (Array.isArray(data.snapshots)) lsSet("pocketfolio.tcg.snapshots.v1", JSON.stringify(data.snapshots));
+      if (data.budget) lsSet("pocketfolio.budget", String(data.budget));
+      location.reload();
+    } catch {
+      window.alert("קובץ הגיבוי אינו תקין.");
+    }
+  });
+
+  $("clear-btn").addEventListener("click", () => {
+    const ok = window.confirm("למחוק את כל נתוני הקלפים מהמכשיר?\n\nהפעולה מוחקת את כל האחזקות, היסטוריית השווי והמחירים השמורים. מפתח ה-API נשמר. לא ניתן לבטל.");
     if (!ok) return;
     Store.clearAll();
-    try { localStorage.removeItem("pocketfolio.gradedCache.v2"); } catch { /* ok */ }
+    lsDel("pocketfolio.gradedCache.v2");
+    lsDel("pocketfolio.budget");
     cards.clear();
     graded.clear();
     hideBanner();
-    refresh();
+    renderAll();
+    location.hash = "#home";
   });
 
-  function startAutoRefresh() {
-    clearInterval(refreshTimer);
-    refreshTimer = setInterval(() => {
-      if (!document.hidden) refresh();
-    }, REFRESH_MS);
-  }
+  /* ---------- misc view events ---------- */
 
-  refresh();
-  startAutoRefresh();
+  $("holdings-filter").addEventListener("input", () => {
+    holdingsQuery = $("holdings-filter").value.trim();
+    renderHoldings(positions());
+  });
+
+  document.querySelectorAll(".tabs .tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      holdingsTab = tab.dataset.tab;
+      document.querySelectorAll(".tabs .tab").forEach((t) =>
+        t.setAttribute("aria-selected", String(t === tab)));
+      renderHoldings(positions());
+    });
+  });
+
+  $("budget-set").addEventListener("click", () => {
+    const v = window.prompt("תקציב רכישה חודשי בדולרים:");
+    if (v === null) return;
+    const n = parseFloat(v);
+    if (Number.isFinite(n) && n > 0) lsSet("pocketfolio.budget", String(n));
+    renderMarket(positions());
+  });
+
+  $("cd-edit").addEventListener("click", () => {
+    const row = $("cd-edit-row");
+    if (row) {
+      row.hidden = !row.hidden;
+      if (!row.hidden) $("cd-value-input")?.focus();
+    }
+  });
+
+  $("refresh-btn").addEventListener("click", () => refresh());
+
+  /* TODO: portfolio switcher and date travel are rendered but inert —
+     see POCKETFOLIO-REDESIGN.md §10 */
+  $("portfolio-switcher").addEventListener("click", () => {});
+  $("date-change-btn").addEventListener("click", () => {});
+
+  /* ---------- init ---------- */
+
+  window.addEventListener("hashchange", route);
+
+  buildGradePills();
+  route();
+  if (refreshOnOpen()) refresh();
+  else renderAll();
+
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    if (!document.hidden && refreshOnOpen()) refresh();
+  }, REFRESH_MS);
+
+  void fmtSigned; void fmtPct; void prettyVariant; // formatters kept per redesign brief
 })();

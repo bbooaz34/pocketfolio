@@ -1,161 +1,371 @@
 <!doctype html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pocketfolio</title>
-  <meta name="description" content="Track your PSA-graded Pokémon TCG collection: purchases, live market prices, and value over time. No account, no server — everything stays in your browser." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='3' width='20' height='26' rx='3' fill='%232a78d6'/%3E%3Crect x='9' y='6' width='14' height='11' rx='1.5' fill='%23fcfcfb' opacity='.9'/%3E%3Crect x='9' y='20' width='9' height='2.5' rx='1' fill='%23fcfcfb' opacity='.7'/%3E%3C/svg%3E" />
+  <meta name="description" content="מעקב אחרי אוסף קלפי פוקימון מדורגים — הנתונים נשמרים במכשיר שלך בלבד." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='3' width='20' height='26' rx='3' fill='%230066FF'/%3E%3Crect x='9' y='6' width='14' height='11' rx='1.5' fill='%23FFFFFF' opacity='.9'/%3E%3Crect x='9' y='20' width='9' height='2.5' rx='1' fill='%23FFFFFF' opacity='.7'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-        <rect x="6" y="3" width="20" height="26" rx="3" fill="var(--accent)"/>
-        <rect x="9" y="6" width="14" height="11" rx="1.5" fill="var(--surface-1)" opacity=".9"/>
-        <rect x="9" y="20" width="9" height="2.5" rx="1" fill="var(--surface-1)" opacity=".7"/>
-      </svg>
-      <h1>Pocketfolio</h1>
-      <span class="tagline muted">PSA-graded Pokémon TCG tracker</span>
-    </div>
-    <div class="topbar-right">
-      <span id="last-updated" class="muted"></span>
-      <button id="refresh-btn" class="btn btn-ghost" type="button" title="Refresh market prices">
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 1.5v3h-3"/></svg>
-        Refresh
-      </button>
-      <div class="settings-wrap">
-        <button id="settings-btn" class="btn btn-ghost" type="button" title="Settings" aria-label="Settings" aria-haspopup="menu">&#9881;</button>
-        <div id="settings-menu" class="settings-menu" role="menu" hidden>
-          <button id="menu-api-key" type="button" role="menuitem">PSA prices API key&#8230;</button>
-          <button id="menu-proxy" type="button" role="menuitem">Prices proxy URL&#8230;</button>
-          <button id="menu-test-api" type="button" role="menuitem">Test PSA prices API&#8230;</button>
-          <button id="menu-clear" type="button" role="menuitem" class="danger">Clear all card data&#8230;</button>
+<div class="app">
+
+  <!-- ================= HOME ================= -->
+  <section data-view="home">
+    <header class="topbar">
+      <div class="topbar-row">
+        <!-- TODO: portfolio switcher — rendered, wired to nothing yet (POCKETFOLIO-REDESIGN.md §10) -->
+        <button type="button" class="switcher" id="portfolio-switcher">
+          <span class="t-h3">התיק שלי</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="topbar-actions">
+          <a href="#holdings" class="icon-btn" aria-label="חיפוש">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+          </a>
+          <a href="#settings" class="icon-btn" aria-label="הגדרות">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="15" cy="7" r="2.6" fill="var(--surface)"/><circle cx="9" cy="17" r="2.6" fill="var(--surface)"/></svg>
+          </a>
         </div>
       </div>
-    </div>
-  </header>
+      <p class="topbar-note t-text4">לתשומת ליבך, הנתונים נשמרים במכשיר שלך בלבד</p>
+    </header>
 
-  <main>
-    <section class="card add-card" aria-label="Add a card">
-      <form id="add-form" autocomplete="off">
-        <div class="field search-field">
-          <label for="card-search">Card</label>
-          <input id="card-search" type="text" placeholder="Search cards — or paste a PSA cert #" required />
-          <div id="search-results" class="search-results" hidden></div>
+    <main class="screen-pad">
+      <div class="date-row">
+        <span class="chip num" id="date-chip"></span>
+        <!-- TODO: date travel — rendered, inert (POCKETFOLIO-REDESIGN.md §10) -->
+        <button type="button" class="text-btn" id="date-change-btn">שינוי תאריך</button>
+      </div>
+
+      <div id="banner" class="banner-stale" hidden role="status">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+        <div>
+          <div class="b-title">הנתונים אינם מתעדכנים כרגע</div>
+          <div class="b-body"><span id="banner-msg">מוצגים הערכים האחרונים שנשמרו.</span> <a href="#settings">בדיקת מפתח ה-API</a></div>
         </div>
-        <div class="field">
-          <label for="grade-select">Grade</label>
-          <select id="grade-select">
-            <option value="10">PSA 10</option>
-            <option value="9" selected>PSA 9</option>
-            <option value="8">PSA 8</option>
-            <option value="7">PSA 7</option>
-            <option value="6">PSA 6</option>
-            <option value="5">PSA 5</option>
-            <option value="4">PSA 4</option>
-            <option value="3">PSA 3</option>
-            <option value="2">PSA 2</option>
-            <option value="1">PSA 1</option>
-            <option value="raw">Raw (ungraded)</option>
-          </select>
+      </div>
+
+      <div id="dashboard">
+        <section class="card">
+          <div class="t-text2 muted">שווי התיק</div>
+          <div class="t-text0 num mt8" id="kpi-total">— —</div>
+          <div class="t-text4 faint" id="kpi-total-note">נכון ל: —</div>
+          <div class="change-split mt14 divider" style="padding-top:14px">
+            <div class="change-block">
+              <div class="label">שינוי יומי</div>
+              <div class="row">
+                <span class="pill is-flat" id="kpi-day-pill">0.0%</span>
+                <span class="amount" id="kpi-day-amount">‎$0</span>
+              </div>
+            </div>
+            <div class="vsep"></div>
+            <div class="change-block">
+              <div class="label">שינוי מקנייה</div>
+              <div class="row">
+                <span class="pill is-flat" id="kpi-pl-pct">0.0%</span>
+                <span class="amount" id="kpi-pl">‎$0</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="round-actions">
+          <a href="#add" class="round-action">
+            <span class="disc">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            </span>
+            <span class="lbl">הוספה</span>
+          </a>
+          <a href="#holdings" class="round-action">
+            <span class="disc">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+            </span>
+            <span class="lbl">מכירה</span>
+          </a>
+          <button type="button" class="round-action" id="refresh-btn">
+            <span class="disc soft">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M20 11a8 8 0 0 0-13.7-5.3L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 13.7 5.3L20 16"/><path d="M20 20v-4h-4"/></svg>
+            </span>
+            <span class="lbl">עדכון מחירים</span>
+          </button>
         </div>
-        <div class="field">
-          <label for="qty-input">Quantity</label>
-          <input id="qty-input" type="number" step="1" min="1" placeholder="1" value="1" required />
+
+        <div class="section-head">
+          <h2 id="home-graded-title">קלפים מדורגים (0)</h2>
+          <a href="#holdings">לכל האחזקות</a>
         </div>
-        <div class="field span-2">
-          <label for="cost-input">Paid <span class="muted">(per card)</span></label>
-          <input id="cost-input" type="number" step="any" min="0" placeholder="USD, optional" />
+        <div id="home-holdings"></div>
+
+        <a href="#add" class="world-banner">
+          <span class="bar"></span>
+          <span class="grow">
+            <span class="wb-title" style="display:block">רוצה להוסיף סינגלים או סילד לתיק?</span>
+            <span class="wb-link" style="display:block">להוספת סינגל</span>
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6l-6 6 6 6"/></svg>
+        </a>
+      </div>
+
+      <div id="empty-state" class="empty-hero" hidden>
+        <div class="sils" aria-hidden="true">
+          <span class="sil"></span><span class="sil mid"></span><span class="sil"></span>
         </div>
-        <div class="field span-2">
-          <label for="cert-input">PSA cert # <span class="muted">(or paste it in the search box)</span></label>
-          <input id="cert-input" type="text" inputmode="numeric" placeholder="optional" />
+        <h2>טרם בוצעה פעילות בתיק</h2>
+        <p>אפשר להוסיף קלף ראשון, או להדביק מספר תעודת PSA ואנחנו נשלים את הפרטים.</p>
+        <a href="#add" class="btn-cta mt18">הוספת קלף ראשון</a>
+        <a href="#settings" class="text-btn" style="display:flex;align-items:center;justify-content:center;height:44px;margin-top:4px;font-size:14px">ייבוא תיק שמור</a>
+        <button type="button" id="demo-btn" class="text-btn faint" style="font-size:13px;color:var(--ink-faint)">או תיק הדגמה</button>
+      </div>
+    </main>
+  </section>
+
+  <!-- ================= HOLDINGS ================= -->
+  <section data-view="holdings">
+    <header class="topbar">
+      <h1 class="t-h3" style="margin:0 0 12px">האחזקות שלי</h1>
+      <label for="holdings-filter" class="sr-only">חיפוש לפי שם קלף, סט או מספר תעודה</label>
+      <div class="search-fill">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+        <input id="holdings-filter" type="text" placeholder="חיפוש לפי שם קלף, סט או מספר תעודה" />
+      </div>
+      <div class="tabs" role="tablist" aria-label="סינון אחזקות">
+        <button type="button" class="tab" role="tab" data-tab="all" aria-selected="true">הכול</button>
+        <button type="button" class="tab" role="tab" data-tab="graded" aria-selected="false">מדורגים</button>
+        <button type="button" class="tab" role="tab" data-tab="raw" aria-selected="false">גולמיים</button>
+      </div>
+    </header>
+    <main class="screen-pad" id="holdings-body"></main>
+  </section>
+
+  <!-- ================= MARKET ================= -->
+  <section data-view="market">
+    <header class="topbar">
+      <div class="topbar-row">
+        <h1 class="t-h3" style="margin:0">שוק הקלפים</h1>
+        <span class="t-text4 faint" id="last-updated"></span>
+      </div>
+    </header>
+    <main class="screen-pad">
+      <h2 class="t-text1-m" style="margin:0 0 8px">הכי עולה והכי יורדת</h2>
+      <div class="movers" id="movers"></div>
+
+      <div class="section-head">
+        <h2>חדשות על האחזקות שלי</h2>
+      </div>
+      <div id="news">
+        <div class="card article-card"><span class="a-thumb" aria-hidden="true"></span>
+          <div class="grow t-text2 muted" style="align-self:center">אין חדשות חדשות</div>
         </div>
-        <button class="btn btn-primary span-2" type="submit" id="add-btn" disabled>Add card</button>
+      </div>
+
+      <h2 class="t-text1-m" style="margin:18px 0 8px">יתרות ותקרות</h2>
+      <section class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span class="t-text2 muted">עלות הרכישה</span>
+          <span class="num" style="font-size:15px;font-weight:500" id="kpi-cost">— —</span>
+        </div>
+        <div class="divider mt12" style="padding-top:12px;display:flex;align-items:center;justify-content:space-between">
+          <span class="t-text2 muted">תקציב רכישה לחודש</span>
+          <span class="num" style="font-size:15px;font-weight:500" id="budget-value"></span>
+          <button type="button" class="text-btn" id="budget-set" hidden>הגדרת תקציב</button>
+        </div>
+        <div class="progress-track mt12" id="budget-track" hidden>
+          <div class="progress-fill" id="budget-bar" style="width:0%"></div>
+        </div>
+        <div class="t-text4 faint mt8" id="budget-note" hidden></div>
+      </section>
+    </main>
+  </section>
+
+  <!-- ================= SETTINGS ================= -->
+  <section data-view="settings">
+    <header class="subbar">
+      <a href="#home" class="icon-btn" aria-label="חזרה">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </a>
+      <h1 class="t-h3" style="margin:0">הגדרות</h1>
+    </header>
+    <main class="screen-pad">
+      <h2 class="t-text1-m" style="margin:0 0 8px">מקור המחיר</h2>
+      <section class="list-card">
+        <div class="list-row">
+          <span class="num-badge">1</span>
+          <span class="grow">שווי שהזנת ידנית</span>
+        </div>
+        <div class="list-row">
+          <span class="num-badge">2</span>
+          <span class="grow">חציון מכירות eBay לדירוג</span>
+          <span id="source-ebay-state"></span>
+        </div>
+        <div class="list-row">
+          <span class="num-badge">3</span>
+          <span class="grow">הערכה משער השוק הגולמי</span>
+          <span id="source-est-state" class="t-text4 faint">גיבוי</span>
+        </div>
+      </section>
+
+      <h2 class="t-text1-m" style="margin:18px 0 8px">מפתח API</h2>
+      <section class="card">
+        <label for="api-key-input" class="field-label">Pokémon Price Tracker</label>
+        <div class="input-wrap fill">
+          <input id="api-key-input" type="text" autocomplete="off" spellcheck="false" />
+        </div>
+        <label for="proxy-input" class="field-label" style="margin-top:14px">כתובת Proxy למחירים <span class="faint">· ראו README</span></label>
+        <div class="input-wrap fill">
+          <input id="proxy-input" type="text" dir="ltr" placeholder="https://…workers.dev" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="settings-actions">
+          <button type="button" class="btn-outline" id="api-save-btn">שמירה</button>
+          <button type="button" class="btn-outline" id="test-api-btn">בדיקת חיבור</button>
+        </div>
+        <div class="mt14" style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+          <span class="muted">שאילתות היום</span>
+          <span class="num" style="font-weight:500" id="quota-label">0 מתוך 100</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="quota-bar" style="width:0%"></div>
+        </div>
+      </section>
+
+      <h2 class="t-text1-m" style="margin:18px 0 8px">תצוגה</h2>
+      <section class="list-card">
+        <div class="list-row">
+          <span class="grow">רענון מחירים בפתיחה</span>
+          <button type="button" class="toggle" id="toggle-refresh" aria-label="רענון מחירים בפתיחה" aria-pressed="true"><span class="knob"></span></button>
+        </div>
+        <div class="list-row">
+          <span class="grow">הסתרת סכומים</span>
+          <button type="button" class="toggle" id="toggle-hide" aria-label="הסתרת סכומים" aria-pressed="false"><span class="knob"></span></button>
+        </div>
+        <div class="list-row">
+          <span class="grow">מטבע</span>
+          <span class="t-text2 muted">USD</span>
+        </div>
+      </section>
+
+      <div class="settings-actions">
+        <button type="button" class="btn-outline" id="export-btn">ייצוא</button>
+        <button type="button" class="btn-outline" id="import-btn">ייבוא</button>
+        <input type="file" id="import-file" accept="application/json" hidden />
+      </div>
+      <button type="button" class="danger-link" id="clear-btn">מחיקת כל הנתונים מהמכשיר</button>
+
+      <p class="t-text4 faint mt14">אין חשבון ואין שרת. התיק נשמר בדפדפן של המכשיר בלבד.</p>
+    </main>
+  </section>
+
+  <!-- ================= ADD ================= -->
+  <section data-view="add">
+    <header class="subbar">
+      <a href="#home" class="icon-btn" aria-label="סגירה">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </a>
+      <h1 class="t-h3" style="margin:0">הוספת אחזקה</h1>
+    </header>
+    <main class="screen-pad">
+      <form id="add-form">
+        <label for="card-search" class="field-label">חיפוש לפי שם קלף, סט או מספר תעודה</label>
+        <div class="input-wrap focus-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+          <input id="card-search" type="text" autocomplete="off" />
+        </div>
+        <div id="search-results" class="result-list" hidden></div>
+        <div id="selected-card"></div>
+
+        <div class="form-field">
+          <div class="field-label" id="grade-label">דירוג</div>
+          <div class="grade-pills" id="grade-pills" role="group" aria-labelledby="grade-label"></div>
+        </div>
+
+        <div class="form-row">
+          <div class="grow-col">
+            <label for="cost-input" class="field-label">מחיר קנייה ליחידה</label>
+            <div class="input-wrap">
+              <span style="font-size:15px;color:var(--ink-faint)">$</span>
+              <input id="cost-input" type="number" inputmode="decimal" step="any" min="0" class="num" style="font-weight:500" />
+            </div>
+          </div>
+          <div class="qty-col">
+            <div class="field-label" id="qty-label">כמות</div>
+            <div class="stepper" role="group" aria-labelledby="qty-label">
+              <button type="button" id="qty-dec" aria-label="הפחתת כמות">–</button>
+              <input id="qty-input" type="text" inputmode="numeric" value="1" readonly aria-live="polite" />
+              <button type="button" id="qty-inc" aria-label="הוספת כמות">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="cert-input" class="field-label">מספר תעודת PSA <span class="faint">· לא חובה</span></label>
+          <div class="input-wrap">
+            <input id="cert-input" type="text" inputmode="numeric" placeholder="לדוגמה 84512907" class="num" />
+          </div>
+        </div>
+
+        <section class="card mt18" id="est-card" hidden>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="t-text2 muted">שווי משוער</span>
+            <span class="t-subtitle num" id="est-value"></span>
+          </div>
+          <div class="t-text4 faint mt8" id="est-note"></div>
+        </section>
       </form>
-      <p id="form-hint" class="muted hint" hidden></p>
-    </section>
-
-    <div id="banner" class="banner" hidden></div>
-
-    <section id="empty-state" class="card empty-state" hidden>
-      <h2>Your collection is empty</h2>
-      <p class="muted">Search for a card above, pick its PSA grade, and add what you paid — everything is saved locally in your browser.</p>
-      <button id="demo-btn" class="btn btn-ghost" type="button">Or try a demo collection</button>
-    </section>
-
-    <div id="dashboard" hidden>
-      <section class="kpi-row" aria-label="Collection summary">
-        <div class="stat-tile hero-tile">
-          <div class="stat-label">Collection value</div>
-          <div class="stat-value hero" id="kpi-total">–</div>
-          <div class="stat-delta muted" id="kpi-total-note"></div>
-        </div>
-        <div class="stat-tile">
-          <div class="stat-label">Cost basis</div>
-          <div class="stat-value" id="kpi-cost">–</div>
-          <div class="stat-delta muted" id="kpi-cost-note"></div>
-        </div>
-        <div class="stat-tile">
-          <div class="stat-label">Profit / loss</div>
-          <div class="stat-value" id="kpi-pl">–</div>
-          <div class="stat-delta" id="kpi-pl-pct"></div>
-        </div>
-        <div class="stat-tile">
-          <div class="stat-label">Cards</div>
-          <div class="stat-value" id="kpi-count">–</div>
-          <div class="stat-delta muted" id="kpi-top"></div>
-        </div>
-      </section>
-
-      <div class="grid-2">
-        <section class="card chart-card">
-          <h2>Collection value <span class="muted">· over time</span></h2>
-          <div id="trend-chart" class="chart-host"></div>
-          <p id="trend-note" class="muted hint" hidden></p>
-        </section>
-        <section class="card alloc-card">
-          <h2>Allocation <span class="muted">· by value</span></h2>
-          <div id="alloc-chart" class="alloc-host"></div>
-        </section>
-      </div>
-
-      <section class="card table-card">
-        <h2>Collection</h2>
-        <div class="table-wrap">
-          <table id="holdings-table">
-            <thead>
-              <tr>
-                <th>Card</th>
-                <th>Grade</th>
-                <th class="num">Raw market</th>
-                <th class="num">Value <span class="th-sub">each</span></th>
-                <th class="num">Qty</th>
-                <th class="num">Paid <span class="th-sub">each</span></th>
-                <th class="num">P/L</th>
-                <th>Cert</th>
-                <th class="actions-col"><span class="sr-only">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody id="holdings-body"></tbody>
-          </table>
-        </div>
-        <p class="muted hint">Values are fetched automatically when you add a card: the <strong>eBay sold-price median for its grade</strong> (free API key from <a href="https://www.pokemonpricetracker.com/api" target="_blank" rel="noopener">pokemonpricetracker.com</a>, added via ⚙ — 100 lookups/day), or an <strong>est.</strong> from the raw market price without a key. Use ✎ only to override a value by hand — leave it empty there to switch back to the API price. Cert numbers link to PSA's verification page.</p>
-      </section>
+    </main>
+    <div class="cta-bar">
+      <button type="submit" form="add-form" class="btn-cta" id="add-btn" disabled>הוספה לתיק</button>
     </div>
-  </main>
+  </section>
 
-  <footer>
-    <span class="muted">Card data &amp; raw prices by the <a href="https://pokemontcg.io" target="_blank" rel="noopener">Pokémon TCG API</a> (TCGplayer market) · prices in USD · collection stored only in this browser · not affiliated with PSA</span>
-  </footer>
+  <!-- ================= CARD DETAIL ================= -->
+  <section data-view="card">
+    <header class="subbar">
+      <a href="#holdings" class="icon-btn" aria-label="חזרה לאחזקות">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </a>
+      <div class="grow">
+        <div class="t-subtitle" id="cd-name"></div>
+        <div class="t-text4 faint" id="cd-sub"></div>
+      </div>
+      <button type="button" class="icon-btn primary" id="cd-edit" aria-label="עדכון שווי ידני">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 6.5l3 3"/></svg>
+      </button>
+    </header>
+    <main class="screen-pad" id="cd-body"></main>
+  </section>
+
+  <!-- ================= BOTTOM NAV ================= -->
+  <nav class="bottom-nav" aria-label="ניווט ראשי">
+    <a href="#home" data-nav="home">
+      <svg class="ic-on" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3l9 8h-2.5v9h-13v-9H3z"/></svg>
+      <svg class="ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l8 7v9H4v-9z"/></svg>
+      <span class="nav-lbl">בית</span>
+    </a>
+    <a href="#holdings" data-nav="holdings">
+      <svg class="ic-on" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="8" height="16" rx="2"/><rect x="13" y="4" width="8" height="16" rx="2"/></svg>
+      <svg class="ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="8" height="16" rx="2"/><rect x="13" y="4" width="8" height="16" rx="2"/></svg>
+      <span class="nav-lbl">אחזקות</span>
+    </a>
+    <a href="#market" data-nav="market">
+      <svg class="ic-on" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="12" width="4" height="8"/><rect x="10" y="6" width="4" height="14"/><rect x="17" y="9" width="4" height="11"/></svg>
+      <svg class="ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18V9M10 18V5M16 18v-6M20 21H3"/></svg>
+      <span class="nav-lbl">שוק</span>
+    </a>
+    <a href="#settings" data-nav="settings">
+      <svg class="ic-on" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="15" cy="7" r="2.6" fill="var(--surface)"/><circle cx="9" cy="17" r="2.6" fill="var(--surface)"/></svg>
+      <svg class="ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="15" cy="7" r="2.6" fill="var(--surface)"/><circle cx="9" cy="17" r="2.6" fill="var(--surface)"/></svg>
+      <span class="nav-lbl">הגדרות</span>
+    </a>
+  </nav>
 
   <div id="tooltip" class="tooltip" hidden></div>
+</div>
 
-  <script src="js/api.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/app.js"></script>
+<script src="js/api.js"></script>
+<script src="js/store.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
