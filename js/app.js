@@ -113,11 +113,18 @@
 
   /* ---------- formatters (unchanged contracts) ---------- */
 
-  const usdFull = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
-  const usdCompact = new Intl.NumberFormat(undefined, {
-    style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1,
+  /* narrowSymbol: Hebrew locales otherwise render USD as "US$" — the design
+     shows a bare "$" */
+  const usdFull = new Intl.NumberFormat(undefined, {
+    style: "currency", currency: "USD", currencyDisplay: "narrowSymbol",
   });
-  const eurFull = new Intl.NumberFormat(undefined, { style: "currency", currency: "EUR" });
+  const usdCompact = new Intl.NumberFormat(undefined, {
+    style: "currency", currency: "USD", currencyDisplay: "narrowSymbol",
+    notation: "compact", maximumFractionDigits: 1,
+  });
+  const eurFull = new Intl.NumberFormat(undefined, {
+    style: "currency", currency: "EUR", currencyDisplay: "narrowSymbol",
+  });
 
   const fmtUSD = (v, compact) => (compact ? usdCompact.format(v) : usdFull.format(v));
   const fmtMoney = (v, currency) => (currency === "EUR" ? eurFull.format(v) : usdFull.format(v));
