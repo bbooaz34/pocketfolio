@@ -25,7 +25,6 @@
     grade: $("grade-select"),
     qty: $("qty-input"),
     cost: $("cost-input"),
-    value: $("value-input"),
     cert: $("cert-input"),
     addBtn: $("add-btn"),
     hint: $("form-hint"),
@@ -376,7 +375,7 @@
       grade: els.grade.value,
       qty,
       cost: numOrNull(els.cost),
-      value: numOrNull(els.value),
+      value: null, // value comes from the API (eBay median / estimate); ✎ overrides later
       cert: els.cert.value.trim().replace(/[^\w-]/g, "") || null,
     });
     cards.set(selectedCard.id, selectedCard); // render immediately with what we have

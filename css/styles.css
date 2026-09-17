@@ -185,6 +185,7 @@ a { color: var(--accent); }
 }
 
 .search-field { grid-column: span 4; }
+#add-form .span-2 { grid-column: span 2; }
 
 .field { display: flex; flex-direction: column; gap: 4px; position: relative; min-width: 0; }
 .field label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

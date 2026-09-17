@@ -43,7 +43,7 @@ the same Wi-Fi.
 ## Usage
 
 1. Search for a card (e.g. "charizard"), pick the exact printing from the dropdown (set + number).
-2. Choose the PSA grade, quantity, and optionally what you paid per card, its current graded value, and the PSA cert number.
+2. Choose the PSA grade, quantity, and optionally what you paid per card and the PSA cert number — the current value is fetched automatically (eBay sold median with an API key, estimate without).
 3. Hit **Add card** — or use **"try a demo collection"** on the empty state.
 4. Adding the same card + grade again merges the positions (quantities add up, paid price becomes the weighted average).
 5. Use the ✎ button on a row to set the real per-card value (check recent PSA sales); leave it empty to fall back to the automatic estimate.

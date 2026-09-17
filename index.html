@@ -63,19 +63,15 @@
           <label for="qty-input">Quantity</label>
           <input id="qty-input" type="number" step="1" min="1" placeholder="1" value="1" required />
         </div>
-        <div class="field">
+        <div class="field span-2">
           <label for="cost-input">Paid <span class="muted">(per card)</span></label>
           <input id="cost-input" type="number" step="any" min="0" placeholder="USD, optional" />
         </div>
-        <div class="field">
-          <label for="value-input">Current value <span class="muted">(per card)</span></label>
-          <input id="value-input" type="number" step="any" min="0" placeholder="USD, optional" />
-        </div>
-        <div class="field">
+        <div class="field span-2">
           <label for="cert-input">PSA cert # <span class="muted">(or paste it in the search box)</span></label>
           <input id="cert-input" type="text" inputmode="numeric" placeholder="optional" />
         </div>
-        <button class="btn btn-primary" type="submit" id="add-btn" disabled>Add card</button>
+        <button class="btn btn-primary span-2" type="submit" id="add-btn" disabled>Add card</button>
       </form>
       <p id="form-hint" class="muted hint" hidden></p>
     </section>
@@ -144,7 +140,7 @@
             <tbody id="holdings-body"></tbody>
           </table>
         </div>
-        <p class="muted hint">Best value source wins per position: a manual value you set (✎) → the <strong>real eBay sold-price median for the grade</strong> (free API key from <a href="https://www.pokemonpricetracker.com/api" target="_blank" rel="noopener">pokemonpricetracker.com</a>, added via the ⚙ button — 100 lookups/day) → an <strong>est.</strong> from the raw market price with a rough per-grade multiplier. Cert numbers link to PSA's verification page.</p>
+        <p class="muted hint">Values are fetched automatically when you add a card: the <strong>eBay sold-price median for its grade</strong> (free API key from <a href="https://www.pokemonpricetracker.com/api" target="_blank" rel="noopener">pokemonpricetracker.com</a>, added via ⚙ — 100 lookups/day), or an <strong>est.</strong> from the raw market price without a key. Use ✎ only to override a value by hand — leave it empty there to switch back to the API price. Cert numbers link to PSA's verification page.</p>
       </section>
     </div>
   </main>
