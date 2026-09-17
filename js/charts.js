@@ -72,18 +72,23 @@
 
   /* ---------- line chart: portfolio value over 7 days ---------- */
 
-  /** points: [{t: epoch ms, v: usd}] — single series, so no legend box. */
-  function renderLineChart(host, points, fmtValue) {
+  /** points: [{t: epoch ms, v: usd}] — single series, so no legend box.
+      opts.compact renders the 96px axis-less trend used on the card detail. */
+  function renderLineChart(host, points, fmtValue, opts) {
     host.replaceChildren();
     if (points.length < 2) return;
+    const compact = !!(opts && opts.compact);
 
-    const W = 620, H = 230;
-    const M = { top: 12, right: 16, bottom: 26, left: 52 };
+    const W = compact ? 326 : 620;
+    const H = compact ? 96 : 230;
+    const M = compact
+      ? { top: 6, right: 4, bottom: 6, left: 4 }
+      : { top: 12, right: 16, bottom: 26, left: 52 };
     const iw = W - M.left - M.right;
     const ih = H - M.top - M.bottom;
 
     const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img" });
-    svg.setAttribute("aria-label", "Portfolio value over the last 7 days");
+    svg.setAttribute("aria-label", (opts && opts.label) || "מגמת שווי");
 
     const vs = points.map((p) => p.v);
     const vMin = Math.min(...vs);
@@ -98,14 +103,14 @@
     const y = (v) => M.top + (1 - (v - yLo) / (yHi - yLo || 1)) * ih;
 
     // gridlines + y tick labels (solid hairlines, recessive)
-    for (const tv of ticks) {
+    if (!compact) for (const tv of ticks) {
       el("line", {
         x1: M.left, x2: W - M.right, y1: y(tv), y2: y(tv),
-        stroke: "var(--gridline)", "stroke-width": 1,
+        stroke: "var(--surface-muted)", "stroke-width": 1,
       }, svg);
       const label = el("text", {
         x: M.left - 8, y: y(tv) + 3.5, "text-anchor": "end",
-        fill: "var(--text-muted)", "font-size": 10.5,
+        fill: "var(--ink-faint)", "font-size": 10.5,
         style: "font-variant-numeric: tabular-nums",
       }, svg);
       label.textContent = fmtValue(tv, true);
@@ -126,11 +131,11 @@
     }
     const labelled = dayFirsts.length > 1 ? dayFirsts.slice(1) : dayFirsts; // skip a partial first day
     const step = Math.max(1, Math.ceil(labelled.length / 7));
-    for (let i = 0; i < labelled.length; i += step) {
+    if (!compact) for (let i = 0; i < labelled.length; i += step) {
       const p = labelled[i];
       const label = el("text", {
         x: x(p.t), y: H - 8, "text-anchor": "middle",
-        fill: "var(--text-muted)", "font-size": 10.5,
+        fill: "var(--ink-faint)", "font-size": 10.5,
       }, svg);
       label.textContent = dayFmt.format(new Date(p.t));
     }
@@ -139,24 +144,24 @@
     const lineD = points.map((p, i) => `${i ? "L" : "M"}${x(p.t).toFixed(2)},${y(p.v).toFixed(2)}`).join("");
     el("path", {
       d: `${lineD}L${x(t1).toFixed(2)},${(M.top + ih).toFixed(2)}L${x(t0).toFixed(2)},${(M.top + ih).toFixed(2)}Z`,
-      fill: "var(--accent)", opacity: 0.1,
+      fill: "var(--primary)", opacity: 0.07,
     }, svg);
     el("path", {
-      d: lineD, fill: "none", stroke: "var(--accent)",
-      "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round",
+      d: lineD, fill: "none", stroke: "var(--primary)",
+      "stroke-width": 2.2, "stroke-linejoin": "round", "stroke-linecap": "round",
     }, svg);
 
     // end marker: 8px dot with a 2px surface ring
     const last = points[points.length - 1];
-    el("circle", { cx: x(last.t), cy: y(last.v), r: 6, fill: "var(--surface-1)" }, svg);
-    el("circle", { cx: x(last.t), cy: y(last.v), r: 4, fill: "var(--accent)" }, svg);
+    el("circle", { cx: x(last.t), cy: y(last.v), r: 6, fill: "var(--surface)" }, svg);
+    el("circle", { cx: x(last.t), cy: y(last.v), r: 4, fill: "var(--primary)" }, svg);
 
     // hover layer: crosshair snaps to the nearest point; tooltip follows
     const crosshair = el("line", {
-      y1: M.top, y2: M.top + ih, stroke: "var(--baseline)", "stroke-width": 1, visibility: "hidden",
+      y1: M.top, y2: M.top + ih, stroke: "var(--border)", "stroke-width": 1, visibility: "hidden",
     }, svg);
-    const hoverOuter = el("circle", { r: 6, fill: "var(--surface-1)", visibility: "hidden" }, svg);
-    const hoverDot = el("circle", { r: 4, fill: "var(--accent)", visibility: "hidden" }, svg);
+    const hoverOuter = el("circle", { r: 6, fill: "var(--surface)", visibility: "hidden" }, svg);
+    const hoverDot = el("circle", { r: 4, fill: "var(--primary)", visibility: "hidden" }, svg);
     const overlay = el("rect", {
       x: M.left, y: M.top, width: iw, height: ih, fill: "transparent",
     }, svg);
@@ -278,12 +283,12 @@
     const y = (v) => pad + (1 - (v - min) / (max - min || 1)) * (h - pad * 2);
     const d = values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
     el("path", {
-      d, fill: "none", stroke: "var(--text-muted)",
+      d, fill: "none", stroke: "var(--ink-faint)",
       "stroke-width": 1.5, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: 0.8,
     }, svg);
     const li = values.length - 1;
-    el("circle", { cx: x(li), cy: y(values[li]), r: 3.5, fill: "var(--surface-1)" }, svg);
-    el("circle", { cx: x(li), cy: y(values[li]), r: 2.2, fill: "var(--accent)" }, svg);
+    el("circle", { cx: x(li), cy: y(values[li]), r: 3.5, fill: "var(--surface)" }, svg);
+    el("circle", { cx: x(li), cy: y(values[li]), r: 2.2, fill: "var(--primary)" }, svg);
     return svg;
   }
 
