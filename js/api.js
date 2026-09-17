@@ -100,8 +100,8 @@
     };
   }
 
-  async function ptcgioSearch(query) {
-    const q = query
+  async function ptcgioSearch(namePart) {
+    const q = namePart
       .replace(/["\\]/g, "")
       .split(/\s+/)
       .filter(Boolean)
@@ -109,7 +109,7 @@
       .join(" ");
     if (!q) return [];
     const url = PTCGIO + "/cards?" + new URLSearchParams({
-      q, pageSize: "12", orderBy: "-set.releaseDate", select: PTCGIO_SELECT,
+      q, pageSize: "20", orderBy: "-set.releaseDate", select: PTCGIO_SELECT,
     });
     const data = await getJSON(url, ptcgioHeaders(), 30 * 60 * 1000);
     return (data.data || []).map(ptcgioNormalize);
@@ -174,13 +174,18 @@
     return data && data.id ? tcgdexNormalize(data) : null;
   }
 
-  async function tcgdexSearch(query) {
-    const url = TCGDEX + "/cards?" + new URLSearchParams({ name: query });
+  async function tcgdexSearch(namePart) {
+    const url = TCGDEX + "/cards?" + new URLSearchParams({ name: namePart });
     const briefs = await getJSON(url, { accept: "application/json" }, 30 * 60 * 1000);
     if (!Array.isArray(briefs)) return [];
-    // Briefs carry only id/name/image — fetch details for the first few so the
-    // dropdown can show set, number, and price. Newest sets tend to sort last.
-    const picks = briefs.slice(-8).reverse();
+    // Briefs carry only id/name/image — fetch details so the dropdown can show
+    // set, number, and price. Rank exact name matches first, then take 20.
+    const wanted = namePart.trim().toLowerCase();
+    const rank = (b) => {
+      const n = (b.name || "").toLowerCase();
+      return n === wanted ? 0 : n.startsWith(wanted) ? 1 : 2;
+    };
+    const picks = briefs.slice().sort((a, b) => rank(a) - rank(b)).slice(0, 20);
     const cards = await Promise.all(picks.map((b) => tcgdexGetCard(b.id).catch(() => null)));
     return cards.filter(Boolean);
   }
@@ -196,19 +201,48 @@
     return preferred === "tcgdex" ? ["tcgdex", "ptcgio"] : ["ptcgio", "tcgdex"];
   }
 
-  /** Search cards by name, failing over between providers. */
+  /* People type "charmander base set" — card name plus set/qualifier words.
+     Card APIs only match the NAME, so: query with progressively fewer leading
+     words as the name until something comes back, then use the leftover words
+     as a best-effort filter over name + set + number + rarity (a leftover word
+     that matches nothing at all, like the "set" in "Base", is ignored rather
+     than wiping the results). */
+  function filterByTerms(cards, terms) {
+    const hay = (c) =>
+      `${c.name} ${c.setName || ""} #${c.number || ""} ${c.rarity || ""}`.toLowerCase();
+    const kept = terms
+      .map((t) => t.toLowerCase())
+      .filter((t) => t && cards.some((c) => hay(c).includes(t)));
+    if (!kept.length) return cards;
+    const out = cards.filter((c) => kept.every((t) => hay(c).includes(t)));
+    return out.length ? out : cards;
+  }
+
+  async function providerSearch(name, query) {
+    const tokens = query.trim().split(/\s+/).filter(Boolean).slice(0, 5);
+    for (let k = tokens.length; k >= 1; k--) {
+      const cards = await providers[name].search(tokens.slice(0, k).join(" "));
+      if (cards.length) return filterByTerms(cards, tokens.slice(k));
+    }
+    return [];
+  }
+
+  /** Search cards, failing over between providers (also when one has no match). */
   async function searchCards(query) {
     let lastErr = null;
     for (const name of order()) {
       try {
-        const cards = await providers[name].search(query);
-        preferred = name;
-        return cards;
+        const cards = await providerSearch(name, query);
+        if (cards.length) {
+          preferred = name;
+          return cards;
+        }
       } catch (err) {
         lastErr = err;
       }
     }
-    throw lastErr || new Error("all providers failed");
+    if (lastErr) throw lastErr;
+    return [];
   }
 
   /** Fetch one card by (provider, id), failing over to the other provider —
