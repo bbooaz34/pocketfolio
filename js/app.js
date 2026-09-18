@@ -74,6 +74,7 @@
     searchLimited: "חריגה ממכסת החיפושים — המתינו רגע ונסו שוב",
     noCards: "לא נמצאו קלפים",
     newsEmpty: "אין חדשות חדשות",
+    articleNoBody: "לכתבה זו אין תקציר בפיד — פתחו אותה באתר המקור.",
     rawMarketShort: "שוק גולמי",
   };
 
@@ -507,14 +508,55 @@
     });
   }
 
+  /* Rebuild the feed's article HTML from a whitelist — elements are created
+     fresh and only safe attributes copied, so nothing from the feed executes.
+     Unknown wrappers (div/span/section) are unwrapped, not dropped. */
+  const READER_TAGS = new Set(["P", "BR", "B", "STRONG", "I", "EM", "U", "S",
+    "H1", "H2", "H3", "H4", "UL", "OL", "LI", "BLOCKQUOTE", "IMG", "A",
+    "FIGURE", "FIGCAPTION", "TABLE", "THEAD", "TBODY", "TR", "TD", "TH"]);
+
+  function sanitizeInto(node, out) {
+    for (const child of node.childNodes) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        out.appendChild(document.createTextNode(child.nodeValue));
+        continue;
+      }
+      if (child.nodeType !== Node.ELEMENT_NODE) continue;
+      const tag = child.tagName;
+      if (tag === "SCRIPT" || tag === "STYLE" || tag === "IFRAME") continue;
+      if (!READER_TAGS.has(tag)) { sanitizeInto(child, out); continue; }
+      const el = document.createElement(tag === "H1" ? "H2" : tag);
+      if (tag === "IMG") {
+        const src = child.getAttribute("src") || "";
+        if (!/^https?:/i.test(src)) continue;
+        el.src = src; el.alt = child.getAttribute("alt") || "";
+        el.loading = "lazy"; el.referrerPolicy = "no-referrer";
+        el.addEventListener("error", () => el.remove());
+      } else if (tag === "A") {
+        const href = child.getAttribute("href") || "";
+        if (/^https?:/i.test(href)) {
+          el.href = href; el.target = "_blank"; el.rel = "noopener";
+        }
+      }
+      sanitizeInto(child, el);
+      out.appendChild(el);
+    }
+  }
+
   function renderArticle() {
     if (!currentArticle) return;
     $("article-title").textContent = currentArticle.title;
     $("article-src").textContent =
       [currentArticle.source, fmtAgo(currentArticle.at)].filter(Boolean).join(" · ");
     $("article-open").href = currentArticle.link;
-    const frame = $("article-frame");
-    if (frame.src !== currentArticle.link) frame.src = currentArticle.link;
+    $("article-more").href = currentArticle.link;
+    const body = $("article-body");
+    body.replaceChildren();
+    const doc = new DOMParser().parseFromString(currentArticle.html || "", "text/html");
+    sanitizeInto(doc.body, body);
+    if (!body.textContent.trim()) {
+      body.appendChild(h("p", "t-text2 muted", T.articleNoBody));
+    }
   }
 
   function renderMarket(pos) {
@@ -778,10 +820,6 @@
     });
     if (view === "card") renderCardDetail();
     if (view === "article") renderArticle();
-    else {
-      const f = $("article-frame"); // stop a left-behind article (audio, timers)
-      if (f && f.getAttribute("src")) f.src = "about:blank";
-    }
     window.scrollTo(0, 0);
   }
 

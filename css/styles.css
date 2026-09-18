@@ -659,15 +659,29 @@ input, select {
   object-fit: cover;
 }
 a.article-card { color: var(--ink); }
-.article-frame {
-  width: 100%;
-  height: calc(100vh - 210px);
-  height: calc(100dvh - 210px);
-  border: 0;
-  border-radius: var(--radius-card);
+/* in-app reader: sanitized article body from the feed (English → LTR) */
+.article-body {
   background: var(--surface);
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-active);
+  padding: 18px 16px;
+  direction: ltr; text-align: start;
+  font-size: 15px; line-height: 1.55; color: var(--ink);
+  overflow-wrap: anywhere;
 }
+.article-body p { margin: 0 0 12px; }
+.article-body h2, .article-body h3, .article-body h4 { margin: 18px 0 8px; }
+.article-body img {
+  display: block; max-width: 100%; height: auto;
+  border-radius: 10px; margin: 10px 0;
+}
+.article-body a { color: var(--primary); }
+.article-body ul, .article-body ol { margin: 0 0 12px; padding-inline-start: 22px; }
+.article-body blockquote {
+  margin: 10px 0; padding: 8px 12px;
+  border-inline-start: 3px solid var(--border); color: var(--ink-muted);
+}
+.article-body table { max-width: 100%; overflow-x: auto; display: block; }
 #article-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .article-card .a-body { min-width: 0; align-self: center; }
 .article-card .a-title {
