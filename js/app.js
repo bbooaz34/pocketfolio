@@ -63,6 +63,7 @@
     certLooking: (c) => `מאתר תעודת PSA ‎#${c}…`,
     certMatch: "בחירת ההדפסה המדויקת תצרף מחיר שוק:",
     certNoMatch: (s) => `לא נמצאה הדפסה תואמת בקטלוג עבור ${s}.`,
+    certJapanese: "שימו לב: התעודה היא של הדפסה יפנית. הקטלוג מכסה הדפסות אנגליות בלבד, כך שההתאמות למטה הן הגרסאות האנגליות — מחיר השוק שלהן שונה. כדי לא לשייך מחיר שגוי, בחרו בהוספת הסלאב בכל זאת.",
     certAddAnyway: "➕ הוספת הסלאב לתיק",
     certNotThese: "לא אחד מאלה — הוספת הסלאב בכל זאת",
     certManualSub: "הדירוג והתעודה ימולאו — את השווי מגדירים ידנית",
@@ -789,6 +790,11 @@
     r.appendChild(headB);
     r.hidden = false;
 
+    /* prefill grade + cert as soon as the cert parses — not only after a
+       printing is picked */
+    if (info.grade && GRADES.some(([v]) => v === info.grade)) setGrade(info.grade);
+    $("cert-input").value = info.cert;
+
     const loading = h("div", "result-note", T.certMatch);
     r.appendChild(loading);
 
@@ -811,7 +817,9 @@
     if (seq !== searchSeq) return;
     loading.remove();
 
+    const japanese = /japanese/i.test(info.brand || "") || /japan/i.test(info.category || "");
     if (matches.length) {
+      if (japanese) r.appendChild(h("div", "result-note warn", T.certJapanese));
       r.appendChild(h("div", "result-note", T.certMatch));
       for (const c of matches.slice(0, 6)) {
         r.appendChild(resultCard(c, () => selectCertCard(c, info)));
