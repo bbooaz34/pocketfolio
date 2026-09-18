@@ -538,6 +538,47 @@
     }
   }
 
+  /* ---------------- TCG news ---------------- */
+
+  /* PokeBeach's RSS, read through the personal worker's /news route (the feed
+     has no CORS headers). Returns normalized items, cached 30 minutes, or
+     null when no worker is configured. */
+  const NEWS_CACHE_KEY = "pocketfolio.newsCache.v1";
+  const NEWS_TTL_MS = 30 * 60 * 1000;
+
+  async function fetchNews() {
+    const proxy = pptProxy();
+    if (!proxy) return null;
+    try {
+      const hit = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY));
+      if (hit && Date.now() - hit.at < NEWS_TTL_MS) return hit.items;
+    } catch { /* cache unreadable — fetch */ }
+
+    const res = await fetch(proxy + "/news", { headers: { accept: "text/xml" } });
+    if (!res.ok) throw new Error("news feed HTTP " + res.status);
+    const xml = new DOMParser().parseFromString(await res.text(), "text/xml");
+    const items = [...xml.querySelectorAll("item")].slice(0, 20).map((it) => {
+      const pick = (tag) => it.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
+      const desc = pick("description");
+      const image = (desc.match(/<img[^>]+src="(https?:[^"]+)"/) || [])[1] ||
+        it.getElementsByTagName("enclosure")[0]?.getAttribute("url") || null;
+      let source = "PokeBeach";
+      try { source = new URL(pick("link")).hostname.replace(/^www\./, ""); } catch { /* keep */ }
+      return {
+        title: pick("title"),
+        link: pick("link"),
+        at: Date.parse(pick("pubDate")) || null,
+        text: desc.replace(/<[^>]*>/g, " "),
+        image,
+        source,
+      };
+    }).filter((n) => n.title && n.link);
+    try {
+      localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({ at: Date.now(), items }));
+    } catch { /* storage full — fine */ }
+    return items;
+  }
+
   /* ---------------- PSA cert lookup ---------------- */
 
   /* PSA's cert page (psacard.com/cert/N) has no CORS headers and its API needs
@@ -654,6 +695,6 @@
   window.PocketfolioAPI = {
     searchCards, getCard, getCards, lookupCert, certCardQuery,
     gradedFor, gradedTest, hasGradedKey, hasGradedProxy, gradedBackoffUntil,
-    gradedCallsToday,
+    gradedCallsToday, fetchNews,
   };
 })();

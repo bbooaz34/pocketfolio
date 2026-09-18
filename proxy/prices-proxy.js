@@ -55,8 +55,24 @@ export default {
       });
     }
 
+    /* TCG news: /news → PokeBeach's RSS feed, cached half an hour */
+    if (url.pathname === "/news") {
+      const upstream = await fetch("https://www.pokebeach.com/feed", {
+        headers: { Accept: "application/rss+xml, text/xml;q=0.9" },
+        cf: { cacheTtl: 1800, cacheEverything: true },
+      });
+      return new Response(await upstream.text(), {
+        status: upstream.status,
+        headers: {
+          ...CORS,
+          "Content-Type": "text/xml; charset=utf-8",
+          "Cache-Control": "public, max-age=1800",
+        },
+      });
+    }
+
     if (!url.pathname.startsWith("/api/v2/")) {
-      return new Response(JSON.stringify({ error: "only /api/v2/* and /cert/* are proxied" }), {
+      return new Response(JSON.stringify({ error: "only /api/v2/*, /cert/* and /news are proxied" }), {
         status: 403,
         headers: { ...CORS, "Content-Type": "application/json" },
       });

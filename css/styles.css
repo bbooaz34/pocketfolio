@@ -656,6 +656,13 @@ input, select {
   border-radius: 10px;
   background: var(--surface-muted);
   display: block;
+  object-fit: cover;
+}
+a.article-card { color: var(--ink); }
+.article-card .a-body { min-width: 0; align-self: center; }
+.article-card .a-title {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .cta-bar {

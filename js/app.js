@@ -73,6 +73,7 @@
     searchFail: "שירותי הקלפים אינם זמינים כרגע — נסו שוב בעוד דקה",
     searchLimited: "חריגה ממכסת החיפושים — המתינו רגע ונסו שוב",
     noCards: "לא נמצאו קלפים",
+    newsEmpty: "אין חדשות חדשות",
     rawMarketShort: "שוק גולמי",
   };
 
@@ -413,7 +414,77 @@
 
   /* ---------- MARKET ---------- */
 
+  /* ---------- news (brief §9: two article cards, no faked content) ---------- */
+
+  let newsItems = null;      // in-memory for this session; API caches 30 min
+  let newsLoading = false;
+
+  function fmtAgo(t) {
+    if (!t) return "";
+    const m = Math.max(1, Math.round((Date.now() - t) / 60000));
+    if (m < 60) return `לפני ${m} דק׳`;
+    const hrs = Math.round(m / 60);
+    if (hrs < 24) return `לפני ${hrs} שע׳`;
+    const d = Math.round(hrs / 24);
+    return d === 1 ? "אתמול" : `לפני ${d} ימים`;
+  }
+
+  /* items mentioning a held card come first, newest first within each group */
+  function rankNews(items, pos) {
+    const words = [...new Set(pos.map((p) => (p.h.name || "").toLowerCase().split(/\s+/)[0])
+      .filter((w) => w.length > 3))];
+    const hit = (n) => words.some((w) => (n.title + " " + n.text).toLowerCase().includes(w));
+    const byTime = (a, b) => (b.at || 0) - (a.at || 0);
+    return [...items.filter(hit).sort(byTime), ...items.filter((n) => !hit(n)).sort(byTime)];
+  }
+
+  function newsEmptyCard() {
+    const c = h("div", "card article-card");
+    const th = h("span", "a-thumb");
+    th.setAttribute("aria-hidden", "true");
+    c.appendChild(th);
+    const t = h("div", "grow t-text2 muted", T.newsEmpty);
+    t.style.alignSelf = "center";
+    c.appendChild(t);
+    return c;
+  }
+
+  function renderNews(pos) {
+    const host = $("news");
+    if (newsItems && newsItems.length) {
+      host.replaceChildren();
+      for (const n of rankNews(newsItems, pos).slice(0, 2)) {
+        const a = h("a", "card article-card");
+        a.href = n.link; a.target = "_blank"; a.rel = "noopener";
+        if (n.image) {
+          const img = h("img", "a-thumb");
+          img.src = n.image; img.alt = ""; img.loading = "lazy";
+          a.appendChild(img);
+        } else {
+          const th = h("span", "a-thumb");
+          th.setAttribute("aria-hidden", "true");
+          a.appendChild(th);
+        }
+        const txt = h("div", "grow a-body");
+        txt.appendChild(h("div", "t-text2-m a-title", n.title));
+        txt.appendChild(h("div", "t-text4 faint mt8",
+          [n.source, fmtAgo(n.at)].filter(Boolean).join(" · ")));
+        a.appendChild(txt);
+        host.appendChild(a);
+      }
+      return;
+    }
+    host.replaceChildren(newsEmptyCard());
+    if (newsItems || newsLoading || !API.hasGradedProxy()) return;
+    newsLoading = true;
+    API.fetchNews().then((items) => {
+      newsItems = items || [];
+      if (document.querySelector('[data-view="market"].active')) renderNews(positions());
+    }).catch(() => { newsItems = []; }).finally(() => { newsLoading = false; });
+  }
+
   function renderMarket(pos) {
+    renderNews(pos);
     $("last-updated").textContent =
       `${T.asOf} ${fmtTime(lastUpdatedAt ? new Date(lastUpdatedAt) : new Date())}`;
 
