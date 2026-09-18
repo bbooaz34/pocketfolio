@@ -6,6 +6,10 @@
  * requests and adds the CORS headers. Your API key travels only from your
  * browser through your worker to the API — no third party sees it.
  *
+ * It also proxies PSA cert pages (/cert/<number> → psacard.com/cert/<number>),
+ * which have no CORS headers either — with the worker set, the cert search no
+ * longer depends on flaky public read-through proxies.
+ *
  * Setup (~5 minutes, free, no credit card):
  *   1. Create an account at https://dash.cloudflare.com
  *   2. Workers & Pages → Create → Worker → name it (e.g. pocketfolio-prices)
@@ -33,8 +37,26 @@ export default {
       return new Response("Method not allowed", { status: 405, headers: CORS });
     }
     const url = new URL(request.url);
+
+    /* PSA cert page: /cert/12345678 → https://www.psacard.com/cert/12345678 */
+    const cert = url.pathname.match(/^\/cert\/(\d{5,12})$/);
+    if (cert) {
+      const upstream = await fetch("https://www.psacard.com/cert/" + cert[1], {
+        headers: {
+          Accept: "text/html,application/xhtml+xml",
+          "Accept-Language": "en-US,en;q=0.9",
+          "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) " +
+            "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile Safari/604.1",
+        },
+      });
+      return new Response(await upstream.text(), {
+        status: upstream.status,
+        headers: { ...CORS, "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+
     if (!url.pathname.startsWith("/api/v2/")) {
-      return new Response(JSON.stringify({ error: "only /api/v2/* is proxied" }), {
+      return new Response(JSON.stringify({ error: "only /api/v2/* and /cert/* are proxied" }), {
         status: 403,
         headers: { ...CORS, "Content-Type": "application/json" },
       });

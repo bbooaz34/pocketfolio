@@ -596,9 +596,14 @@
   async function lookupCert(cert) {
     if (certCache.has(cert)) return certCache.get(cert);
     const target = "https://www.psacard.com/cert/" + encodeURIComponent(cert);
+    /* the user's own Cloudflare Worker (when configured) is the reliable
+       route; the public read-through proxies are best-effort fallbacks */
+    const proxy = pptProxy();
     const sources = [
+      ...(proxy ? [proxy + "/cert/" + encodeURIComponent(cert)] : []),
       target,
       "https://api.allorigins.win/raw?url=" + encodeURIComponent(target),
+      "https://corsproxy.io/?url=" + encodeURIComponent(target),
       "https://r.jina.ai/" + target,
     ];
     let lastErr = null;

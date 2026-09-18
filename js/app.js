@@ -67,6 +67,7 @@
     certNotThese: "לא אחד מאלה — הוספת הסלאב בכל זאת",
     certManualSub: "הדירוג והתעודה ימולאו — את השווי מגדירים ידנית",
     certFail: "לא ניתן לקרוא את דף התעודה של PSA כרגע.",
+    certProxyHint: "אם ה-Worker האישי שלך הוקם לפני שנוסף נתיב התעודות — עדכנו אותו לקוד העדכני (proxy/prices-proxy.js).",
     certOpen: (c) => `פתיחת תעודה ‎#${c} באתר PSA`,
     searchFail: "שירותי הקלפים אינם זמינים כרגע — נסו שוב בעוד דקה",
     searchLimited: "חריגה ממכסת החיפושים — המתינו רגע ונסו שוב",
@@ -768,6 +769,9 @@
       a.href = "https://www.psacard.com/cert/" + encodeURIComponent(cert);
       a.target = "_blank"; a.rel = "noopener";
       note.appendChild(a);
+      if (API.hasGradedProxy()) {
+        note.appendChild(h("div", "t-text4 faint mt8", T.certProxyHint));
+      }
       r.appendChild(note);
       r.hidden = false;
       return;
