@@ -312,7 +312,9 @@
   const PPT_HOST = "https://www.pokemonpricetracker.com";
   const GRADED_CACHE_KEY = "pocketfolio.gradedCache.v2"; // v2: v1 wrongly cached misses for 12h
   const GRADED_TTL_MS = 12 * 3600 * 1000; // conserve the daily credit budget
-  const GRADED_MISS_TTL_MS = 60 * 60 * 1000; // retry misses hourly (each retry is a billed credit)
+  /* a card with no sales data today won't grow any within the hour, and every
+     retry bills credits per returned row — retry misses twice a day at most */
+  const GRADED_MISS_TTL_MS = 12 * 3600 * 1000;
   const GRADED_BACKOFF_KEY = "pocketfolio.gradedBackoffUntil";
   const GRADED_BACKOFF_MS = 60 * 60 * 1000; // after a 429, pause all lookups for an hour
 
@@ -459,8 +461,9 @@
     if (setId) attempts.push({ search: first, setId });
     if (!card.jp) attempts.push({ search: card.name });
     /* every returned card costs credits (double with includeEbay), so cap
-       the row count — the free tier is only 100 credits/day */
-    return attempts.map((p) => ({ includeEbay: "true", limit: "10", ...p }));
+       the row count hard — the free tier is only 100 credits/day, and the
+       set-scoped search puts the right printing in the first rows */
+    return attempts.map((p) => ({ includeEbay: "true", limit: "5", ...p }));
   }
 
   /* Core lookup shared by gradedFor and the ⚙ self-test. `diag`, when given,
