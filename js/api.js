@@ -551,12 +551,18 @@
     if (!proxy) return null;
     try {
       const hit = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY));
-      if (hit && Date.now() - hit.at < NEWS_TTL_MS) return hit.items;
+      // an empty cached list (from a failed source) is a miss, not an answer
+      if (hit && hit.items?.length && Date.now() - hit.at < NEWS_TTL_MS) return hit.items;
     } catch { /* cache unreadable — fetch */ }
 
     const res = await fetch(proxy + "/news", { headers: { accept: "text/xml" } });
-    if (!res.ok) throw new Error("news feed HTTP " + res.status);
+    if (!res.ok) {
+      throw new Error(res.status === 403
+        ? "ה-Worker עדיין בגרסה ישנה — יש להדביק את הקוד המעודכן (HTTP 403)"
+        : "פיד החדשות החזיר HTTP " + res.status);
+    }
     const xml = new DOMParser().parseFromString(await res.text(), "text/xml");
+    if (xml.querySelector("parsererror")) throw new Error("הפיד חזר בפורמט לא תקין");
     const items = [...xml.querySelectorAll("item")].slice(0, 20).map((it) => {
       const pick = (tag) => it.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
       /* XenForo feeds (PokeBeach) keep the article body in content:encoded */

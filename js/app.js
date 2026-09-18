@@ -419,6 +419,7 @@
   let newsItems = null;      // in-memory for this session; API caches 30 min
   let newsLoading = false;
   let newsFailedAt = 0;      // failed fetches retry after a short cooldown
+  let newsError = null;      // last failure, shown on the empty card
 
   function fmtAgo(t) {
     if (!t) return "";
@@ -444,9 +445,13 @@
     const th = h("span", "a-thumb");
     th.setAttribute("aria-hidden", "true");
     c.appendChild(th);
-    const t = h("div", "grow t-text2 muted", T.newsEmpty);
-    t.style.alignSelf = "center";
-    c.appendChild(t);
+    const body = h("div", "grow");
+    body.style.alignSelf = "center";
+    body.appendChild(h("div", "t-text2 muted", T.newsEmpty));
+    if (newsError && API.hasGradedProxy()) {
+      body.appendChild(h("div", "t-text4 faint mt8", String(newsError)));
+    }
+    c.appendChild(body);
     return c;
   }
 
@@ -481,9 +486,15 @@
     newsLoading = true;
     API.fetchNews().then((items) => {
       newsItems = items && items.length ? items : null;
-      if (!newsItems) newsFailedAt = Date.now();
+      if (!newsItems) { newsFailedAt = Date.now(); newsError = "הפיד חזר ריק"; }
+      else newsError = null;
+    }).catch((err) => {
+      newsFailedAt = Date.now();
+      newsError = err && err.message ? err.message : "שגיאת רשת";
+    }).finally(() => {
+      newsLoading = false;
       if (document.querySelector('[data-view="market"].active')) renderNews(positions());
-    }).catch(() => { newsFailedAt = Date.now(); }).finally(() => { newsLoading = false; });
+    });
   }
 
   function renderMarket(pos) {
