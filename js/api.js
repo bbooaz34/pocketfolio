@@ -453,8 +453,11 @@
     const setId = card.provider !== "manual" && card.id.includes("-")
       ? card.id.split("-")[0] : null;
     const attempts = [];
+    /* Japanese prints live behind language=japanese — try that catalog first
+       so an English print's sales are never attributed to a JP slab */
+    if (card.jp) attempts.push({ search: card.name, language: "japanese" });
     if (setId) attempts.push({ search: first, setId });
-    attempts.push({ search: card.name });
+    if (!card.jp) attempts.push({ search: card.name });
     return attempts.map((p) => ({ includeEbay: "true", ...p }));
   }
 

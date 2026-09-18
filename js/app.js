@@ -63,7 +63,7 @@
     certLooking: (c) => `מאתר תעודת PSA ‎#${c}…`,
     certMatch: "בחירת ההדפסה המדויקת תצרף מחיר שוק:",
     certNoMatch: (s) => `לא נמצאה הדפסה תואמת בקטלוג עבור ${s}.`,
-    certJapanese: "שימו לב: התעודה היא של הדפסה יפנית. הקטלוג מכסה הדפסות אנגליות בלבד, כך שההתאמות למטה הן הגרסאות האנגליות — מחיר השוק שלהן שונה. כדי לא לשייך מחיר שגוי, בחרו בהוספת הסלאב בכל זאת.",
+    certJapanese: "שימו לב: התעודה היא של הדפסה יפנית, וההתאמות למטה הן הגרסאות האנגליות מהקטלוג — מחיר השוק שלהן שונה. בחרו בהוספת הסלאב בכל זאת: השווי יימשך אוטומטית ממכירות eBay של הגרסה היפנית (כשיש נתונים).",
     certAddAnyway: "➕ הוספת הסלאב לתיק",
     certNotThese: "לא אחד מאלה — הוספת הסלאב בכל זאת",
     certManualSub: "הדירוג והתעודה ימולאו — את השווי מגדירים ידנית",
@@ -798,6 +798,7 @@
     const loading = h("div", "result-note", T.certMatch);
     r.appendChild(loading);
 
+    const japanese = /japanese/i.test(info.brand || "") || /japan/i.test(info.category || "");
     const manualCard = {
       provider: "manual",
       id: "psa-" + info.cert,
@@ -805,6 +806,7 @@
       setName: [info.year, info.brand].filter(Boolean).join(" ") || null,
       number: info.cardNumber || null,
       rarity: null, image: null, price: null,
+      jp: japanese, // eBay lookups go through the Japanese catalog
     };
 
     let matches = [];
@@ -817,7 +819,6 @@
     if (seq !== searchSeq) return;
     loading.remove();
 
-    const japanese = /japanese/i.test(info.brand || "") || /japan/i.test(info.category || "");
     if (matches.length) {
       if (japanese) r.appendChild(h("div", "result-note warn", T.certJapanese));
       r.appendChild(h("div", "result-note", T.certMatch));
@@ -1179,6 +1180,9 @@
         provider: hh.provider || "ptcgio", id: hh.cardId, name: hh.name,
         setName: hh.setName ?? null, number: hh.number ?? null,
         rarity: null, image: hh.image ?? null, price: null,
+        /* a manual slab's set line carries the PSA brand, e.g.
+           "1998 POKEMON JAPANESE HANADA CITY GYM DECK" */
+        jp: /japanese/i.test(hh.setName || ""),
       });
     }
   }
