@@ -458,7 +458,9 @@
     if (card.jp) attempts.push({ search: card.name, language: "japanese" });
     if (setId) attempts.push({ search: first, setId });
     if (!card.jp) attempts.push({ search: card.name });
-    return attempts.map((p) => ({ includeEbay: "true", ...p }));
+    /* every returned card costs credits (double with includeEbay), so cap
+       the row count — the free tier is only 100 credits/day */
+    return attempts.map((p) => ({ includeEbay: "true", limit: "10", ...p }));
   }
 
   /* Core lookup shared by gradedFor and the ⚙ self-test. `diag`, when given,
