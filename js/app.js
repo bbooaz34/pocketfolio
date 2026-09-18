@@ -1161,20 +1161,37 @@
     }
     const card = cards.get(hh.cardId);
     const r = await API.gradedTest(card);
+
+    /* the state summary answers "what am I actually seeing right now?" */
+    const gradedPos = positions().filter((p) => p.h.grade !== "raw");
+    const byEbay = gradedPos.filter((p) => p.val && p.val.src === "ebay").length;
+    const backoffAt = API.gradedBackoffUntil();
+    let state = `\n\nמצב התיק: ${byEbay} מתוך ${gradedPos.length} הקלפים המדורגים מוצגים לפי חציון eBay; השאר לפי הערכה מהשער הגולמי או שווי ידני.`;
+    if (backoffAt) state += `\nהמערכת בהשהיה אחרי 429 — קריאות חדשות יתחדשו ב-${fmtTime(new Date(backoffAt))}.`;
+
     if (r.ok) {
       const lines = Object.entries(r.grades)
         .map(([g, v]) => `PSA ${g}: $${v.price}${v.count ? ` (${v.count} מכירות)` : ""}`).join("\n");
-      window.alert(`✓ ה-API עובד! חציוני מכירות eBay עבור ${card.name} #${card.number || "?"}:\n\n${lines}`);
+      const m = r.diag && r.diag.matched;
+      const src = m
+        ? `\n\nהנתונים נלקחו מהשורה: ${m.name || "?"} #${m.number || "?"}${m.setId ? ` (${m.setId})` : ""} — התאמה ${m.byNumber ? "לפי מספר הקלף" : "לפי שם בלבד (פחות מדויק!)"}`
+        : "";
+      window.alert(`✓ ה-API עובד! חציוני מכירות eBay עבור ${card.name} #${card.number || "?"}:\n\n${lines}${src}${state}`);
     } else if (r.reason === "unauthorized") {
-      window.alert("✗ המפתח נדחה (401/403). בדקו אותו ב-pokemonpricetracker.com והזינו מחדש.");
+      window.alert("✗ המפתח נדחה (401/403). בדקו אותו ב-pokemonpricetracker.com והזינו מחדש." + state);
     } else if (r.reason === "rate-limited") {
-      window.alert("⚠ חריגה ממכסה (429) — אבל זה סימן טוב: ה-Proxy והמפתח עובדים. המכסה מתאפסת יומית.");
+      window.alert("⚠ חריגה ממכסה (429) — אבל זה סימן טוב: ה-Proxy והמפתח עובדים. המכסה מתאפסת יומית ב-03:00 שעון ישראל." + state);
     } else if (r.reason === "network") {
       window.alert(API.hasGradedProxy()
         ? `✗ לא ניתן להגיע ל-API דרך ה-Proxy.\n\nשגיאה: ${r.message}\n\nבדקו שה-Worker פעיל ושהכתובת נכונה.`
         : "✗ ה-API חוסם קריאות מדפדפן (CORS) ולכן דרוש Proxy אישי חינמי (~5 דקות הקמה).\n\nההוראות המלאות בסעיף Graded prices proxy ב-README של המאגר.");
     } else {
-      window.alert(`✗ ה-API זמין והמפתח תקין, אבל לא נמצאו נתוני מכירות עבור ${card.name} #${card.number || "?"}.`);
+      const detail = (r.diag && r.diag.attempts.length
+        ? "\n\nמה נוסה:\n" + r.diag.attempts.map((a) =>
+            `· ${new URLSearchParams(a.params).toString()} → ${a.rows} שורות`).join("\n")
+        : "") +
+        (r.diag && r.diag.errors.length ? "\n" + r.diag.errors.map((e) => "· " + e).join("\n") : "");
+      window.alert(`✗ ה-API זמין והמפתח תקין, אבל לא נמצאו נתוני מכירות עבור ${card.name} #${card.number || "?"}.${detail}${state}`);
     }
     refresh();
   });

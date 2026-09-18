@@ -485,7 +485,17 @@
       ];
       for (const row of candidates) {
         const grades = extractGrades(row);
-        if (grades) return grades;
+        if (grades) {
+          if (diag) {
+            diag.matched = {
+              name: row.name ?? row.card?.name ?? null,
+              number: row.number ?? row.cardNumber ?? row.localId ?? row.card?.number ?? null,
+              setId: row.setId ?? row.set?.id ?? row.set?.name ?? null,
+              byNumber: rows.filter((r) => pptRowMatches(r, card)).includes(row),
+            };
+          }
+          return grades;
+        }
       }
       if (diag && candidates.length) diag.errors.push("matching rows had no PSA sale buckets");
       if (diag && !candidates.length) diag.errors.push("no row matched " + card.name + " #" + (card.number || "?"));
