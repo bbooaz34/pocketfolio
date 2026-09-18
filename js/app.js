@@ -1198,6 +1198,13 @@
     }
   }
 
+  /* a home-screen shortcut captures the URL as saved — #add or #card/…
+     included. A fresh launch always starts at home; the tab views stay
+     valid as deep links. */
+  if (location.hash === "#add" || location.hash.startsWith("#card/")) {
+    history.replaceState(null, "", "#home");
+  }
+
   window.addEventListener("hashchange", route);
 
   buildGradePills();
