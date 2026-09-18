@@ -58,8 +58,8 @@
           <div class="value-head">
             <div class="grow">
               <div class="t-text2 muted">שווי התיק</div>
-              <div class="t-text0 num mt8" id="kpi-total">— —</div>
-              <div class="t-text4 faint" id="kpi-total-note">נכון ל: —</div>
+              <div class="t-text0 num mt4" id="kpi-total">— —</div>
+              <div class="t-text4 faint mt4" id="kpi-total-note">נכון ל: —</div>
             </div>
             <a href="#holdings" class="card-fan" id="card-fan" hidden>
               <span class="fan"></span>
@@ -116,21 +116,40 @@
           <span class="bar"></span>
           <span class="grow">
             <span class="wb-title" style="display:block">רוצה להוסיף סינגלים או סילד לתיק?</span>
-            <span class="wb-link" style="display:block">להוספת סינגל</span>
           </span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6l-6 6 6 6"/></svg>
         </a>
       </div>
 
-      <div id="empty-state" class="empty-hero" hidden>
-        <div class="sils" aria-hidden="true">
-          <span class="sil"></span><span class="sil mid"></span><span class="sil"></span>
+      <div id="empty-state" hidden>
+        <section class="card">
+          <div class="t-text2 muted">שווי התיק</div>
+          <div class="num mt4 faint" style="font-size:30px;line-height:36px;font-weight:500">— —</div>
+          <div class="t-text4 faint mt4" id="empty-asof">נכון ל: —</div>
+          <div class="change-split mt14 divider" style="padding-top:14px">
+            <div class="change-block">
+              <div class="label">שינוי יומי</div>
+              <div class="row">
+                <span class="pill is-flat">0.0%</span>
+                <span class="amount muted">‎$0</span>
+              </div>
+            </div>
+            <div class="vsep"></div>
+            <div class="change-block">
+              <div class="label">שינוי מקנייה</div>
+              <div class="row"><span class="t-text2 faint">הנתונים אינם זמינים</span></div>
+            </div>
+          </div>
+        </section>
+        <div class="empty-hero">
+          <div class="sils" aria-hidden="true">
+            <span class="sil"></span><span class="sil mid"></span><span class="sil"></span>
+          </div>
+          <h2>טרם בוצעה פעילות בתיק</h2>
+          <p>אפשר להוסיף קלף ראשון, או להדביק מספר תעודת PSA ואנחנו נשלים את הפרטים.</p>
+          <a href="#add" class="btn-cta mt18">הוספת קלף ראשון</a>
+          <a href="#settings" class="text-btn" style="display:flex;align-items:center;justify-content:center;height:44px;margin-top:4px;font-size:14px">ייבוא תיק שמור</a>
         </div>
-        <h2>טרם בוצעה פעילות בתיק</h2>
-        <p>אפשר להוסיף קלף ראשון, או להדביק מספר תעודת PSA ואנחנו נשלים את הפרטים.</p>
-        <a href="#add" class="btn-cta mt18">הוספת קלף ראשון</a>
-        <a href="#settings" class="text-btn" style="display:flex;align-items:center;justify-content:center;height:44px;margin-top:4px;font-size:14px">ייבוא תיק שמור</a>
-        <button type="button" id="demo-btn" class="text-btn faint" style="font-size:13px;color:var(--ink-faint)">או תיק הדגמה</button>
       </div>
     </main>
   </section>
@@ -147,7 +166,7 @@
       <div class="tabs" role="tablist" aria-label="סינון אחזקות">
         <button type="button" class="tab" role="tab" data-tab="all" aria-selected="true">הכול</button>
         <button type="button" class="tab" role="tab" data-tab="graded" aria-selected="false">מדורגים</button>
-        <button type="button" class="tab" role="tab" data-tab="raw" aria-selected="false">גולמיים</button>
+        <button type="button" class="tab" role="tab" data-tab="raw" aria-selected="false">סינגלים</button>
       </div>
     </header>
     <main class="screen-pad" id="holdings-body"></main>
@@ -162,11 +181,12 @@
       </div>
     </header>
     <main class="screen-pad">
-      <h2 class="t-text1-m" style="margin:0 0 8px">הכי עולה והכי יורדת</h2>
+      <h2 class="t-text1-m" style="margin:0 0 8px">טרנדים ביותר</h2>
       <div class="movers" id="movers"></div>
 
       <div class="section-head">
         <h2>חדשות על האחזקות שלי</h2>
+        <a href="https://www.pokebeach.com" target="_blank" rel="noopener">לכל החדשות</a>
       </div>
       <div id="news">
         <div class="card article-card"><span class="a-thumb" aria-hidden="true"></span>
@@ -352,23 +372,19 @@
   <!-- ================= BOTTOM NAV ================= -->
   <nav class="bottom-nav" aria-label="ניווט ראשי">
     <a href="#home" data-nav="home">
-      <svg class="ic-on" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3l9 8h-2.5v9h-13v-9H3z"/></svg>
-      <svg class="ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l8 7v9H4v-9z"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 0 1 17 0z" fill="currentColor"/><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 12h17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.4" fill="var(--surface)" stroke="currentColor" stroke-width="1.9"/></svg>
       <span class="nav-lbl">בית</span>
     </a>
     <a href="#holdings" data-nav="holdings">
-      <svg class="ic-on" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="4" width="8" height="16" rx="2"/><rect x="13" y="4" width="8" height="16" rx="2"/></svg>
-      <svg class="ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="8" height="16" rx="2"/><rect x="13" y="4" width="8" height="16" rx="2"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="4" width="10" height="14" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-10 12 12)"/><rect x="8.7" y="6.2" width="10.6" height="14.8" rx="1.7" fill="currentColor" stroke="var(--surface)" stroke-width="1.6" transform="rotate(8 12 12)"/></svg>
       <span class="nav-lbl">אחזקות</span>
     </a>
     <a href="#market" data-nav="market">
-      <svg class="ic-on" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="12" width="4" height="8"/><rect x="10" y="6" width="4" height="14"/><rect x="17" y="9" width="4" height="11"/></svg>
-      <svg class="ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18V9M10 18V5M16 18v-6M20 21H3"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 3 6 13.5h5.5L10 21l8-11h-5.5z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       <span class="nav-lbl">שוק</span>
     </a>
     <a href="#settings" data-nav="settings">
-      <svg class="ic-on" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="15" cy="7" r="2.6" fill="var(--surface)"/><circle cx="9" cy="17" r="2.6" fill="var(--surface)"/></svg>
-      <svg class="ic-off" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="15" cy="7" r="2.6" fill="var(--surface)"/><circle cx="9" cy="17" r="2.6" fill="var(--surface)"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="15" cy="7" r="3" fill="currentColor"/><circle cx="9" cy="17" r="3" fill="currentColor"/></svg>
       <span class="nav-lbl">הגדרות</span>
     </a>
   </nav>

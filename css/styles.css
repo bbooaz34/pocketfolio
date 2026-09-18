@@ -45,6 +45,9 @@
   --shadow-active: 3px 5px 16px rgba(186, 202, 221, 0.35);
   --shadow-screen: 0 4px 20px rgba(0, 0, 0, 0.15);
   --shadow-fan: 0 4px 10px rgba(29, 29, 32, 0.16); /* mini card fan on home */
+  --shadow-thumb: 0 2px 6px rgba(29, 29, 32, 0.14); /* holding-card thumbnail */
+  --shadow-card-img: 0 8px 18px rgba(29, 29, 32, 0.18); /* card-detail image */
+  --nav-glass: rgba(255, 255, 255, 0.88); /* floating bottom nav */
 
   /* space */
   --space-1: 4px;
@@ -142,7 +145,7 @@ input, select {
 [data-view].active { display: flex; }
 
 .screen-pad {
-  padding: var(--space-3) var(--space-4) calc(88px + env(safe-area-inset-bottom, 0px));
+  padding: var(--space-3) var(--space-4) calc(104px + env(safe-area-inset-bottom, 0px));
   flex-grow: 1;
 }
 
@@ -151,6 +154,7 @@ input, select {
 .topbar {
   background: var(--surface);
   padding: 14px var(--space-4) 12px;
+  border-bottom-left-radius: 32px;
 }
 .topbar-row { display: flex; align-items: center; justify-content: space-between; }
 .topbar-note { margin: 2px 0 0; color: var(--ink-faint); }
@@ -161,6 +165,7 @@ input, select {
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  border-bottom-left-radius: 32px;
 }
 .subbar .grow { flex-grow: 1; min-width: 0; }
 
@@ -259,31 +264,36 @@ input, select {
   box-shadow: var(--shadow-active);
   color: var(--ink);
 }
-.holding-card .r1 { display: flex; align-items: center; gap: var(--space-2); }
+/* row 1: text block at the start, card thumbnail at the end */
+.holding-card .r1 {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--space-3);
+}
+.holding-card .r1 .txt { min-width: 0; }
+.holding-card .nameline { display: flex; align-items: center; gap: var(--space-2); }
 .holding-card .thumb {
-  width: 26px; height: 34px;
-  border-radius: var(--radius-tag);
+  width: 36px; height: 50px;
+  border-radius: 5px;
   background: var(--primary-soft);
   object-fit: cover;
   display: block;
   flex: none;
+  box-shadow: var(--shadow-thumb);
 }
-/* the card name is never truncated — a long one wraps to a second line;
-   the set line is what gives way (shrinks, then ellipsizes) */
+/* the card name is never truncated — a long one wraps to a second line */
 .holding-card .name {
   font-size: 15px; font-weight: 500;
   min-width: 0; flex-shrink: 1;
   overflow-wrap: anywhere;
 }
-.holding-card .r1 .tag { flex: none; }
+.holding-card .nameline .tag { flex: none; }
 .holding-card .setnum {
-  /* physical margin: the element is direction:ltr inside the RTL row, so a
-     logical margin-inline-start would land on the wrong side */
-  margin-right: auto;
+  display: block;
+  margin-top: 4px;
   font-size: 12px; color: var(--ink-faint);
-  min-width: 24px; max-width: 40%; flex-shrink: 4;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   direction: ltr; unicode-bidi: isolate; /* Latin set line — ellipsis at its end */
+  text-align: right;
 }
 .holding-card .r2 {
   display: flex; align-items: center; justify-content: space-between;
@@ -464,32 +474,63 @@ input, select {
 
 /* ---------- bottom nav ---------- */
 
+/* floating glass pill; collapses to a compact pill while scrolling */
 .bottom-nav {
   position: fixed;
   inset-inline: 0;
-  bottom: 0;
-  height: calc(72px + env(safe-area-inset-bottom, 0px));
-  padding: 8px 12px env(safe-area-inset-bottom, 0px);
-  background: var(--surface);
-  border-top: 1px solid var(--surface-muted);
+  margin: 0 auto;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  width: calc(100% - 32px);
+  max-width: 358px;
+  height: 64px;
+  padding: 0 8px;
+  box-sizing: border-box;
+  border-radius: 24px;
+  background: var(--nav-glass);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--surface-muted);
+  box-shadow: var(--shadow-active);
   display: flex;
   justify-content: space-between;
-  max-width: 390px;
-  margin: 0 auto;
+  align-items: center;
   z-index: 20;
+  transition: width 280ms cubic-bezier(.2,.8,.2,1), height 280ms cubic-bezier(.2,.8,.2,1),
+    border-radius 280ms cubic-bezier(.2,.8,.2,1), bottom 280ms cubic-bezier(.2,.8,.2,1);
 }
-@media (min-width: 768px) { .bottom-nav { max-width: 480px; } }
+@media (min-width: 768px) { .bottom-nav { max-width: 448px; } }
 .bottom-nav a {
-  flex-grow: 1;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  position: relative;
+  flex: 1 1 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+  height: 52px;
+  border-radius: 20px;
   color: var(--ink-muted);
   font-size: 12px;
 }
-.bottom-nav a .ic-on { display: none; }
+.bottom-nav a::before {
+  content: "";
+  position: absolute;
+  width: 46px; height: 38px;
+  border-radius: 19px;
+  background: var(--primary-soft);
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 200ms ease, transform 280ms cubic-bezier(.2,.8,.2,1);
+}
+.bottom-nav a svg { position: relative; }
+.bottom-nav .nav-lbl {
+  font-size: 12px; line-height: 14px;
+  max-height: 14px; opacity: 1; overflow: hidden;
+  transition: max-height 220ms cubic-bezier(.2,.8,.2,1), opacity 140ms ease,
+    margin-top 220ms cubic-bezier(.2,.8,.2,1);
+}
 .bottom-nav a[aria-current="page"] { color: var(--primary); }
-.bottom-nav a[aria-current="page"] .ic-on { display: block; }
-.bottom-nav a[aria-current="page"] .ic-off { display: none; }
 .bottom-nav a[aria-current="page"] .nav-lbl { font-weight: 700; }
+.bottom-nav.compact { width: calc(100% - 104px); max-width: 286px; height: 56px; border-radius: 28px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+.bottom-nav.compact .nav-lbl { max-height: 0; opacity: 0; margin-top: -4px; }
+.bottom-nav.compact a[aria-current="page"]::before { opacity: 1; transform: scale(1); }
 
 /* ---------- banner (stale data) ---------- */
 
@@ -576,7 +617,6 @@ input, select {
   background: var(--lime);
 }
 .world-banner .wb-title { font-size: 15px; font-weight: 500; }
-.world-banner .wb-link { margin-top: 2px; font-size: 13px; font-weight: 500; color: var(--primary); }
 
 /* ---------- empty state ---------- */
 
@@ -603,6 +643,7 @@ input, select {
   flex-shrink: 0;
   width: 82px; height: 114px;
   border-radius: 6px;
+  box-shadow: var(--shadow-card-img);
   background: var(--primary-soft);
   box-shadow: var(--shadow-screen);
   object-fit: cover;
@@ -638,6 +679,19 @@ input, select {
 .mt12 { margin-top: 12px; }
 .mt14 { margin-top: 14px; }
 .mt18 { margin-top: 18px; }
+.mt4 { margin-top: 4px; }
+
+/* bordered sort chip (holdings) */
+.sort-chip {
+  height: 32px; padding: 0 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.chip.sm { height: 26px; padding: 0 10px; font-size: 12px; }
 .t-value-lg { font-size: 30px; line-height: 36px; font-weight: 500; letter-spacing: -0.4px; }
 
 .movers { display: flex; gap: 10px; margin-top: var(--space-2); }
@@ -691,7 +745,7 @@ a.article-card { color: var(--ink); }
   font-size: 14px; font-weight: 500;
 }
 
-.value-head { display: flex; align-items: flex-start; gap: 14px; }
+.value-head { display: flex; align-items: flex-start; gap: 12px; }
 
 /* home: fan of the top cards inside the portfolio value card */
 .card-fan {

@@ -45,8 +45,8 @@
     backup: "גיבוי",
     needsKey: "נדרש מפתח",
     estimated: "שווי משוער",
-    rising: "הכי עולה",
-    falling: "הכי יורדת",
+    rising: "עלייה",
+    falling: "ירידה",
     notEnoughData: "אין מספיק נתונים עדיין",
     usedOf: (x, y) => `נוצלו ${x} מתוך ${y}`,
     queriesOf: (n, m) => `${n} מתוך ${m}`,
@@ -271,18 +271,24 @@
       .join(" ");
   }
 
-  function holdingCard(p) {
+  function holdingCard(p, opts) {
     const hh = p.h;
     const a = h("a", "holding-card");
     a.href = "#card/" + encodeURIComponent(hh.uid);
 
+    /* text block at the start, thumbnail at the end (mockup: Collection) */
     const r1 = h("span", "r1");
+    const txt = h("span", "txt");
+    const nameline = h("span", "nameline");
+    nameline.appendChild(h("span", "name", hh.name));
+    nameline.appendChild(h("span", "tag " + (hh.grade === "raw" ? "tag--raw" : "tag--psa"), gradeLabel(hh.grade)));
+    txt.appendChild(nameline);
+    if (!opts || opts.showSet !== false) {
+      const setBits = [displaySet(hh.setName), hh.number].filter(Boolean).join(" ");
+      if (setBits) txt.appendChild(h("span", "setnum num", setBits));
+    }
+    r1.appendChild(txt);
     r1.appendChild(thumbEl(hh.cardId, null, "thumb"));
-    r1.appendChild(h("span", "name", hh.name));
-    const tag = h("span", "tag " + (hh.grade === "raw" ? "tag--raw" : "tag--psa"), gradeLabel(hh.grade));
-    r1.appendChild(tag);
-    const setBits = [displaySet(hh.setName), hh.number].filter(Boolean).join(" · ");
-    if (setBits) r1.appendChild(h("span", "setnum num", setBits));
     a.appendChild(r1);
 
     const r2 = h("span", "r2");
@@ -300,11 +306,15 @@
     r2.appendChild(pill);
     a.appendChild(r2);
 
-    const r3 = h("span", "r3");
-    const raw = cards.get(hh.cardId)?.price;
-    r3.appendChild(h("span", "num", `${T.lastPrice} ${raw ? show(fmtMoney(raw.value, raw.currency)) : "— —"}`));
-    r3.appendChild(h("span", null, T.changeBuy));
-    a.appendChild(r3);
+    /* the last-price row belongs to graded cards only (mockup: raw singles
+       end at the value row) */
+    if (hh.grade !== "raw") {
+      const r3 = h("span", "r3");
+      const raw = cards.get(hh.cardId)?.price;
+      r3.appendChild(h("span", "num", `${T.lastPrice} ${raw ? show(fmtMoney(raw.value, raw.currency)) : "— —"}`));
+      r3.appendChild(h("span", null, T.changeBuy));
+      a.appendChild(r3);
+    }
     return a;
   }
 
@@ -315,7 +325,11 @@
     const empty = !Store.getAll().length;
     $("dashboard").hidden = empty;
     $("empty-state").hidden = !empty;
-    if (empty) return;
+    if (empty) {
+      $("empty-asof").textContent =
+        `${T.asOf} ${fmtDateChip(new Date()).replace(/^היום /, "")}, ${fmtTime(new Date())}`;
+      return;
+    }
 
     const valued = pos.filter((p) => p.val);
     const total = valued.reduce((s, p) => s + p.total, 0);
@@ -359,7 +373,7 @@
     $("home-graded-title").textContent = T.graded(gradedPos.length);
     const host = $("home-holdings");
     host.replaceChildren();
-    for (const p of gradedPos.slice(0, 2)) host.appendChild(holdingCard(p));
+    for (const p of gradedPos.slice(0, 2)) host.appendChild(holdingCard(p, { showSet: false }));
   }
 
   /* ---------- HOLDINGS ---------- */
@@ -395,7 +409,7 @@
       const head = h("div", "section-head");
       head.style.marginTop = "0";
       head.appendChild(h("h2", null, T.graded(gradedPos.length)));
-      const sort = h("button", "chip num", sortDesc ? T.sortDesc : T.sortAsc);
+      const sort = h("button", "sort-chip num", sortDesc ? T.sortDesc : T.sortAsc);
       sort.type = "button";
       sort.setAttribute("aria-label", "מיון לפי שווי");
       sort.addEventListener("click", () => { sortDesc = !sortDesc; renderAll(); });
@@ -585,7 +599,7 @@
     txt.appendChild(h("div", "t-text4 faint", p.val
       ? `${T.asOf} ${time} · ${sourceLabel(p.val.src, hh.grade !== "raw" ? hh.grade : null)}`
       : T.unavailable));
-    const chip = h("span", "chip num", fmtDateChip(new Date()));
+    const chip = h("span", "chip sm num", fmtDateChip(new Date()));
     chip.style.marginTop = "10px";
     txt.appendChild(chip);
     head.appendChild(txt);
@@ -763,7 +777,11 @@
       else a.removeAttribute("aria-current");
     });
     if (view === "card") renderCardDetail();
-    window.scrollTo(0, 0);
+    /* the floating nav belongs to the four main screens (mockup: the add
+       and card-detail boards carry no nav) */
+    const nav = document.querySelector(".bottom-nav");
+    nav.hidden = view === "add" || view === "card";
+    window.scrollTo(0, 0); // also expands the nav via the scroll listener
   }
 
   /* ---------- card search (add view) ---------- */
@@ -822,11 +840,11 @@
     let each, note;
     if (gradeValue === "raw") {
       each = raw.value;
-      note = T.srcRaw;
+      note = `מחושב לפי ${T.srcRaw}`;
     } else {
       const mult = GRADE_MULT[gradeValue] ?? 1;
       each = raw.value * mult;
-      note = `${T.srcEst} · ×${mult} לדירוג ${gradeValue}`;
+      note = `מחושב לפי ${T.srcEst} · ×${mult} לדירוג ${gradeValue}`;
     }
     $("est-value").textContent = fmtMoney(each * qtyVal, raw.currency);
     $("est-note").textContent = note;
@@ -1034,41 +1052,6 @@
     $("est-card").hidden = true;
     location.hash = "#home";
     await refresh();
-  });
-
-  /* ---------- demo ---------- */
-
-  $("demo-btn").addEventListener("click", async () => {
-    $("demo-btn").disabled = true;
-    const demo = [
-      { id: "base1-4", grade: "9", qty: 1 },
-      { id: "base1-2", grade: "8", qty: 1 },
-      { id: "base1-58", grade: "10", qty: 2 },
-    ];
-    try {
-      let added = 0;
-      for (const d of demo) {
-        const card = await API.getCard("ptcgio", d.id);
-        if (!card) continue;
-        const est = card.price ? card.price.value * (GRADE_MULT[d.grade] ?? 1) : null;
-        Store.upsert({
-          cardId: card.id, provider: card.provider, name: card.name,
-          setName: card.setName, number: card.number, image: card.image,
-          grade: d.grade, qty: d.qty,
-          cost: est != null ? Math.round(est * 100) / 100 : null,
-          value: null, cert: null,
-        });
-        cards.set(card.id, card);
-        added++;
-      }
-      if (!added) throw new Error("שירותי הקלפים אינם זמינים כרגע.");
-      await refresh();
-    } catch (err) {
-      showBanner(err.message || "טעינת תיק ההדגמה נכשלה.");
-      renderAll();
-    } finally {
-      $("demo-btn").disabled = false;
-    }
   });
 
   /* ---------- refresh (data pipeline unchanged) ---------- */
@@ -1316,6 +1299,17 @@
   }
 
   window.addEventListener("hashchange", route);
+
+  /* the floating nav collapses to a compact pill while scrolling */
+  {
+    const nav = document.querySelector(".bottom-nav");
+    let compact = false;
+    window.addEventListener("scroll", () => {
+      const t = window.scrollY;
+      if (t > 14 && !compact) { compact = true; nav.classList.add("compact"); }
+      else if (t <= 2 && compact) { compact = false; nav.classList.remove("compact"); }
+    }, { passive: true });
+  }
 
   buildGradePills();
   route();
