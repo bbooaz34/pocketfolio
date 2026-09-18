@@ -644,8 +644,9 @@
       .split(/\s+/)
       .filter((w) => w && !SUBJECT_NOISE.has(w.toLowerCase()) && !/^\d+$/.test(w));
     if (!words.length) return null;
+    /* capitalize word starts only — \b\w would also hit the s in "misty's" */
     return words.slice(0, 3).join(" ").toLowerCase()
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+      .replace(/(^|\s)\w/g, (c) => c.toUpperCase());
   }
 
   window.PocketfolioAPI = {

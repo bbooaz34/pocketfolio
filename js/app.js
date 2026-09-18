@@ -259,6 +259,17 @@
     return h("span", imgCls);
   }
 
+  /* PSA brand strings are long ALL-CAPS ("1998 POKEMON JAPANESE HANADA CITY
+     GYM DECK") — compact them for display: drop POKEMON, JAPANESE→JP,
+     title-case. Catalog set names (mixed case) pass through unchanged. */
+  function displaySet(s) {
+    if (!s || /[a-z]/.test(s) || s.length <= 12) return s;
+    return s.replace(/\bPOKEMON\b/g, " ").replace(/\bJAPANESE\b/g, "JP")
+      .split(/\s+/).filter(Boolean)
+      .map((w) => w === "JP" || /^\d/.test(w) ? w : w[0] + w.slice(1).toLowerCase())
+      .join(" ");
+  }
+
   function holdingCard(p) {
     const hh = p.h;
     const a = h("a", "holding-card");
@@ -269,7 +280,7 @@
     r1.appendChild(h("span", "name", hh.name));
     const tag = h("span", "tag " + (hh.grade === "raw" ? "tag--raw" : "tag--psa"), gradeLabel(hh.grade));
     r1.appendChild(tag);
-    const setBits = [hh.setName, hh.number].filter(Boolean).join(" · ");
+    const setBits = [displaySet(hh.setName), hh.number].filter(Boolean).join(" · ");
     if (setBits) r1.appendChild(h("span", "setnum num", setBits));
     a.appendChild(r1);
 
@@ -458,7 +469,7 @@
     p.total = p.val ? p.val.each * hh.qty : 0;
 
     $("cd-name").textContent = hh.name;
-    $("cd-sub").textContent = [hh.setName, hh.number, cards.get(hh.cardId)?.rarity]
+    $("cd-sub").textContent = [displaySet(hh.setName), hh.number, cards.get(hh.cardId)?.rarity]
       .filter(Boolean).join(" · ");
 
     const body = $("cd-body");

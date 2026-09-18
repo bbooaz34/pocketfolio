@@ -268,19 +268,22 @@ input, select {
   display: block;
   flex: none;
 }
-/* long names (e.g. from a PSA cert subject) truncate instead of
-   overflowing the row */
+/* the card name is never truncated — a long one wraps to a second line;
+   the set line is what gives way (shrinks, then ellipsizes) */
 .holding-card .name {
   font-size: 15px; font-weight: 500;
   min-width: 0; flex-shrink: 1;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 .holding-card .r1 .tag { flex: none; }
 .holding-card .setnum {
-  margin-inline-start: auto;
-  font-size: 12px; color: var(--ink-faint); min-width: 24px;
-  flex-shrink: 4; /* the set line gives way before the card name does */
+  /* physical margin: the element is direction:ltr inside the RTL row, so a
+     logical margin-inline-start would land on the wrong side */
+  margin-right: auto;
+  font-size: 12px; color: var(--ink-faint);
+  min-width: 24px; max-width: 40%; flex-shrink: 4;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  direction: ltr; unicode-bidi: isolate; /* Latin set line — ellipsis at its end */
 }
 .holding-card .r2 {
   display: flex; align-items: center; justify-content: space-between;
