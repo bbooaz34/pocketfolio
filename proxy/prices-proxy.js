@@ -38,8 +38,15 @@ export default {
     }
     const url = new URL(request.url);
 
+    /* bare worker URL: a friendly health check instead of an error */
+    if (url.pathname === "/" || url.pathname === "") {
+      return new Response("Pocketfolio proxy is up. Routes: /api/v2/*, /cert/<number>, /news", {
+        headers: { ...CORS, "Content-Type": "text/plain; charset=utf-8" },
+      });
+    }
+
     /* PSA cert page: /cert/12345678 → https://www.psacard.com/cert/12345678 */
-    const cert = url.pathname.match(/^\/cert\/(\d{5,12})$/);
+    const cert = url.pathname.match(/^\/cert\/(\d{5,12})\/?$/);
     if (cert) {
       const upstream = await fetch("https://www.psacard.com/cert/" + cert[1], {
         headers: {
@@ -58,7 +65,7 @@ export default {
     /* TCG news: /news → first reachable RSS feed, cached half an hour.
        (PokeBeach's old /feed endpoint broke in a 2024 site move — their
        front-page news feed lives under the forums now.) */
-    if (url.pathname === "/news") {
+    if (/^\/news\/?$/.test(url.pathname)) {
       const FEEDS = [
         "https://www.pokebeach.com/forums/forum/front-page-news.18/index.rss",
         "https://bleedingcool.com/games/tabletop/card-games/pokemon-tcg/feed/",
