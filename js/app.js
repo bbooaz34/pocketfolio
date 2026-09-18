@@ -271,7 +271,7 @@
       .join(" ");
   }
 
-  function holdingCard(p, opts) {
+  function holdingCard(p) {
     const hh = p.h;
     const a = h("a", "holding-card");
     a.href = "#card/" + encodeURIComponent(hh.uid);
@@ -283,10 +283,8 @@
     nameline.appendChild(h("span", "name", hh.name));
     nameline.appendChild(h("span", "tag " + (hh.grade === "raw" ? "tag--raw" : "tag--psa"), gradeLabel(hh.grade)));
     txt.appendChild(nameline);
-    if (!opts || opts.showSet !== false) {
-      const setBits = [displaySet(hh.setName), hh.number].filter(Boolean).join(" ");
-      if (setBits) txt.appendChild(h("span", "setnum num", setBits));
-    }
+    const setBits = [displaySet(hh.setName), hh.number].filter(Boolean).join(" ");
+    if (setBits) txt.appendChild(h("span", "setnum num", setBits));
     r1.appendChild(txt);
     r1.appendChild(thumbEl(hh.cardId, null, "thumb"));
     a.appendChild(r1);
@@ -373,7 +371,7 @@
     $("home-graded-title").textContent = T.graded(gradedPos.length);
     const host = $("home-holdings");
     host.replaceChildren();
-    for (const p of gradedPos.slice(0, 2)) host.appendChild(holdingCard(p, { showSet: false }));
+    for (const p of gradedPos.slice(0, 2)) host.appendChild(holdingCard(p));
   }
 
   /* ---------- HOLDINGS ---------- */
