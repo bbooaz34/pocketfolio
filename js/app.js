@@ -416,6 +416,7 @@
 
   /* ---------- news (brief §9: two article cards, no faked content) ---------- */
 
+  let currentArticle = null; // the article open in the in-app reader
   let newsItems = null;      // in-memory for this session; API caches 30 min
   let newsLoading = false;
   let newsFailedAt = 0;      // failed fetches retry after a short cooldown
@@ -461,10 +462,19 @@
       host.replaceChildren();
       for (const n of rankNews(newsItems, pos).slice(0, 2)) {
         const a = h("a", "card article-card");
-        a.href = n.link; a.target = "_blank"; a.rel = "noopener";
+        a.href = "#article";
+        a.addEventListener("click", () => { currentArticle = n; });
         if (n.image) {
           const img = h("img", "a-thumb");
           img.src = n.image; img.alt = ""; img.loading = "lazy";
+          /* many news CDNs block hotlinking by Referer; sending none usually
+             passes — and a failed image degrades to the plain placeholder */
+          img.referrerPolicy = "no-referrer";
+          img.addEventListener("error", () => {
+            const th = h("span", "a-thumb");
+            th.setAttribute("aria-hidden", "true");
+            img.replaceWith(th);
+          });
           a.appendChild(img);
         } else {
           const th = h("span", "a-thumb");
@@ -495,6 +505,16 @@
       newsLoading = false;
       if (document.querySelector('[data-view="market"].active')) renderNews(positions());
     });
+  }
+
+  function renderArticle() {
+    if (!currentArticle) return;
+    $("article-title").textContent = currentArticle.title;
+    $("article-src").textContent =
+      [currentArticle.source, fmtAgo(currentArticle.at)].filter(Boolean).join(" · ");
+    $("article-open").href = currentArticle.link;
+    const frame = $("article-frame");
+    if (frame.src !== currentArticle.link) frame.src = currentArticle.link;
   }
 
   function renderMarket(pos) {
@@ -734,7 +754,8 @@
   function activeView() {
     const raw = (location.hash || "#home").slice(1);
     if (raw.startsWith("card/")) return "card";
-    return ["home", "holdings", "market", "settings", "add", "card"].includes(raw) ? raw : "home";
+    if (raw === "article") return currentArticle ? "article" : "market";
+    return ["home", "holdings", "market", "settings", "add"].includes(raw) ? raw : "home";
   }
 
   function route() {
@@ -750,11 +771,17 @@
     document.querySelectorAll(".bottom-nav a").forEach((a) => {
       const on = a.dataset.nav === view ||
         (a.dataset.nav === "holdings" && view === "card") ||
+        (a.dataset.nav === "market" && view === "article") ||
         (a.dataset.nav === "home" && view === "add");
       if (on) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     });
     if (view === "card") renderCardDetail();
+    if (view === "article") renderArticle();
+    else {
+      const f = $("article-frame"); // stop a left-behind article (audio, timers)
+      if (f && f.getAttribute("src")) f.src = "about:blank";
+    }
     window.scrollTo(0, 0);
   }
 
@@ -1286,7 +1313,8 @@
   /* a home-screen shortcut captures the URL as saved — #add or #card/…
      included. A fresh launch always starts at home; the tab views stay
      valid as deep links. */
-  if (location.hash === "#add" || location.hash.startsWith("#card/")) {
+  if (location.hash === "#add" || location.hash === "#article" ||
+      location.hash.startsWith("#card/")) {
     history.replaceState(null, "", "#home");
   }
 
