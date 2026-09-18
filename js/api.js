@@ -559,8 +559,10 @@
     const xml = new DOMParser().parseFromString(await res.text(), "text/xml");
     const items = [...xml.querySelectorAll("item")].slice(0, 20).map((it) => {
       const pick = (tag) => it.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
-      const desc = pick("description");
-      const image = (desc.match(/<img[^>]+src="(https?:[^"]+)"/) || [])[1] ||
+      /* XenForo feeds (PokeBeach) keep the article body in content:encoded */
+      const desc = pick("description") || pick("content:encoded");
+      const image = ((desc + pick("content:encoded"))
+        .match(/<img[^>]+src="(https?:[^"]+)"/) || [])[1] ||
         it.getElementsByTagName("enclosure")[0]?.getAttribute("url") || null;
       let source = "PokeBeach";
       try { source = new URL(pick("link")).hostname.replace(/^www\./, ""); } catch { /* keep */ }
@@ -573,9 +575,11 @@
         source,
       };
     }).filter((n) => n.title && n.link);
-    try {
-      localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({ at: Date.now(), items }));
-    } catch { /* storage full — fine */ }
+    if (items.length) { // never pin an empty result for 30 minutes
+      try {
+        localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({ at: Date.now(), items }));
+      } catch { /* storage full — fine */ }
+    }
     return items;
   }
 

@@ -55,20 +55,38 @@ export default {
       });
     }
 
-    /* TCG news: /news → PokeBeach's RSS feed, cached half an hour */
+    /* TCG news: /news → first reachable RSS feed, cached half an hour.
+       (PokeBeach's old /feed endpoint broke in a 2024 site move — their
+       front-page news feed lives under the forums now.) */
     if (url.pathname === "/news") {
-      const upstream = await fetch("https://www.pokebeach.com/feed", {
-        headers: { Accept: "application/rss+xml, text/xml;q=0.9" },
-        cf: { cacheTtl: 1800, cacheEverything: true },
-      });
-      return new Response(await upstream.text(), {
-        status: upstream.status,
-        headers: {
-          ...CORS,
-          "Content-Type": "text/xml; charset=utf-8",
-          "Cache-Control": "public, max-age=1800",
-        },
-      });
+      const FEEDS = [
+        "https://www.pokebeach.com/forums/forum/front-page-news.18/index.rss",
+        "https://bleedingcool.com/games/tabletop/card-games/pokemon-tcg/feed/",
+        "https://pokemondb.net/news/feed",
+      ];
+      for (const feed of FEEDS) {
+        try {
+          const upstream = await fetch(feed, {
+            headers: {
+              Accept: "application/rss+xml, application/xml, text/xml;q=0.9",
+              "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) " +
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile Safari/604.1",
+            },
+            cf: { cacheTtl: 1800, cacheEverything: true },
+          });
+          if (!upstream.ok) continue;
+          const body = await upstream.text();
+          if (!body.includes("<item")) continue; // an error page, not a feed
+          return new Response(body, {
+            headers: {
+              ...CORS,
+              "Content-Type": "text/xml; charset=utf-8",
+              "Cache-Control": "public, max-age=1800",
+            },
+          });
+        } catch { /* try the next feed */ }
+      }
+      return new Response("no news feed reachable", { status: 502, headers: CORS });
     }
 
     if (!url.pathname.startsWith("/api/v2/")) {

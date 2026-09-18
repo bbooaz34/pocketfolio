@@ -418,6 +418,7 @@
 
   let newsItems = null;      // in-memory for this session; API caches 30 min
   let newsLoading = false;
+  let newsFailedAt = 0;      // failed fetches retry after a short cooldown
 
   function fmtAgo(t) {
     if (!t) return "";
@@ -476,11 +477,13 @@
     }
     host.replaceChildren(newsEmptyCard());
     if (newsItems || newsLoading || !API.hasGradedProxy()) return;
+    if (Date.now() - newsFailedAt < 5 * 60 * 1000) return;
     newsLoading = true;
     API.fetchNews().then((items) => {
-      newsItems = items || [];
+      newsItems = items && items.length ? items : null;
+      if (!newsItems) newsFailedAt = Date.now();
       if (document.querySelector('[data-view="market"].active')) renderNews(positions());
-    }).catch(() => { newsItems = []; }).finally(() => { newsLoading = false; });
+    }).catch(() => { newsFailedAt = Date.now(); }).finally(() => { newsLoading = false; });
   }
 
   function renderMarket(pos) {
