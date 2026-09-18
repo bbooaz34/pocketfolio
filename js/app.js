@@ -980,14 +980,16 @@
 
       if (API.hasGradedKey()) {
         let keyRejected = false;
-        let attempted = 0;
-        await Promise.all(refs.map(async (r) => {
-          const card = cards.get(r.id);
+        /* eBay medians are looked up for every held card — including
+           cert-only ("manual") slabs, whose name/number come from the PSA
+           cert and can still match a sales row. */
+        const gradedIds = [...new Set(holdings.map((hh) => hh.cardId))];
+        await Promise.all(gradedIds.map(async (id) => {
+          const card = cards.get(id);
           if (!card) return;
-          attempted++;
           try {
             const g = await API.gradedFor(card);
-            if (g) graded.set(r.id, g);
+            if (g) graded.set(id, g);
           } catch (err) {
             if (err.unauthorized) keyRejected = true;
           }
@@ -1153,6 +1155,21 @@
   $("date-change-btn").addEventListener("click", () => {});
 
   /* ---------- init ---------- */
+
+  /* Seed the in-memory card map from the metadata each holding already
+     persists, so thumbnails, set lines and estimates render before the first
+     refresh completes, when providers are unreachable, and for cert-only
+     ("manual") slabs that no catalog can re-fetch. A live refresh overwrites
+     these stubs with fresh cards. */
+  for (const hh of Store.getAll()) {
+    if (!cards.has(hh.cardId)) {
+      cards.set(hh.cardId, {
+        provider: hh.provider || "ptcgio", id: hh.cardId, name: hh.name,
+        setName: hh.setName ?? null, number: hh.number ?? null,
+        rarity: null, image: hh.image ?? null, price: null,
+      });
+    }
+  }
 
   window.addEventListener("hashchange", route);
 

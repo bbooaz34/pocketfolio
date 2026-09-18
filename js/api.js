@@ -449,7 +449,9 @@
 
   function pptAttempts(card) {
     const first = card.name.split(/\s+/)[0];
-    const setId = card.id.includes("-") ? card.id.split("-")[0] : null;
+    /* a cert-only slab's id ("psa-<cert>") is not a catalog set id */
+    const setId = card.provider !== "manual" && card.id.includes("-")
+      ? card.id.split("-")[0] : null;
     const attempts = [];
     if (setId) attempts.push({ search: first, setId });
     attempts.push({ search: card.name });
