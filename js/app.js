@@ -74,7 +74,6 @@
     searchLimited: "חריגה ממכסת החיפושים — המתינו רגע ונסו שוב",
     noCards: "לא נמצאו קלפים",
     newsEmpty: "אין חדשות חדשות",
-    articleNoBody: "לכתבה זו אין תקציר בפיד — פתחו אותה באתר המקור.",
     rawMarketShort: "שוק גולמי",
   };
 
@@ -417,7 +416,6 @@
 
   /* ---------- news (brief §9: two article cards, no faked content) ---------- */
 
-  let currentArticle = null; // the article open in the in-app reader
   let newsItems = null;      // in-memory for this session; API caches 30 min
   let newsLoading = false;
   let newsFailedAt = 0;      // failed fetches retry after a short cooldown
@@ -463,13 +461,12 @@
       host.replaceChildren();
       for (const n of rankNews(newsItems, pos).slice(0, 2)) {
         const a = h("a", "card article-card");
-        a.href = "#article";
-        a.addEventListener("click", () => { currentArticle = n; });
+        a.href = n.link; a.target = "_blank"; a.rel = "noopener";
         if (n.image) {
           const img = h("img", "a-thumb");
           img.src = n.image; img.alt = ""; img.loading = "lazy";
-          /* many news CDNs block hotlinking by Referer; sending none usually
-             passes — and a failed image degrades to the plain placeholder */
+          /* news CDNs block hotlinking by Referer; a failed image degrades
+             to the plain placeholder instead of a broken-image icon */
           img.referrerPolicy = "no-referrer";
           img.addEventListener("error", () => {
             const th = h("span", "a-thumb");
@@ -506,57 +503,6 @@
       newsLoading = false;
       if (document.querySelector('[data-view="market"].active')) renderNews(positions());
     });
-  }
-
-  /* Rebuild the feed's article HTML from a whitelist — elements are created
-     fresh and only safe attributes copied, so nothing from the feed executes.
-     Unknown wrappers (div/span/section) are unwrapped, not dropped. */
-  const READER_TAGS = new Set(["P", "BR", "B", "STRONG", "I", "EM", "U", "S",
-    "H1", "H2", "H3", "H4", "UL", "OL", "LI", "BLOCKQUOTE", "IMG", "A",
-    "FIGURE", "FIGCAPTION", "TABLE", "THEAD", "TBODY", "TR", "TD", "TH"]);
-
-  function sanitizeInto(node, out) {
-    for (const child of node.childNodes) {
-      if (child.nodeType === Node.TEXT_NODE) {
-        out.appendChild(document.createTextNode(child.nodeValue));
-        continue;
-      }
-      if (child.nodeType !== Node.ELEMENT_NODE) continue;
-      const tag = child.tagName;
-      if (tag === "SCRIPT" || tag === "STYLE" || tag === "IFRAME") continue;
-      if (!READER_TAGS.has(tag)) { sanitizeInto(child, out); continue; }
-      const el = document.createElement(tag === "H1" ? "H2" : tag);
-      if (tag === "IMG") {
-        const src = child.getAttribute("src") || "";
-        if (!/^https?:/i.test(src)) continue;
-        el.src = src; el.alt = child.getAttribute("alt") || "";
-        el.loading = "lazy"; el.referrerPolicy = "no-referrer";
-        el.addEventListener("error", () => el.remove());
-      } else if (tag === "A") {
-        const href = child.getAttribute("href") || "";
-        if (/^https?:/i.test(href)) {
-          el.href = href; el.target = "_blank"; el.rel = "noopener";
-        }
-      }
-      sanitizeInto(child, el);
-      out.appendChild(el);
-    }
-  }
-
-  function renderArticle() {
-    if (!currentArticle) return;
-    $("article-title").textContent = currentArticle.title;
-    $("article-src").textContent =
-      [currentArticle.source, fmtAgo(currentArticle.at)].filter(Boolean).join(" · ");
-    $("article-open").href = currentArticle.link;
-    $("article-more").href = currentArticle.link;
-    const body = $("article-body");
-    body.replaceChildren();
-    const doc = new DOMParser().parseFromString(currentArticle.html || "", "text/html");
-    sanitizeInto(doc.body, body);
-    if (!body.textContent.trim()) {
-      body.appendChild(h("p", "t-text2 muted", T.articleNoBody));
-    }
   }
 
   function renderMarket(pos) {
@@ -796,8 +742,7 @@
   function activeView() {
     const raw = (location.hash || "#home").slice(1);
     if (raw.startsWith("card/")) return "card";
-    if (raw === "article") return currentArticle ? "article" : "market";
-    return ["home", "holdings", "market", "settings", "add"].includes(raw) ? raw : "home";
+    return ["home", "holdings", "market", "settings", "add", "card"].includes(raw) ? raw : "home";
   }
 
   function route() {
@@ -813,13 +758,11 @@
     document.querySelectorAll(".bottom-nav a").forEach((a) => {
       const on = a.dataset.nav === view ||
         (a.dataset.nav === "holdings" && view === "card") ||
-        (a.dataset.nav === "market" && view === "article") ||
         (a.dataset.nav === "home" && view === "add");
       if (on) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     });
     if (view === "card") renderCardDetail();
-    if (view === "article") renderArticle();
     window.scrollTo(0, 0);
   }
 
@@ -1351,8 +1294,7 @@
   /* a home-screen shortcut captures the URL as saved — #add or #card/…
      included. A fresh launch always starts at home; the tab views stay
      valid as deep links. */
-  if (location.hash === "#add" || location.hash === "#article" ||
-      location.hash.startsWith("#card/")) {
+  if (location.hash === "#add" || location.hash.startsWith("#card/")) {
     history.replaceState(null, "", "#home");
   }
 

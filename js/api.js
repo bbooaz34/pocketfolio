@@ -576,10 +576,7 @@
         title: pick("title"),
         link: pick("link"),
         at: Date.parse(pick("pubDate")) || null,
-        text: desc.replace(/<[^>]*>/g, " ").slice(0, 4000),
-        /* the feed carries the article body — the in-app reader renders it
-           (sanitized) since news sites refuse iframing */
-        html: (pick("content:encoded") || pick("description")).slice(0, 80000),
+        text: desc.replace(/<[^>]*>/g, " "),
         image,
         source,
       };
