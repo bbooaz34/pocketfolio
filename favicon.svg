@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Pocketfolio: card fan on white, brand colors from css/styles.css tokens
+       (lime #DBFF00, primary #0066FF, negative pink #E8437F) -->
+  <rect width="64" height="64" fill="#FFFFFF"/>
+  <g>
+    <rect x="9" y="18" width="24" height="36" rx="5" fill="#DBFF00"
+          stroke="#1D1D20" stroke-opacity="0.12" stroke-width="1"
+          transform="rotate(-10 21 36)"/>
+    <rect x="31" y="18" width="24" height="36" rx="5" fill="#E8437F"
+          transform="rotate(10 43 36)"/>
+    <rect x="20" y="13" width="24" height="36" rx="5" fill="#0066FF"
+          stroke="#FFFFFF" stroke-width="3"/>
+  </g>
+</svg>
