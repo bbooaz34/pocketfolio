@@ -484,6 +484,10 @@ async function priceWithPPT(cards, out, prev) {
         search: row.name || card.name,
         lastPriced: today,
       };
+      /* which row we actually bound to — the only way to catch a card that
+         matched a different printing of the same name */
+      console.log(`  ${card.id} <- "${row.name}" · ${row.setName ?? row.set?.name ?? "?"}` +
+        ` #${row.cardNumber ?? row.number ?? "-"} · setId=${row.setId ?? "-"} tcg=${row.tcgPlayerId ?? "-"}`);
       const hist = pptHistory(row);
       if (hist) histories.set(card.id, hist);
       const gradedParsed = hist && Object.keys(hist).some((k) => k !== "raw");

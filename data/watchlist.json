@@ -10,6 +10,7 @@
     { "id": "base1-44",  "name": "Bulbasaur",  "setName": "Base",            "number": "44",  "pcQuery": "bulbasaur base set 44/102 pokemon" },
     { "id": "gym2-118",  "name": "Misty's Tears", "setName": "Gym Challenge", "number": "118", "pcQuery": "misty's tears gym challenge 118/132 pokemon" },
     { "id": "gym2-118@jp", "name": "Misty's Tears", "setName": "Hanada City Gym", "language": "japanese", "pcQuery": "misty's tears japanese gym pokemon" },
+    { "id": "psa-154146687@jp", "name": "Togepi", "setName": "Gold Silver to a New World", "language": "japanese", "pcQuery": "togepi japanese gold silver new world pokemon" },
     { "id": "neo1-9",    "name": "Lugia",      "setName": "Neo Genesis",     "number": "9",   "pcQuery": "lugia neo genesis 9/111 pokemon" },
     { "id": "base5-73",  "name": "The Boss's Way", "setName": "Team Rocket",  "number": "73",  "pcQuery": "the boss's way team rocket 73/82 pokemon" },
     { "id": "swsh7-215", "name": "Umbreon VMAX", "setName": "Evolving Skies", "number": "215", "pcQuery": "umbreon vmax alt art evolving skies 215/203 pokemon" },
