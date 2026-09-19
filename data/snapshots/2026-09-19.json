@@ -1,10 +1,169 @@
 {
  "date": "2026-09-19",
- "builtAt": "2026-09-19T12:49:58.150Z",
+ "builtAt": "2026-09-19T13:04:49.577Z",
  "source": "ppt",
  "cards": {
+  "base1-2": {
+   "pcId": null,
+   "tcgPlayerId": "42360",
+   "name": "Blastoise",
+   "set": "Base",
+   "number": "2",
+   "grades": {
+    "2": 9100,
+    "3": 8000,
+    "4": 9999,
+    "5": 11125,
+    "6": 14475,
+    "7": 19000,
+    "8": 31791,
+    "9": 80000,
+    "10": 795000,
+    "raw": 22970
+   },
+   "metrics": {
+    "2": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "3": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "4": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "5": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.2857142857142857,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.2857142857142857,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "10": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
+   "salesVolume": null,
+   "confidence": "low",
+   "pricedOn": "2026-09-19"
+  },
+  "base1-15": {
+   "pcId": null,
+   "tcgPlayerId": "42355",
+   "name": "Venusaur",
+   "set": "Base",
+   "number": "15",
+   "grades": {
+    "1": 12540,
+    "2": 5999,
+    "3": 7350,
+    "4": 7500,
+    "5": 9495,
+    "6": 11000,
+    "7": 18125,
+    "8": 25250,
+    "9": 52500,
+    "raw": 17774
+   },
+   "metrics": {
+    "1": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "2": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "3": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "4": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "5": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
+   "salesVolume": null,
+   "confidence": "low",
+   "pricedOn": "2026-09-19"
+  },
   "base1-4": {
    "pcId": null,
+   "tcgPlayerId": "42479",
    "name": "Charizard",
    "set": "Base",
    "number": "4",
@@ -20,12 +179,70 @@
     "9": 145000,
     "raw": 51290
    },
+   "metrics": {
+    "1": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "2": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "3": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "4": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "5": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   },
   "base1-46": {
    "pcId": null,
+   "tcgPlayerId": "42389",
    "name": "Charmander",
    "set": "Base",
    "number": "46",
@@ -37,12 +254,46 @@
     "10": 21999,
     "raw": 265
    },
+   "metrics": {
+    "6": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "10": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   },
   "base1-58": {
    "pcId": null,
+   "tcgPlayerId": "161748",
    "name": "Pikachu",
    "set": "Base",
    "number": "58",
@@ -59,12 +310,76 @@
     "10": 56391,
     "raw": 4950
    },
+   "metrics": {
+    "1": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "2": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "3": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "4": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "5": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0.7142857142857143,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 1.1428571428571428,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 1.2857142857142858,
+     "salesCount": null
+    },
+    "10": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0.8571428571428571,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   },
   "base1-63": {
    "pcId": null,
+   "tcgPlayerId": "42408",
    "name": "Squirtle",
    "set": "Base",
    "number": "63",
@@ -78,12 +393,58 @@
     "10": 25500,
     "raw": 486
    },
+   "metrics": {
+    "4": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "5": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "10": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   },
   "base1-44": {
    "pcId": null,
+   "tcgPlayerId": "42387",
    "name": "Bulbasaur",
    "set": "Base",
    "number": "44",
@@ -96,12 +457,52 @@
     "10": 30000,
     "raw": 369
    },
+   "metrics": {
+    "5": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "10": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   },
   "gym2-118": {
    "pcId": null,
+   "tcgPlayerId": "87549",
    "name": "Misty's Tears",
    "set": "Gym Challenge",
    "number": "118",
@@ -114,12 +515,52 @@
     "10": 104789,
     "raw": 5476
    },
+   "metrics": {
+    "5": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "10": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   },
   "neo1-9": {
    "pcId": null,
+   "tcgPlayerId": "86903",
    "name": "Lugia",
    "set": "Neo Genesis",
    "number": "9",
@@ -135,12 +576,70 @@
     "9": 672500,
     "raw": 107979
    },
+   "metrics": {
+    "1": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "2": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "3": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.2857142857142857,
+     "salesCount": null
+    },
+    "4": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "5": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.2857142857142857,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.42857142857142855,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.8571428571428571,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.42857142857142855,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   },
   "swsh7-215": {
    "pcId": null,
+   "tcgPlayerId": "246723",
    "name": "Umbreon VMAX",
    "set": "Evolving Skies",
    "number": "215",
@@ -157,12 +656,76 @@
     "10": 420000,
     "raw": 228314
    },
+   "metrics": {
+    "1": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "2": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "3": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "4": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "5": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.5714285714285714,
+     "salesCount": null
+    },
+    "10": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 2.7142857142857144,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "high",
    "pricedOn": "2026-09-19"
   },
   "swsh4-188": {
    "pcId": null,
+   "tcgPlayerId": "226434",
    "name": "Pikachu VMAX",
    "set": "Vivid Voltage",
    "number": "188",
@@ -175,12 +738,52 @@
     "10": 35000,
     "raw": 17499
    },
+   "metrics": {
+    "3": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "10": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 1.1428571428571428,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   },
   "sv3pt5-6": {
    "pcId": null,
+   "tcgPlayerId": "502558",
    "name": "Charizard",
    "set": "151",
    "number": "6",
@@ -192,8 +795,41 @@
     "10": 9599,
     "raw": 808
    },
+   "metrics": {
+    "4": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "10": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
    "salesVolume": null,
-   "confidence": "fallback",
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   }
  }
