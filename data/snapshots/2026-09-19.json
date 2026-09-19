@@ -1,185 +1,8 @@
 {
  "date": "2026-09-19",
- "builtAt": "2026-09-19T20:38:40.142Z",
+ "builtAt": "2026-09-19T20:52:51.810Z",
  "source": "ppt",
  "cards": {
-  "psa-77452905@jp": {
-   "pcId": null,
-   "tcgPlayerId": "614817",
-   "name": "Misty's Tears",
-   "set": "Hanada City Gym",
-   "number": null,
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/614817_in_400x400.jpg",
-   "grades": {
-    "1": 6300,
-    "2": 5600,
-    "3": 5150,
-    "4": 5700,
-    "5": 13550,
-    "6": 10812,
-    "7": 12705,
-    "8": 15400,
-    "9": 28750,
-    "10": 200000,
-    "raw": 14954
-   },
-   "metrics": {
-    "1": {
-     "confidence": "high",
-     "effective": "high",
-     "trend": "down",
-     "dailyVolume7Day": 0.7142857142857143,
-     "salesCount": 94,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 7,
-     "lastSaleDate": "2026-09-17",
-     "spread": {
-      "low": 4577,
-      "high": 17000
-     }
-    },
-    "2": {
-     "confidence": "low",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 15,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 261,
-     "lastSaleDate": "2026-09-04",
-     "spread": {
-      "low": 2800,
-      "high": 6200
-     }
-    },
-    "3": {
-     "confidence": "medium",
-     "effective": "medium",
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": 22,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-13",
-     "spread": {
-      "low": 3164,
-      "high": 7700
-     }
-    },
-    "4": {
-     "confidence": "medium",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 15,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-10",
-     "spread": {
-      "low": 3600,
-      "high": 8200
-     }
-    },
-    "5": {
-     "confidence": "low",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": 19,
-     "priceField": "marketPrice7Day",
-     "smartRejected": "outside-observed-range",
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-13",
-     "spread": {
-      "low": 3500,
-      "high": 9999
-     }
-    },
-    "6": {
-     "confidence": "medium",
-     "effective": "medium",
-     "trend": "up",
-     "dailyVolume7Day": 0.2857142857142857,
-     "salesCount": 11,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 14,
-     "lastSaleDate": "2026-09-14",
-     "spread": {
-      "low": 4500,
-      "high": 15000
-     }
-    },
-    "7": {
-     "confidence": "high",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 30,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 90,
-     "lastSaleDate": "2026-08-19",
-     "spread": {
-      "low": 4500,
-      "high": 17500
-     }
-    },
-    "8": {
-     "confidence": "high",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 68,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-10",
-     "spread": {
-      "low": 5100,
-      "high": 25000
-     }
-    },
-    "9": {
-     "confidence": "medium",
-     "effective": "medium",
-     "trend": "up",
-     "dailyVolume7Day": 0.5714285714285714,
-     "salesCount": 82,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 7,
-     "lastSaleDate": "2026-09-17",
-     "spread": {
-      "low": 15969,
-      "high": 43028
-     }
-    },
-    "10": {
-     "confidence": "low",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": 34,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-15",
-     "spread": {
-      "low": 90000,
-      "high": 269900
-     }
-    }
-   },
-   "salesVelocityWeekly": 11.627906976744187,
-   "salesVolume": null,
-   "confidence": "high",
-   "pricedOn": "2026-09-19"
-  },
   "base1-4": {
    "pcId": null,
    "tcgPlayerId": "42382",
@@ -1276,13 +1099,190 @@
    "confidence": "low",
    "pricedOn": "2026-09-19"
   },
+  "psa-77452905@jp": {
+   "pcId": null,
+   "tcgPlayerId": "614817",
+   "name": "Misty's Tears",
+   "set": "Hanada City Gym",
+   "number": null,
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/614817_in_400x400.jpg",
+   "grades": {
+    "1": 6300,
+    "2": 5600,
+    "3": 5150,
+    "4": 5700,
+    "5": 13550,
+    "6": 10812,
+    "7": 12705,
+    "8": 15400,
+    "9": 28750,
+    "10": 200000,
+    "raw": 14954
+   },
+   "metrics": {
+    "1": {
+     "confidence": "high",
+     "effective": "high",
+     "trend": "down",
+     "dailyVolume7Day": 0.7142857142857143,
+     "salesCount": 94,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 4577,
+      "high": 17000
+     }
+    },
+    "2": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 261,
+     "lastSaleDate": "2026-09-04",
+     "spread": {
+      "low": 2800,
+      "high": 6200
+     }
+    },
+    "3": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 22,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 3164,
+      "high": 7700
+     }
+    },
+    "4": {
+     "confidence": "medium",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-10",
+     "spread": {
+      "low": 3600,
+      "high": 8200
+     }
+    },
+    "5": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 19,
+     "priceField": "marketPrice7Day",
+     "smartRejected": "outside-observed-range",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 3500,
+      "high": 9999
+     }
+    },
+    "6": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.2857142857142857,
+     "salesCount": 11,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-14",
+     "spread": {
+      "low": 4500,
+      "high": 15000
+     }
+    },
+    "7": {
+     "confidence": "high",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 30,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-19",
+     "spread": {
+      "low": 4500,
+      "high": 17500
+     }
+    },
+    "8": {
+     "confidence": "high",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 68,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-10",
+     "spread": {
+      "low": 5100,
+      "high": 25000
+     }
+    },
+    "9": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.5714285714285714,
+     "salesCount": 82,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 15969,
+      "high": 43028
+     }
+    },
+    "10": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 34,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-15",
+     "spread": {
+      "low": 90000,
+      "high": 269900
+     }
+    }
+   },
+   "salesVelocityWeekly": 11.627906976744187,
+   "salesVolume": null,
+   "confidence": "high",
+   "pricedOn": "2026-09-19"
+  },
   "psa-154146687@jp": {
    "pcId": null,
    "tcgPlayerId": "575874",
    "name": "Togepi",
    "set": "Gold Silver to a New World",
    "number": null,
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/575874_in_400x400.jpg",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/89928_in_400x400.jpg",
    "grades": {
     "1": 20000,
     "5": 8132,
