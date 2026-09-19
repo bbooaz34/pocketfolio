@@ -35,6 +35,10 @@
     singles: (n) => `סינגלים (${n})`,
     srcEbay: "חציון מכירות eBay",
     srcEbayGrade: (g) => `חציון מכירות eBay לדירוג ${g}`,
+    srcSmartGrade: (g) => `מחיר eBay מסונן לדירוג ${g}`,
+    src7dGrade: (g) => `מחיר eBay ב-7 ימים לדירוג ${g}`,
+    spreadWide: "מדגם מפוזר",
+    noSalesWeek: "לא נמכר השבוע",
     srcEst: "הערכה משער השוק הגולמי",
     srcManual: "שווי שהוזן ידנית",
     srcRaw: "שער השוק הגולמי",
@@ -219,6 +223,9 @@
       return {
         each: g / 100, src: "snapshot", date: snap.date, builtAt: snap.builtAt,
         superseded: manual && builtAt > manualAt, confidence: entry.confidence,
+        /* per-grade provenance: which field the number came from, how active
+           that grade is, how wide the sample spread is */
+        m: entry.metrics?.[String(hh.grade)] ?? null,
         jpFallback,
       };
     }
@@ -250,6 +257,25 @@
 
   /* one line under a value — a number whose origin is invisible is a number
      the user cannot trust (POCKETFOLIO-PRICING.md §4) */
+  /* What the number is, said plainly — a filtered market price is not a
+     median, and saying "median" when it is not is the overclaim we removed. */
+  function methodName(priceField, grade) {
+    if (priceField === "smartMarketPrice") return T.srcSmartGrade(grade);
+    if (priceField === "marketPrice7Day") return T.src7dGrade(grade);
+    return T.srcEbayGrade(grade);
+  }
+
+  /* Caveats the number cannot carry on its own: a sample that spans a wide
+     range, or a grade nothing has sold at this week. */
+  function caveats(m) {
+    if (!m) return "";
+    const out = [];
+    const wide = m.spread && m.spread.low > 0 && m.spread.high / m.spread.low > 2;
+    if (wide || m.effective === "medium" || m.effective === "low") out.push(T.spreadWide);
+    if (m.dailyVolume7Day === 0) out.push(T.noSalesWeek);
+    return out.length ? ` · ${out.join(" · ")}` : "";
+  }
+
   function sourceLine(val, grade) {
     if (!val) return T.noPrice;
     if (val.src === "manual-pinned") return T.manualPinnedLine;
@@ -258,8 +284,8 @@
     if (val.src === "snapshot") {
       const d = fmtDM(val.date);
       return (grade && grade !== "raw"
-        ? `${T.asOf} ${d} · ${T.srcEbayGrade(grade)}`
-        : `${T.asOf} ${d} · ${T.rawMarket}`) + en;
+        ? `${T.asOf} ${d} · ${methodName(val.m?.priceField, grade)}`
+        : `${T.asOf} ${d} · ${T.rawMarket}`) + en + caveats(val.m);
     }
     if (val.src === "raw") return T.rawMarket + en;
     return T.srcEst + en;
@@ -836,9 +862,12 @@
       }
     };
     draw(localPts);
-    /* One history file per card, built by the daily job (§6) — the provider's
-       backfilled months plus our own snapshot values. Walking snapshot files
-       remains the fallback for cards with no history yet. */
+    /* One history file per card, built by the daily job (§6). The provider
+       backfills BOTH raw (priceHistory.conditions) and every PSA grade
+       (ebay.priceHistory, a dated series that honours `days`), so a chart has
+       months of real points from day one; our own snapshots then accumulate
+       on top. Walking snapshot files remains the fallback for a card the
+       daily job has not reached yet. */
     {
       const uid = hh.uid;
       (async () => {
@@ -1047,14 +1076,17 @@
     /* the snapshot's grade median beats any multiplier estimate; a Japanese
        print reads its own @jp entry first */
     const jpEntry = selectedCard.jp ? snapLatest?.cards?.[selectedCard.id + "@jp"] : null;
-    const snapG = (jpEntry || snapLatest?.cards?.[selectedCard.id])?.grades?.[gradeValue];
+    const snapEntry = jpEntry || snapLatest?.cards?.[selectedCard.id];
+    const snapG = snapEntry?.grades?.[gradeValue];
     let each, note, currency = "USD";
     if (snapG != null) {
+      const m = snapEntry.metrics?.[String(gradeValue)] ?? null;
       each = snapG / 100;
       note = gradeValue === "raw"
         ? `מחושב לפי ${T.rawMarket}`
-        : `מחושב לפי ${T.srcEbayGrade(gradeValue)}`;
+        : `מחושב לפי ${methodName(m?.priceField, gradeValue)}`;
       if (selectedCard.jp && !jpEntry) note += ` · ${T.enFallback}`;
+      if (gradeValue !== "raw") note += caveats(m);
     } else if (selectedCard.price) {
       const raw = selectedCard.price;
       currency = raw.currency;

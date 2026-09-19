@@ -141,3 +141,111 @@
 6. שדות ה-API של PriceCharting לקלפים לא תואמים את שמותיהם
    (`graded-price`=PSA 9, `manual-only-price`=PSA 10 וכו') — ממופה ב-
    `PC_GRADE_FIELD` בבילדר וב-POCKETFOLIO-PRICING.md §2.
+7. **`smartMarketPrice` הוא אובייקט, לא מספר** — בדיקת `typeof === "number"`
+   הפילה אותו בשקט במשך כל הזמן (ראו החקירה למטה).
+
+---
+
+## חקירה: מה המספרים של eBay אצל PPT באמת אומרים (19.09.2026)
+
+הורץ `scripts/probe-ebay.mjs` דרך workflow "probe ebay" על **base1-4**
+(Charizard, Base Set), שלוש קריאות `days=7/30/180`, 9 קרדיטים.
+הרקע: דף של PPT הראה ממוצע ‎$38.68, חציון ‎$38.00, טווח ‎$14.5–$65 ו-32 מכירות —
+ונשאלה השאלה אם מדובר בנתון עדכני בכלל.
+
+### התשובות
+
+**1. האם `salesCount` חלון-תלוי? לא — ואין בכלל שדה בשם הזה.**
+השדה נקרא `count`, והוא **זהה לחלוטין** ב-`days=7`, `days=30` ו-`days=180`
+(psa7=40, psa8=27, psa9=3…), וכך גם `totalSales=378`. הפרמטר `days` **לא** מגביל
+את האגרגטים. מה שכן מגדיר אותם: `dateRangeStart`/`dateRangeEnd` של הספק —
+בבדיקה 21.06–17.09, כלומר ~88 יום שאיננו שולטים בהם.
+המסקנה המעשית: `count`/`averagePrice`/`medianPrice` הם **נתון מצטבר בחלון של
+הספק**, ואסור להציג אותם כ"פעילות אחרונה". דוגמה חדה: ב-PSA 9 של הקלף הזה
+`count=3`, המכירה האחרונה ב-30.07 — ובכל זאת `medianPrice=1450` הוא מה ששמרנו
+כשווי של היום.
+
+**2. האם יש נתון חלון אמיתי? כן, כמה:**
+- `marketPrice7Day` / `marketPriceMedian7Day` — חלון 7 ימים מפורש, אבל **null
+  ב-7 מתוך 9 הדירוגים** (רק psa6=350 ו-psa3=300 קיימים).
+- `dailyVolume7Day` — תמיד קיים, ולרוב **0** (7 מתוך 9 דירוגים).
+- `smartMarketPrice.daysUsed` — החלון שבו הספק באמת השתמש: 30, 90, ואפילו
+  **275 ו-353 ימים**.
+- `lastSaleDate` לכל דירוג — סימן העדכניות הכן ביותר.
+- `ebay.salesVelocity` — אובייקט `{dailyAverage, weeklyAverage, monthlyTotal}`,
+  ברמת הקלף ולא לפי דירוג.
+
+**3. האם `ebay.priceHistory` היא סדרה מתוארכת? כן — ומכבדת את `days`.**
+מבנה: `psaN → "YYYY-MM-DD" → {average, count, totalValue, sevenDayAverage,
+sevenDayVolumeAvg, sevenDayValueAvg, rollingWindow}`.
+אורך לפי חלון: ב-`days=7` כמעט הכול ריק, ב-`days=30` 0–4 נקודות, ב-`days=180`
+1–26 נקודות לדירוג. **מכאן: ענף ההיסטוריה המדורגת ב-`pptHistory()` נכון ונשאר.**
+
+**4. אילו שדות מחיר קיימים לכל דירוג:**
+`count`, `totalValue`, `averagePrice`, `medianPrice`, `minPrice`, `maxPrice`,
+`marketPrice7Day`, `marketPriceMedian7Day`, `dailyVolume7Day`, `marketTrend`,
+`lastMarketUpdate`, `lastSaleDate`, ו-`smartMarketPrice`.
+**`smartMarketConfidence` ו-`salesCount` אינם קיימים.**
+
+### הבאג שהחקירה חשפה
+
+`smartMarketPrice` הוא **אובייקט** `{price, confidence, method, daysUsed}` —
+לא מספר. הקוד בחר מחיר עם
+`[v.smartMarketPrice, v.medianPrice, …].find(x => typeof x === "number")`,
+כך שהאובייקט נפל בשקט וכל מחיר שנשמר אי פעם היה `medianPrice`. באותו אופן
+`v.smartMarketConfidence` היה תמיד `undefined` (הביטחון יושב ב-
+`smartMarketPrice.confidence`), ולכן `metrics[].confidence` תמיד `null`
+וה-confidence חושב תמיד לפי נפח בלבד.
+
+### הפיקסצ'ר (base1-4, `days=30`, נתוני שוק ציבוריים)
+
+```json
+{
+ "totalSales": 378,
+ "salesVelocity": { "dailyAverage": 0.8, "weeklyAverage": 5.5813953488372094, "monthlyTotal": 24 },
+ "dateRangeStart": "2026-06-21T00:00:00.000Z",
+ "dateRangeEnd": "2026-09-17T00:00:00.000Z",
+ "salesByGrade": {
+  "psa9": { "count": 3, "totalValue": 2900, "averagePrice": 1450, "medianPrice": 1450,
+            "minPrice": 1400, "maxPrice": 1500, "marketPrice7Day": null,
+            "marketPriceMedian7Day": null, "dailyVolume7Day": 0, "marketTrend": "down",
+            "lastSaleDate": "2026-07-30T00:00:00.000Z",
+            "smartMarketPrice": { "price": 1345, "confidence": "low",
+                                  "method": "all_filtered_weighted", "daysUsed": 353 } },
+  "psa8": { "count": 27, "totalValue": 17324.39, "averagePrice": 692.9756, "medianPrice": 705,
+            "minPrice": 326, "maxPrice": 850, "marketPrice7Day": null,
+            "marketPriceMedian7Day": null, "dailyVolume7Day": 0, "marketTrend": "up",
+            "lastSaleDate": "2026-08-12T00:00:00.000Z",
+            "smartMarketPrice": { "price": 850, "confidence": "medium",
+                                  "method": "90day_filtered_weighted", "daysUsed": 90 } },
+  "psa4": { "count": 27, "totalValue": 7727.64, "averagePrice": 286.2088888888889,
+            "medianPrice": 290, "minPrice": 190.5, "maxPrice": 375, "marketPrice7Day": null,
+            "marketPriceMedian7Day": null, "dailyVolume7Day": 0, "marketTrend": "stable",
+            "lastSaleDate": "2026-08-25T00:00:00.000Z",
+            "smartMarketPrice": { "price": 238.12, "confidence": "high",
+                                  "method": "90day_filtered_weighted", "daysUsed": 90 } },
+  "psa3": { "count": 11, "totalValue": 3125.49, "averagePrice": 284.1354545454546,
+            "medianPrice": 280, "minPrice": 212.5, "maxPrice": 380, "marketPrice7Day": 300,
+            "marketPriceMedian7Day": 300, "dailyVolume7Day": 0.14285714285714285,
+            "marketTrend": "up", "lastSaleDate": "2026-09-17T00:00:00.000Z",
+            "smartMarketPrice": { "price": 299.84, "confidence": "medium",
+                                  "method": "30day_filtered_weighted", "daysUsed": 30 } }
+ },
+ "smartPriceOutlierByGrade": { "psa9": false, "psa8": false, "psa4": false, "psa3": false }
+}
+```
+
+שימו לב ל-psa4: הספק אומר `confidence: "high"` בזמן ש-`dailyVolume7Day=0`
+והמכירה האחרונה הייתה 25 יום קודם. ביטחון "גבוה" של הספק מדבר על איכות החישוב,
+לא על עדכניות — ולכן הבילדר מוריד אותו ל-`low` כשאין מכירה השבוע.
+
+### מה שונה בעקבות זה
+
+| | לפני | אחרי |
+|---|---|---|
+| מחיר | תמיד `medianPrice` (בשקט) | `smartMarketPrice.price` → `marketPrice7Day` → `medianPrice` → `median` |
+| `averagePrice` | היה ברשימת המועמדים | **הוסר לגמרי** |
+| ביטחון | תמיד לפי נפח (הספק נקרא לא נכון) | הביטחון האמיתי של הספק לכל דירוג, ואז הורדות קשיחות |
+| מקור המספר | לא נשמר | `metrics[g].priceField` + `daysUsed` + `lastSaleDate` |
+| פיזור | לא נשמר | `metrics[g].spread = {low, high}` מ-`minPrice`/`maxPrice` |
+| בממשק | שורת מקור אחידה | מוסיפה `· מדגם מפוזר` / `· לא נמכר השבוע` לפי הנתון |

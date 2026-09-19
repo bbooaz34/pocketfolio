@@ -189,6 +189,25 @@ function pptBuckets(row) {
 
 const pennies = (n) => (typeof n === "number" && n > 0 ? Math.round(n * 100) : null);
 
+const RANK = { low: 0, medium: 1, high: 2 };
+const capAt = (c, limit) => (RANK[c] > RANK[limit] ? limit : c);
+
+/* What a grade's number is worth trusting. The provider's own confidence
+   grades the CALCULATION, not its recency — psa4 on base1-4 is "high" with a
+   90-day window and nothing sold for 25 days — so recency caps it after the
+   fact (PRICING-ATTEMPTS.md, the 19.09 investigation). */
+function effectiveConfidence(bucket, priceField, stated) {
+  const vol = typeof bucket?.dailyVolume7Day === "number" ? bucket.dailyVolume7Day : null;
+  let c = RANK[stated] !== undefined ? stated
+    : vol != null ? (vol * 7 >= SALES_VOLUME_FLOOR ? "high" : "low")
+    : "low";
+  if (vol === 0) c = capAt(c, "low");                 // nothing sold this week
+  else if (vol == null) c = capAt(c, "medium");       // we cannot tell
+  /* only an unbounded-window median to go on */
+  if (priceField === "medianPrice" || priceField === "median") c = capAt(c, "medium");
+  return c;
+}
+
 function pptGrades(row) {
   const buckets = pptBuckets(row);
   const grades = {};
@@ -197,47 +216,68 @@ function pptGrades(row) {
     const m = k.toLowerCase().match(/^psa[\s_-]?((10|[1-9])(\.5)?)$/);
     if (!m) continue;
     const g = m[1];
-    /* smartMarketPrice is PPT's own outlier-filtered figure; prefer it over a
-       bare median, but keep the median when it is all we get. */
-    const price = typeof v === "number" ? v
-      : v && typeof v === "object"
-        ? [v.smartMarketPrice, v.medianPrice, v.median, v.marketPrice7Day, v.averagePrice, v.avgPrice, v.price]
-            .find((x) => typeof x === "number" && x > 0)
-        : null;
-    const p = pennies(price);
-    if (!p) continue;
-    grades[g] = p;
-    const daily = [v?.dailyVolume7Day, v?.dailyVolume].find((x) => typeof x === "number");
+    if (typeof v === "number") {
+      const p = pennies(v);
+      if (!p) continue;
+      grades[g] = p;
+      metrics[g] = { confidence: null, effective: "low", trend: null, dailyVolume7Day: null,
+        salesCount: null, priceField: "value", daysUsed: null, lastSaleDate: null, spread: null };
+      continue;
+    }
+    if (!v || typeof v !== "object") continue;
+    /* smartMarketPrice is an OBJECT {price, confidence, method, daysUsed} — a
+       `typeof === "number"` test drops it silently, which is how every stored
+       price came to be medianPrice. Never `averagePrice`: a mean over a window
+       we do not control, on a 4x spread, is not a current value. */
+    const smart = v.smartMarketPrice && typeof v.smartMarketPrice === "object"
+      ? v.smartMarketPrice
+      : (typeof v.smartMarketPrice === "number" ? { price: v.smartMarketPrice } : null);
+    const hit = [
+      ["smartMarketPrice", smart?.price],
+      ["marketPrice7Day", v.marketPrice7Day],
+      ["medianPrice", v.medianPrice],
+      ["median", v.median],
+    ].find(([, x]) => typeof x === "number" && x > 0);
+    if (!hit) continue;
+    const [priceField, price] = hit;
+    grades[g] = pennies(price);
+    const daily = [v.dailyVolume7Day, v.dailyVolume].find((x) => typeof x === "number");
+    const stated = String(smart?.confidence ?? v.smartMarketConfidence ?? "").toLowerCase();
+    const lo = pennies(v.minPrice), hi = pennies(v.maxPrice);
     metrics[g] = {
-      confidence: v?.smartMarketConfidence ?? null,
-      trend: v?.marketTrend ?? null,
+      confidence: RANK[stated] !== undefined ? stated : null, // provider's, about the calculation
+      effective: effectiveConfidence(v, priceField, RANK[stated] !== undefined ? stated : null),
+      trend: v.marketTrend ?? null,
       dailyVolume7Day: Number.isFinite(daily) ? daily : null,
-      salesCount: Number.isFinite(v?.salesCount) ? v.salesCount : null,
+      /* the provider's `count` over ITS OWN window, not ours — never present
+         this as recent activity */
+      salesCount: Number.isFinite(v.salesCount) ? v.salesCount
+        : Number.isFinite(v.count) ? v.count : null,
+      priceField,
+      daysUsed: Number.isFinite(smart?.daysUsed) ? smart.daysUsed : null,
+      lastSaleDate: typeof v.lastSaleDate === "string" ? v.lastSaleDate.slice(0, 10) : null,
+      spread: lo && hi ? { low: lo, high: hi } : null,
     };
   }
   const raw = [row.prices?.market, row.price?.market, row.marketPrice]
     .find((x) => typeof x === "number" && x > 0);
   if (raw) grades.raw = pennies(raw);
   if (!Object.keys(grades).length) return null;
-  const velocity = [row.salesVelocityWeekly, row.ebay?.salesVelocityWeekly, row.ebay?.salesVelocity]
-    .find((x) => typeof x === "number");
+  /* ebay.salesVelocity is {dailyAverage, weeklyAverage, monthlyTotal} */
+  const velocity = [row.salesVelocityWeekly, row.ebay?.salesVelocityWeekly,
+    row.ebay?.salesVelocity?.weeklyAverage].find((x) => typeof x === "number");
   return { grades, metrics, velocity: Number.isFinite(velocity) ? velocity : null };
 }
 
-/* Map the provider's own confidence onto ours, falling back to activity.
-   "high" must mean a number we would defend, not merely a number we received. */
+/* Card-level summary: the best any of its grades can honestly claim. Each
+   grade's own `effective` is what the app shows — a card can trade briskly at
+   PSA 10 while nothing has moved at PSA 7 for a month. */
 function gradeConfidence(metrics, velocity) {
   const vals = Object.values(metrics || {});
-  const stated = vals.map((m) => String(m.confidence || "").toLowerCase()).filter(Boolean);
-  if (stated.length) {
-    if (stated.some((c) => c === "high")) return "high";
-    if (stated.every((c) => c === "low")) return "low";
-    return "medium";
-  }
-  const daily = vals.map((m) => m.dailyVolume7Day).filter((x) => Number.isFinite(x));
-  const weekly = daily.length ? Math.max(...daily) * 7 : velocity;
-  if (!Number.isFinite(weekly)) return "low";
-  return weekly >= SALES_VOLUME_FLOOR ? "high" : "low";
+  const eff = vals.map((m) => m.effective).filter((c) => RANK[c] !== undefined);
+  if (eff.length) return eff.reduce((a, b) => (RANK[b] > RANK[a] ? b : a), "low");
+  if (!Number.isFinite(velocity)) return "low";
+  return velocity >= SALES_VOLUME_FLOOR ? "high" : "low";
 }
 
 /* priceHistory arrives in several shapes; normalise to [{d, v}] in pennies. */

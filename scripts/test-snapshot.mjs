@@ -58,7 +58,8 @@ const makeHistory = (base) => {
 };
 
 let rowsServed = 0, requests = 0, byIdRequests = 0, creditsBilled = 0,
-  force429After = Infinity, limitsSeen = [], jpLangSeen = false;
+  force429After = Infinity, limitsSeen = [], jpLangSeen = false,
+  dropEbayHistory = false;
 
 const server = createServer((req, res) => {
   requests++;
@@ -99,13 +100,30 @@ const server = createServer((req, res) => {
     number: filler ? `9${filler}` : c.number,
     prices: { market: 12.34 },
     priceHistory: { conditions: { "Near Mint": { history: histArr(10) } } },
+    /* the real shapes, from the 19.09 probe: smartMarketPrice is an OBJECT,
+       there is no smartMarketConfidence and no salesCount, the count field is
+       `count`, and the spread is minPrice/maxPrice */
     ebay: {
       salesByGrade: {
-        psa10: { smartMarketPrice: 500 + Number(c.number), medianPrice: 480, smartMarketConfidence: "high", marketTrend: "up", dailyVolume7Day: 2, salesCount: 140 },
-        psa9: { medianPrice: 200, smartMarketConfidence: "low", dailyVolume7Day: 0 },
+        // healthy: smart price + weekly activity. averagePrice must never win.
+        psa10: { count: 140, averagePrice: 999, medianPrice: 480, minPrice: 450, maxPrice: 520,
+          marketPrice7Day: null, dailyVolume7Day: 2, marketTrend: "up",
+          lastSaleDate: "2026-09-18T00:00:00.000Z",
+          smartMarketPrice: { price: 500 + Number(c.number), confidence: "high", method: "30day_filtered_weighted", daysUsed: 30 } },
+        // provider says high, but nothing sold this week → must cap to low
+        psa9: { count: 32, averagePrice: 210, medianPrice: 200, minPrice: 150, maxPrice: 260,
+          marketPrice7Day: null, dailyVolume7Day: 0, marketTrend: "down",
+          lastSaleDate: "2026-07-30T00:00:00.000Z",
+          smartMarketPrice: { price: 205, confidence: "high", method: "all_filtered_weighted", daysUsed: 353 } },
+        // only a median, and a 4x spread → medium at best, priceField medianPrice
+        psa8: { count: 11, averagePrice: 300, medianPrice: 290, minPrice: 100, maxPrice: 420,
+          dailyVolume7Day: 0.5, marketTrend: "up" },
+        // no 7-day volume field at all → cannot tell → medium at best
+        psa7: { count: 5, medianPrice: 150, marketPrice7Day: 160,
+          smartMarketPrice: { price: 158, confidence: "high", method: "7day", daysUsed: 7 } },
       },
-      salesVelocity: 4,
-      // the real graded-history shape (run #8): psaN → date → {average, count}
+      salesVelocity: { dailyAverage: 0.8, weeklyAverage: 5.6, monthlyTotal: 24 },
+      // graded history: psaN → date → {average, count} (respects `days`)
       priceHistory: {
         psa10: Object.fromEntries(Object.entries(makeHistory(500))
           .map(([d, v]) => [d, { average: v, count: 1, sevenDayAverage: v }])),
@@ -124,7 +142,9 @@ const server = createServer((req, res) => {
   const search = url.searchParams.get("search") || "";
   if (url.searchParams.get("language") === "japanese" && search.startsWith("TestMon 9")) jpLangSeen = true;
   const match = CARDS.find((c) => search.startsWith(c.name)) || CARDS[0];
-  send(Array.from({ length: limit }, (_, i) => rowFor(match, i)), limit);
+  const rows = Array.from({ length: limit }, (_, i) => rowFor(match, i));
+  if (dropEbayHistory) for (const r of rows) delete r.ebay.priceHistory;
+  send(rows, limit);
 });
 
 server.on("error", (e) => { console.error("server error", e); process.exit(1); });
@@ -188,9 +208,31 @@ check("carried entries keep their real date", Object.values(s2.cards).some((c) =
 const freshId2 = freshDay2[0];
 const anyCard = s2.cards[freshId2];
 check("tcgPlayerId is captured for later exact lookups", Boolean(anyCard?.tcgPlayerId), anyCard?.tcgPlayerId);
-check("smart price preferred over bare median", anyCard?.grades?.["10"] > 50000, `psa10 = ${anyCard?.grades?.["10"]}`);
+check("smart price (an object) beats the bare median", anyCard?.grades?.["10"] > 50000, `psa10 = ${anyCard?.grades?.["10"]}`);
 check("confidence comes from the provider", anyCard?.confidence === "high", anyCard?.confidence);
 check("per-grade metrics are kept", anyCard?.metrics?.["10"]?.dailyVolume7Day === 2);
+
+/* ---- the 19.09 probe: price provenance and honest confidence ---- */
+const M = anyCard?.metrics || {};
+check("priceField recorded per grade", M["10"]?.priceField === "smartMarketPrice",
+  Object.entries(M).map(([g, m]) => `${g}:${m.priceField}`).join(" "));
+check("averagePrice never wins", anyCard.grades["10"] !== 99900 && anyCard.grades["9"] !== 21000,
+  `psa10=${anyCard.grades["10"]} psa9=${anyCard.grades["9"]}`);
+check("zero 7-day volume caps at low, whatever the provider says",
+  M["9"]?.confidence === "high" && M["9"]?.effective === "low",
+  `provider=${M["9"]?.confidence} effective=${M["9"]?.effective}`);
+check("median-only grade: priceField medianPrice and never high",
+  M["8"]?.priceField === "medianPrice" && M["8"]?.effective !== "high",
+  `${M["8"]?.priceField} / ${M["8"]?.effective}`);
+check("no dailyVolume7Day at all caps at medium",
+  M["7"]?.dailyVolume7Day === null && M["7"]?.effective === "medium",
+  `vol=${M["7"]?.dailyVolume7Day} effective=${M["7"]?.effective}`);
+check("spread carried through from minPrice/maxPrice",
+  M["8"]?.spread?.low === 10000 && M["8"]?.spread?.high === 42000, JSON.stringify(M["8"]?.spread));
+check("the window the smart price used is recorded", M["9"]?.daysUsed === 353, `${M["9"]?.daysUsed}`);
+check("no grade with zero 7-day volume is stored as high",
+  Object.values(s2.cards).every((c) => Object.values(c.metrics || {})
+    .every((m) => !(m.dailyVolume7Day === 0 && m.effective === "high"))));
 const histFile = join(work, "data", "history", `${freshId2}.json`);
 const hist = existsSync(histFile) ? JSON.parse(readFileSync(histFile, "utf8")) : null;
 check("history file written per card", Boolean(hist), histFile);
@@ -221,6 +263,19 @@ check("resolved identities re-query via stored search at limit=1",
 check("no tcgPlayerId lookups (they answer count=0 and still bill)", byIdRequests === 0, `${byIdRequests} exact lookups`);
 check("a Japanese print gets its own @jp snapshot entry", Boolean(s5.cards["base1-9@jp"]), Object.keys(s5.cards).join(","));
 check("language=japanese forwarded for @jp cards", jpLangSeen);
+
+/* ---- ebay.priceHistory absent: build still succeeds, raw-only history ---- */
+dropEbayHistory = true;
+const d6 = await run("2026-09-25", { PPT_CREDIT_BUDGET: "2000" });
+dropEbayHistory = false;
+check("build succeeds with no graded history", d6.status === 0, d6.stderr.trim().split("\n").at(-1) || "");
+const s6 = snap("2026-09-25");
+check("prices still stored without graded history",
+  Object.values(s6.cards).some((c) => !c.carried && c.grades?.["10"] > 0));
+const h6 = JSON.parse(readFileSync(join(work, "data", "history",
+  `${Object.keys(s6.cards).find((id) => !s6.cards[id].carried)}.json`), "utf8"));
+check("today's raw series still grows when graded history is missing",
+  (h6.series?.raw?.length ?? 0) > 100, `raw ${h6.series?.raw?.length} pts`);
 
 server.close();
 console.log(`\nworkspace: ${work}`);
