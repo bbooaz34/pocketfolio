@@ -1,0 +1,200 @@
+{
+ "date": "2026-09-19",
+ "builtAt": "2026-09-19T12:49:58.150Z",
+ "source": "ppt",
+ "cards": {
+  "base1-4": {
+   "pcId": null,
+   "name": "Charizard",
+   "set": "Base",
+   "number": "4",
+   "grades": {
+    "1": 29548,
+    "2": 25000,
+    "3": 28000,
+    "4": 29000,
+    "5": 32500,
+    "6": 35000,
+    "7": 45500,
+    "8": 70500,
+    "9": 145000,
+    "raw": 51290
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  },
+  "base1-46": {
+   "pcId": null,
+   "name": "Charmander",
+   "set": "Base",
+   "number": "46",
+   "grades": {
+    "6": 2750,
+    "7": 2525,
+    "8": 2822,
+    "9": 3800,
+    "10": 21999,
+    "raw": 265
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  },
+  "base1-58": {
+   "pcId": null,
+   "name": "Pikachu",
+   "set": "Base",
+   "number": "58",
+   "grades": {
+    "1": 12000,
+    "2": 2299,
+    "3": 3150,
+    "4": 3948,
+    "5": 3150,
+    "6": 3000,
+    "7": 3500,
+    "8": 5900,
+    "9": 12376,
+    "10": 56391,
+    "raw": 4950
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  },
+  "base1-63": {
+   "pcId": null,
+   "name": "Squirtle",
+   "set": "Base",
+   "number": "63",
+   "grades": {
+    "4": 1499,
+    "5": 1999,
+    "6": 3500,
+    "7": 2700,
+    "8": 3499,
+    "9": 4999,
+    "10": 25500,
+    "raw": 486
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  },
+  "base1-44": {
+   "pcId": null,
+   "name": "Bulbasaur",
+   "set": "Base",
+   "number": "44",
+   "grades": {
+    "5": 1999,
+    "6": 2300,
+    "7": 2999,
+    "8": 3175,
+    "9": 4400,
+    "10": 30000,
+    "raw": 369
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  },
+  "gym2-118": {
+   "pcId": null,
+   "name": "Misty's Tears",
+   "set": "Gym Challenge",
+   "number": "118",
+   "grades": {
+    "5": 4475,
+    "6": 2672,
+    "7": 4750,
+    "8": 8495,
+    "9": 12000,
+    "10": 104789,
+    "raw": 5476
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  },
+  "neo1-9": {
+   "pcId": null,
+   "name": "Lugia",
+   "set": "Neo Genesis",
+   "number": "9",
+   "grades": {
+    "1": 37100,
+    "2": 38500,
+    "3": 35500,
+    "4": 42500,
+    "5": 44226,
+    "6": 59784,
+    "7": 87500,
+    "8": 148950,
+    "9": 672500,
+    "raw": 107979
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  },
+  "swsh7-215": {
+   "pcId": null,
+   "name": "Umbreon VMAX",
+   "set": "Evolving Skies",
+   "number": "215",
+   "grades": {
+    "1": 147500,
+    "2": 135938,
+    "3": 110000,
+    "4": 126750,
+    "5": 139500,
+    "6": 148850,
+    "7": 192500,
+    "8": 181730,
+    "9": 202000,
+    "10": 420000,
+    "raw": 228314
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  },
+  "swsh4-188": {
+   "pcId": null,
+   "name": "Pikachu VMAX",
+   "set": "Vivid Voltage",
+   "number": "188",
+   "grades": {
+    "3": 5999,
+    "6": 12999,
+    "7": 13000,
+    "8": 12500,
+    "9": 15475,
+    "10": 35000,
+    "raw": 17499
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  },
+  "sv3pt5-6": {
+   "pcId": null,
+   "name": "Charizard",
+   "set": "151",
+   "number": "6",
+   "grades": {
+    "4": 1999,
+    "7": 1774,
+    "8": 1899,
+    "9": 2400,
+    "10": 9599,
+    "raw": 808
+   },
+   "salesVolume": null,
+   "confidence": "fallback",
+   "pricedOn": "2026-09-19"
+  }
+ }
+}
