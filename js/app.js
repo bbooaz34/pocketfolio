@@ -40,6 +40,12 @@
     spreadWide: "מדגם מפוזר",
     thinSample: "מדגם דל",
     noSalesWeek: "לא נמכר השבוע",
+    estTag: "הערכה",
+    untrackedTitle: "קלפים ללא מחיר מדורג",
+    untrackedBody: "הקלפים האלה לא נכללים בעדכון היומי, ולכן השווי שלהם הוא הערכה גסה (מחיר סינגל × מקדם דירוג) ולא מחיר מכירות אמיתי. העתיקו את השורות והוסיפו אותן ל-data/watchlist.json במאגר.",
+    untrackedCopy: "העתקת השורות",
+    untrackedCopied: "הועתק",
+    untrackedNone: "כל הקלפים בתיק נכללים בעדכון היומי.",
     srcEst: "הערכה משער השוק הגולמי",
     srcManual: "שווי שהוזן ידנית",
     srcRaw: "שער השוק הגולמי",
@@ -411,6 +417,11 @@
     worth.appendChild(document.createTextNode(T.worth + " "));
     worth.appendChild(h("b", "num", p.val ? show(fmtUSD(p.total, false)) : "— —"));
     worth.appendChild(document.createTextNode(` · ${hh.qty} ${T.units}`));
+    /* a raw x multiplier guess must not read like an eBay price — the list is
+       where the user compares, so it has to say so here, not only on detail */
+    if (p.val && (p.val.src === "est" || p.val.src === "raw")) {
+      worth.appendChild(h("span", "tag tag--est", T.estTag));
+    }
     r2.appendChild(worth);
     const pill = h("span");
     const buyDelta = (hh.cost != null && p.val)
@@ -963,10 +974,59 @@
       upd.textContent = T.noSnapshotYet;
     }
 
+    renderUntracked();
+
     $("proxy-input").value = lsGet("pocketfolio.pptProxy") || "";
 
     $("toggle-refresh").setAttribute("aria-pressed", String(refreshOnOpen()));
     $("toggle-hide").setAttribute("aria-pressed", String(hideValues()));
+  }
+
+  /* The app is backendless, so the daily job cannot know what anyone holds:
+     a card is priced only if data/watchlist.json lists it. Anything else falls
+     back to raw x multiplier, which is a guess — a PSA 9 Team Rocket trainer
+     came out at $1.13. Name those holdings and hand over the exact JSON. */
+  function untrackedHoldings() {
+    if (!snapLatest) return [];
+    const seen = new Set();
+    const out = [];
+    for (const hh of Store.getAll()) {
+      const key = (hh.jp ? hh.cardId + "@jp" : hh.cardId);
+      if (seen.has(key) || snapLatest.cards[key]) continue;
+      seen.add(key);
+      out.push({ hh, key });
+    }
+    return out;
+  }
+
+  function watchlistJson(rows) {
+    return rows.map(({ hh, key }) => JSON.stringify({
+      id: key,
+      name: hh.name,
+      setName: hh.setName || null,
+      ...(hh.number ? { number: String(hh.number) } : {}),
+      ...(hh.jp ? { language: "japanese" } : {}),
+    })).join(",\n");
+  }
+
+  function renderUntracked() {
+    const card = $("untracked-card");
+    if (!card) return;
+    const rows = untrackedHoldings();
+    $("untracked-title").textContent = T.untrackedTitle;
+    $("untracked-body").textContent = rows.length ? T.untrackedBody : T.untrackedNone;
+    const list = $("untracked-list");
+    list.replaceChildren();
+    for (const { hh, key } of rows) {
+      const li = h("li");
+      li.appendChild(h("span", "grow", `${hh.name} · ${gradeLabel(hh.grade)}`));
+      li.appendChild(h("span", "t-text4 faint num", key));
+      list.appendChild(li);
+    }
+    const btn = $("untracked-copy-btn");
+    btn.textContent = T.untrackedCopy;
+    btn.hidden = !rows.length;
+    card.hidden = !snapLatest;
   }
 
   /* ---------- render everything ---------- */
@@ -1391,6 +1451,27 @@
     if (proxy) lsSet("pocketfolio.pptProxy", proxy.replace(/\/+$/, ""));
     else if (lsGet("pocketfolio.pptProxy")) lsDel("pocketfolio.pptProxy");
     renderSettings();
+  });
+
+  $("untracked-copy-btn").addEventListener("click", async (ev) => {
+    /* currentTarget is null once the handler awaits — hold the node first */
+    const btn = ev.currentTarget;
+    const text = watchlistJson(untrackedHoldings());
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      /* clipboard blocked (no permission, or not a secure context) — fall back
+         to a selection the user can copy by hand */
+      const ta = h("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;inset-inline-start:-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch { /* nothing left to try */ }
+      ta.remove();
+    }
+    btn.textContent = T.untrackedCopied;
+    setTimeout(() => { btn.textContent = T.untrackedCopy; }, 1600);
   });
 
   $("toggle-refresh").addEventListener("click", () => {

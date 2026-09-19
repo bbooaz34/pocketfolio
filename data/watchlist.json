@@ -11,6 +11,7 @@
     { "id": "gym2-118",  "name": "Misty's Tears", "setName": "Gym Challenge", "number": "118", "pcQuery": "misty's tears gym challenge 118/132 pokemon" },
     { "id": "gym2-118@jp", "name": "Misty's Tears", "setName": "Hanada City Gym", "language": "japanese", "pcQuery": "misty's tears japanese gym pokemon" },
     { "id": "neo1-9",    "name": "Lugia",      "setName": "Neo Genesis",     "number": "9",   "pcQuery": "lugia neo genesis 9/111 pokemon" },
+    { "id": "base5-73",  "name": "The Boss's Way", "setName": "Team Rocket",  "number": "73",  "pcQuery": "the boss's way team rocket 73/82 pokemon" },
     { "id": "swsh7-215", "name": "Umbreon VMAX", "setName": "Evolving Skies", "number": "215", "pcQuery": "umbreon vmax alt art evolving skies 215/203 pokemon" },
     { "id": "swsh4-188", "name": "Pikachu VMAX", "setName": "Vivid Voltage",  "number": "188", "pcQuery": "pikachu vmax vivid voltage 188/185 pokemon" },
     { "id": "sv3pt5-6",  "name": "Charizard",  "setName": "151",             "number": "6",   "pcQuery": "charizard 151 6/165 pokemon" }

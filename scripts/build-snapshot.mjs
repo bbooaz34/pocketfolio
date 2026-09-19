@@ -397,9 +397,12 @@ function pptAttempts(card) {
   return attempts;
 }
 
-/* The PPT setId most often learned for cards of this catalog set. */
+/* The PPT setId most often learned for cards of this catalog set.
+   "psa" is not a set: a cert-only slab's id is psa-<cert>, and every such
+   slab would otherwise inherit an unrelated card's setId and filter itself
+   out of every result. */
 function siblingSetId(catalogSetId) {
-  if (!catalogSetId) return null;
+  if (!catalogSetId || catalogSetId === "psa") return null;
   const counts = new Map();
   for (const [id, m] of Object.entries(pptMap)) {
     if (id.startsWith(catalogSetId + "-") && m.setId != null) {
