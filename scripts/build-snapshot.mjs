@@ -240,7 +240,13 @@ async function priceWithPPT(cards, out, prev) {
         continue;
       }
       const data = await res.json();
-      rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? []);
+      rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? data.results ?? []);
+      if (!Array.isArray(rows)) rows = [];
+      /* an empty answer is a diagnosis problem, not a silent skip — show what
+         the API actually said (public card data, truncated) */
+      if (!rows.length) {
+        console.log(`  PPT 0 rows for ${card.id} [${params}]: ${JSON.stringify(data).slice(0, 300)}`);
+      }
     } catch (err) {
       console.log(`  PPT error ${card.id}: ${err.message}`);
       continue;
