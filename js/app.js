@@ -58,7 +58,7 @@
     holdingValue: "שווי האחזקה",
     trend: "מגמה",
     costPerUnit: "עלות רכישה ליחידה",
-    rawMarket: "שער השוק הגולמי",
+    rawMarket: "מחיר סינגל",
     psaCert: "מספר תעודת PSA",
     certLooking: (c) => `מאתר תעודת PSA ‎#${c}…`,
     certMatch: "בחירת ההדפסה המדויקת תצרף מחיר שוק:",
