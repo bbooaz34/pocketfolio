@@ -456,14 +456,14 @@
       ? card.id.split("-")[0] : null;
     const attempts = [];
     /* Japanese prints live behind language=japanese — try that catalog first
-       so an English print's sales are never attributed to a JP slab */
-    if (card.jp) attempts.push({ search: card.name, language: "japanese" });
-    if (setId) attempts.push({ search: first, setId });
-    if (!card.jp) attempts.push({ search: card.name });
-    /* every returned card costs credits (double with includeEbay), so cap
-       the row count hard — the free tier is only 100 credits/day, and the
-       set-scoped search puts the right printing in the first rows */
-    return attempts.map((p) => ({ includeEbay: "true", limit: "5", ...p }));
+       so an English print's sales are never attributed to a JP slab.
+       Row caps trade credits (each returned row bills, double with
+       includeEbay) against match coverage: a set-scoped search holds few
+       printings so 5 rows suffice; a name-wide search needs a wider net. */
+    if (card.jp) attempts.push({ search: card.name, language: "japanese", limit: "10" });
+    if (setId) attempts.push({ search: first, setId, limit: "5" });
+    if (!card.jp) attempts.push({ search: card.name, limit: "10" });
+    return attempts.map((p) => ({ includeEbay: "true", ...p }));
   }
 
   /* Core lookup shared by gradedFor and the ⚙ self-test. `diag`, when given,
@@ -522,7 +522,11 @@
     if (gradedBackoffUntil()) return hit ? hit.grades : null;
 
     try {
-      const grades = await gradedLookup(card, key, null);
+      let grades = await gradedLookup(card, key, null);
+      /* an empty lookup never erases known medians — sales rows drift in and
+         out of the top results, and yesterday's eBay median beats a silent
+         fallback to the raw-market estimate */
+      if (!grades && hit && hit.grades) grades = hit.grades;
       cache[cacheId] = { at: Date.now(), grades };
       saveGradedCache(cache);
       return grades;
