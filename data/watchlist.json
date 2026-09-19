@@ -1,5 +1,5 @@
 {
-  "comment": "Cards the daily snapshot job prices (POCKETFOLIO-PRICING.md §3). The app is backendless, so CI cannot know what users hold — add the cards you own here. `id` is the pokemontcg.io card id the app stores on holdings; `pcQuery` overrides the auto-built PriceCharting search when the default (name + set + number + pokemon) misses.",
+  "comment": "Cards the daily snapshot job prices (POCKETFOLIO-PRICING.md §3). The app is backendless, so CI cannot know what users hold — add the cards you own here. `id` is the pokemontcg.io card id the app stores on holdings; `pcQuery` overrides the auto-built PriceCharting search when the default (name + set + number + pokemon) misses. A JAPANESE print gets its own entry: the English id with an `@jp` suffix plus `language: \"japanese\"` — the app reads the @jp snapshot entry for holdings flagged as Japanese slabs.",
   "cards": [
     { "id": "base1-4",   "name": "Charizard",  "setName": "Base",            "number": "4",   "pcQuery": "charizard base set 4/102 pokemon" },
     { "id": "base1-2",   "name": "Blastoise",  "setName": "Base",            "number": "2",   "pcQuery": "blastoise base set 2/102 pokemon" },
@@ -9,6 +9,7 @@
     { "id": "base1-63",  "name": "Squirtle",   "setName": "Base",            "number": "63",  "pcQuery": "squirtle base set 63/102 pokemon" },
     { "id": "base1-44",  "name": "Bulbasaur",  "setName": "Base",            "number": "44",  "pcQuery": "bulbasaur base set 44/102 pokemon" },
     { "id": "gym2-118",  "name": "Misty's Tears", "setName": "Gym Challenge", "number": "118", "pcQuery": "misty's tears gym challenge 118/132 pokemon" },
+    { "id": "gym2-118@jp", "name": "Misty's Tears", "setName": "Hanada City Gym", "language": "japanese", "pcQuery": "misty's tears japanese gym pokemon" },
     { "id": "neo1-9",    "name": "Lugia",      "setName": "Neo Genesis",     "number": "9",   "pcQuery": "lugia neo genesis 9/111 pokemon" },
     { "id": "swsh7-215", "name": "Umbreon VMAX", "setName": "Evolving Skies", "number": "215", "pcQuery": "umbreon vmax alt art evolving skies 215/203 pokemon" },
     { "id": "swsh4-188", "name": "Pikachu VMAX", "setName": "Vivid Voltage",  "number": "188", "pcQuery": "pikachu vmax vivid voltage 188/185 pokemon" },

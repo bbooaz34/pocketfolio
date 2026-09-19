@@ -44,6 +44,8 @@ const CARDS = Array.from({ length: 8 }, (_, i) => ({
   setName: "Base",
   number: String(i + 1),
 }));
+// a Japanese print: own @jp identity, language forwarded, no card number
+CARDS.push({ id: "base1-9@jp", name: "TestMon 9", setName: "Base JP", number: "9", language: "japanese" });
 
 const HISTORY_DAYS = 120;
 const makeHistory = (base) => {
@@ -56,7 +58,7 @@ const makeHistory = (base) => {
 };
 
 let rowsServed = 0, requests = 0, byIdRequests = 0, creditsBilled = 0,
-  force429After = Infinity, limitsSeen = [];
+  force429After = Infinity, limitsSeen = [], jpLangSeen = false;
 
 const server = createServer((req, res) => {
   requests++;
@@ -120,6 +122,7 @@ const server = createServer((req, res) => {
   const limit = Number(url.searchParams.get("limit") || 5);
   limitsSeen.push(limit);
   const search = url.searchParams.get("search") || "";
+  if (url.searchParams.get("language") === "japanese" && search.startsWith("TestMon 9")) jpLangSeen = true;
   const match = CARDS.find((c) => search.startsWith(c.name)) || CARDS[0];
   send(Array.from({ length: limit }, (_, i) => rowFor(match, i)), limit);
 });
@@ -216,6 +219,8 @@ check("full budget prices the whole watchlist", fresh5 === CARDS.length, `${fres
 check("resolved identities re-query via stored search at limit=1",
   limitsSeen.includes(1) && limitsSeen.includes(3), `limits: ${limitsSeen.join(",")}`);
 check("no tcgPlayerId lookups (they answer count=0 and still bill)", byIdRequests === 0, `${byIdRequests} exact lookups`);
+check("a Japanese print gets its own @jp snapshot entry", Boolean(s5.cards["base1-9@jp"]), Object.keys(s5.cards).join(","));
+check("language=japanese forwarded for @jp cards", jpLangSeen);
 
 server.close();
 console.log(`\nworkspace: ${work}`);

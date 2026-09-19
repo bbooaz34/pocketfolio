@@ -426,7 +426,8 @@ async function priceWithPPT(cards, out, prev) {
          rows carry catalog-style card ids */
       const row = attempt.tcgPlayerId ? rows[0] :
         rows.find((r) => (r.id ?? r.cardId) === card.id) ||
-        rows.find((r) => norm(r.number ?? r.cardNumber ?? r.localId) === norm(card.number)) ||
+        (card.number != null &&
+          rows.find((r) => norm(r.number ?? r.cardNumber ?? r.localId) === norm(card.number))) ||
         rows.find((r) => (r.name || "").toLowerCase() === card.name.toLowerCase());
       if (!row) { console.log(`  PPT no matching row for ${card.id} [${params}]`); continue; }
       const priced = pptGrades(row);

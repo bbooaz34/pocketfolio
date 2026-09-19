@@ -61,7 +61,8 @@
     certLooking: (c) => `מאתר תעודת PSA ‎#${c}…`,
     certMatch: "בחירת ההדפסה המדויקת תצרף מחיר שוק:",
     certNoMatch: (s) => `לא נמצאה הדפסה תואמת בקטלוג עבור ${s}.`,
-    certJapanese: "שימו לב: התעודה היא של הדפסה יפנית, וההתאמות למטה הן הגרסאות האנגליות מהקטלוג — מחיר השוק שלהן שונה. בחרו בהוספת הסלאב בכל זאת: השווי יימשך אוטומטית ממכירות eBay של הגרסה היפנית (כשיש נתונים).",
+    certJapanese: "שימו לב: התעודה היא של הדפסה יפנית, וההתאמות למטה הן הגרסאות האנגליות מהקטלוג — מחיר השוק שלהן שונה. אחרי ההוספה יוצג מחיר הגרסה היפנית כשהיא נכללת בעדכון היומי; עד אז יוצג מחיר הגרסה האנגלית, מסומן ככזה.",
+    enFallback: "לפי הגרסה האנגלית",
     certAddAnyway: "➕ הוספת הסלאב לתיק",
     certNotThese: "לא אחד מאלה — הוספת הסלאב בכל זאת",
     certManualSub: "הדירוג והתעודה ימולאו — את השווי מגדירים ידנית",
@@ -200,7 +201,12 @@
      Against a historic snapshot, a manual value counts only if it was already
      in force when that snapshot was built. */
   function valueEach(hh, snap = snapActive) {
-    const entry = snap?.cards?.[hh.cardId] || null;
+    /* a Japanese print prices from its own snapshot identity ("<id>@jp");
+       when the daily job does not cover it, the English entry stands in and
+       the source line says so explicitly */
+    const jpEntry = hh.jp ? snap?.cards?.[hh.cardId + "@jp"] || null : null;
+    const entry = jpEntry || snap?.cards?.[hh.cardId] || null;
+    const jpFallback = !!hh.jp && !jpEntry && !!entry;
     const g = entry?.grades?.[hh.grade];
     const manualAt = hh.valueSetAt ? Date.parse(hh.valueSetAt) : 0;
     const builtAt = snap ? Date.parse(snap.builtAt) || 0 : 0;
@@ -211,13 +217,14 @@
       return {
         each: g / 100, src: "snapshot", date: snap.date, builtAt: snap.builtAt,
         superseded: manual && builtAt > manualAt, confidence: entry.confidence,
+        jpFallback,
       };
     }
     if (manual) return { each: hh.value, src: "manual-pending" };
     const rawP = entry?.grades?.raw;
     if (rawP != null) {
-      if (hh.grade === "raw") return { each: rawP / 100, src: "raw" };
-      return { each: (rawP / 100) * (GRADE_MULT[hh.grade] ?? 1), src: "est" };
+      if (hh.grade === "raw") return { each: rawP / 100, src: "raw", jpFallback };
+      return { each: (rawP / 100) * (GRADE_MULT[hh.grade] ?? 1), src: "est", jpFallback };
     }
     const price = cards.get(hh.cardId)?.price;
     if (price) {
@@ -245,14 +252,15 @@
     if (!val) return T.noPrice;
     if (val.src === "manual-pinned") return T.manualPinnedLine;
     if (val.src === "manual-pending") return T.manualPendingLine;
+    const en = val.jpFallback ? ` · ${T.enFallback}` : "";
     if (val.src === "snapshot") {
       const d = fmtDM(val.date);
-      return grade && grade !== "raw"
+      return (grade && grade !== "raw"
         ? `${T.asOf} ${d} · ${T.srcEbayGrade(grade)}`
-        : `${T.asOf} ${d} · ${T.rawMarket}`;
+        : `${T.asOf} ${d} · ${T.rawMarket}`) + en;
     }
-    if (val.src === "raw") return T.rawMarket;
-    return T.srcEst;
+    if (val.src === "raw") return T.rawMarket + en;
+    return T.srcEst + en;
   }
 
   /* portfolio change between the active snapshot and the one before it */
@@ -832,7 +840,8 @@
     {
       const uid = hh.uid;
       (async () => {
-        const doc = await API.loadHistory(hh.cardId);
+        const doc = (hh.jp && await API.loadHistory(hh.cardId + "@jp")) ||
+          await API.loadHistory(hh.cardId);
         const series = doc && doc.series
           ? doc.series[String(hh.grade ?? "raw")] || doc.series.raw
           : null;
@@ -1027,14 +1036,17 @@
   function updateEstimate() {
     const card = $("est-card");
     if (!selectedCard) { card.hidden = true; return; }
-    /* the snapshot's grade median beats any multiplier estimate */
-    const snapG = snapLatest?.cards?.[selectedCard.id]?.grades?.[gradeValue];
+    /* the snapshot's grade median beats any multiplier estimate; a Japanese
+       print reads its own @jp entry first */
+    const jpEntry = selectedCard.jp ? snapLatest?.cards?.[selectedCard.id + "@jp"] : null;
+    const snapG = (jpEntry || snapLatest?.cards?.[selectedCard.id])?.grades?.[gradeValue];
     let each, note, currency = "USD";
     if (snapG != null) {
       each = snapG / 100;
       note = gradeValue === "raw"
         ? `מחושב לפי ${T.rawMarket}`
         : `מחושב לפי ${T.srcEbayGrade(gradeValue)}`;
+      if (selectedCard.jp && !jpEntry) note += ` · ${T.enFallback}`;
     } else if (selectedCard.price) {
       const raw = selectedCard.price;
       currency = raw.currency;
@@ -1149,7 +1161,10 @@
       if (japanese) r.appendChild(h("div", "result-note warn", T.certJapanese));
       r.appendChild(h("div", "result-note", T.certMatch));
       for (const c of matches.slice(0, 6)) {
-        r.appendChild(resultCard(c, () => selectCertCard(c, info)));
+        /* a Japanese cert keeps its jp flag even when the English catalog
+           printing is picked — value resolution reads the @jp entry first */
+        const pick = japanese ? { ...c, jp: true } : c;
+        r.appendChild(resultCard(c, () => selectCertCard(pick, info)));
       }
       const m = resultCard(manualCard, () => selectCertCard(manualCard, info));
       m.querySelector(".rc-name").textContent = T.certNotThese;
@@ -1242,6 +1257,7 @@
       cost,
       value: null, // the API fills the value (eBay median / estimate); ✎ overrides later
       cert: $("cert-input").value.trim().replace(/[^\w-]/g, "") || null,
+      jp: !!selectedCard.jp,
     });
     cards.set(selectedCard.id, selectedCard);
     if (cost) lsSet(monthKey(), String(monthSpend() + cost * qtyVal));

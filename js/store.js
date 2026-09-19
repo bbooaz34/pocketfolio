@@ -84,6 +84,7 @@
         existing.valueSetAt = new Date().toISOString();
       }
       if (pos.cert) existing.cert = pos.cert;
+      if (pos.jp) existing.jp = true;
     } else {
       holdings.push({
         uid,
@@ -100,6 +101,8 @@
         valueSetAt: pos.value != null ? new Date().toISOString() : null,
         valuePinned: false,
         cert: pos.cert || null,
+        /* a Japanese print prices from the snapshot's "<cardId>@jp" entry */
+        jp: !!pos.jp,
         slot: nextFreeSlot(),
         addedAt: Date.now(),
       });
