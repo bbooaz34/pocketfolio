@@ -194,19 +194,6 @@ input, select {
   flex: none;
 }
 .icon-btn.primary { color: var(--primary); }
-/* an action, not a floating glyph: the same soft disc the home-screen
-   round actions use, sized to the 44px tap target around it */
-.icon-btn.disc-soft { width: 44px; }
-.icon-btn.disc-soft::before {
-  content: "";
-  position: absolute;
-  width: 36px; height: 36px;
-  border-radius: var(--radius-pill);
-  background: var(--primary-soft);
-  border: 1px solid var(--primary-border);
-}
-.icon-btn.disc-soft svg { position: relative; }
-.icon-btn { position: relative; }
 
 .switcher {
   display: flex; align-items: center; gap: 6px;
