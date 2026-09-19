@@ -1,14 +1,192 @@
 {
  "date": "2026-09-19",
- "builtAt": "2026-09-19T20:29:43.029Z",
+ "builtAt": "2026-09-19T20:38:40.142Z",
  "source": "ppt",
  "cards": {
+  "psa-77452905@jp": {
+   "pcId": null,
+   "tcgPlayerId": "614817",
+   "name": "Misty's Tears",
+   "set": "Hanada City Gym",
+   "number": null,
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/614817_in_400x400.jpg",
+   "grades": {
+    "1": 6300,
+    "2": 5600,
+    "3": 5150,
+    "4": 5700,
+    "5": 13550,
+    "6": 10812,
+    "7": 12705,
+    "8": 15400,
+    "9": 28750,
+    "10": 200000,
+    "raw": 14954
+   },
+   "metrics": {
+    "1": {
+     "confidence": "high",
+     "effective": "high",
+     "trend": "down",
+     "dailyVolume7Day": 0.7142857142857143,
+     "salesCount": 94,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 4577,
+      "high": 17000
+     }
+    },
+    "2": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 261,
+     "lastSaleDate": "2026-09-04",
+     "spread": {
+      "low": 2800,
+      "high": 6200
+     }
+    },
+    "3": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 22,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 3164,
+      "high": 7700
+     }
+    },
+    "4": {
+     "confidence": "medium",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-10",
+     "spread": {
+      "low": 3600,
+      "high": 8200
+     }
+    },
+    "5": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 19,
+     "priceField": "marketPrice7Day",
+     "smartRejected": "outside-observed-range",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 3500,
+      "high": 9999
+     }
+    },
+    "6": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.2857142857142857,
+     "salesCount": 11,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-14",
+     "spread": {
+      "low": 4500,
+      "high": 15000
+     }
+    },
+    "7": {
+     "confidence": "high",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 30,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-19",
+     "spread": {
+      "low": 4500,
+      "high": 17500
+     }
+    },
+    "8": {
+     "confidence": "high",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 68,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-10",
+     "spread": {
+      "low": 5100,
+      "high": 25000
+     }
+    },
+    "9": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.5714285714285714,
+     "salesCount": 82,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 15969,
+      "high": 43028
+     }
+    },
+    "10": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 34,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-15",
+     "spread": {
+      "low": 90000,
+      "high": 269900
+     }
+    }
+   },
+   "salesVelocityWeekly": 11.627906976744187,
+   "salesVolume": null,
+   "confidence": "high",
+   "pricedOn": "2026-09-19"
+  },
   "base1-4": {
    "pcId": null,
    "tcgPlayerId": "42382",
    "name": "Charizard",
    "set": "Base",
    "number": "4",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/42382_in_400x400.jpg",
    "grades": {
     "1": 33779,
     "2": 27200,
@@ -185,6 +363,7 @@
    "name": "Blastoise",
    "set": "Base",
    "number": "2",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/42360_in_400x400.jpg",
    "grades": {
     "2": 12800,
     "3": 10175,
@@ -345,6 +524,7 @@
    "name": "Venusaur",
    "set": "Base",
    "number": "15",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/42355_in_400x400.jpg",
    "grades": {
     "1": 12540,
     "2": 5999,
@@ -505,6 +685,7 @@
    "name": "Charmander",
    "set": "Base",
    "number": "46",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/42389_in_400x400.jpg",
    "grades": {
     "6": 2500,
     "7": 2706,
@@ -601,6 +782,7 @@
    "name": "Pikachu",
    "set": "Base",
    "number": "58",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/42402_in_400x400.jpg",
    "grades": {
     "2": 1000,
     "4": 2500,
@@ -745,6 +927,7 @@
    "name": "Squirtle",
    "set": "Base",
    "number": "63",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/42408_in_400x400.jpg",
    "grades": {
     "4": 1499,
     "5": 1999,
@@ -873,6 +1056,7 @@
    "name": "Bulbasaur",
    "set": "Base",
    "number": "44",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/42387_in_400x400.jpg",
    "grades": {
     "5": 1600,
     "6": 2300,
@@ -985,6 +1169,7 @@
    "name": "Misty's Tears",
    "set": "Gym Challenge",
    "number": "118",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/87549_in_400x400.jpg",
    "grades": {
     "5": 2741,
     "6": 2425,
@@ -1091,188 +1276,13 @@
    "confidence": "low",
    "pricedOn": "2026-09-19"
   },
-  "gym2-118@jp": {
-   "pcId": null,
-   "tcgPlayerId": "614817",
-   "name": "Misty's Tears",
-   "set": "Hanada City Gym",
-   "number": null,
-   "grades": {
-    "1": 6300,
-    "2": 5600,
-    "3": 5150,
-    "4": 5700,
-    "5": 13550,
-    "6": 10812,
-    "7": 12705,
-    "8": 15400,
-    "9": 28750,
-    "10": 200000,
-    "raw": 14954
-   },
-   "metrics": {
-    "1": {
-     "confidence": "high",
-     "effective": "high",
-     "trend": "down",
-     "dailyVolume7Day": 0.7142857142857143,
-     "salesCount": 94,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 7,
-     "lastSaleDate": "2026-09-17",
-     "spread": {
-      "low": 4577,
-      "high": 17000
-     }
-    },
-    "2": {
-     "confidence": "low",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 15,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 261,
-     "lastSaleDate": "2026-09-04",
-     "spread": {
-      "low": 2800,
-      "high": 6200
-     }
-    },
-    "3": {
-     "confidence": "medium",
-     "effective": "medium",
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": 22,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-13",
-     "spread": {
-      "low": 3164,
-      "high": 7700
-     }
-    },
-    "4": {
-     "confidence": "medium",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 15,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-10",
-     "spread": {
-      "low": 3600,
-      "high": 8200
-     }
-    },
-    "5": {
-     "confidence": "low",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": 19,
-     "priceField": "marketPrice7Day",
-     "smartRejected": "outside-observed-range",
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-13",
-     "spread": {
-      "low": 3500,
-      "high": 9999
-     }
-    },
-    "6": {
-     "confidence": "medium",
-     "effective": "medium",
-     "trend": "up",
-     "dailyVolume7Day": 0.2857142857142857,
-     "salesCount": 11,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 14,
-     "lastSaleDate": "2026-09-14",
-     "spread": {
-      "low": 4500,
-      "high": 15000
-     }
-    },
-    "7": {
-     "confidence": "high",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 30,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 90,
-     "lastSaleDate": "2026-08-19",
-     "spread": {
-      "low": 4500,
-      "high": 17500
-     }
-    },
-    "8": {
-     "confidence": "high",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 68,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-10",
-     "spread": {
-      "low": 5100,
-      "high": 25000
-     }
-    },
-    "9": {
-     "confidence": "medium",
-     "effective": "medium",
-     "trend": "up",
-     "dailyVolume7Day": 0.5714285714285714,
-     "salesCount": 82,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 7,
-     "lastSaleDate": "2026-09-17",
-     "spread": {
-      "low": 15969,
-      "high": 43028
-     }
-    },
-    "10": {
-     "confidence": "low",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": 34,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-15",
-     "spread": {
-      "low": 90000,
-      "high": 269900
-     }
-    }
-   },
-   "salesVelocityWeekly": 11.627906976744187,
-   "salesVolume": null,
-   "confidence": "high",
-   "pricedOn": "2026-09-19"
-  },
   "psa-154146687@jp": {
    "pcId": null,
    "tcgPlayerId": "575874",
    "name": "Togepi",
    "set": "Gold Silver to a New World",
    "number": null,
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/575874_in_400x400.jpg",
    "grades": {
     "1": 20000,
     "5": 8132,
@@ -1401,6 +1411,7 @@
    "name": "Lugia",
    "set": "Neo Genesis",
    "number": "9",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/86903_in_400x400.jpg",
    "grades": {
     "1": 149900,
     "2": 38500,
@@ -1561,6 +1572,7 @@
    "name": "The Boss's Way",
    "set": "Team Rocket",
    "number": "73",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/89894_in_400x400.jpg",
    "grades": {
     "5": 1873,
     "7": 1425,
@@ -1657,6 +1669,7 @@
    "name": "Umbreon VMAX",
    "set": "Evolving Skies",
    "number": "215",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/246723_in_400x400.jpg",
    "grades": {
     "1": 134500,
     "2": 121875,
@@ -1833,6 +1846,7 @@
    "name": "Pikachu VMAX",
    "set": "Vivid Voltage",
    "number": "188",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/226434_in_400x400.jpg",
    "grades": {
     "3": 5999,
     "6": 12999,
@@ -1945,6 +1959,7 @@
    "name": "Charizard",
    "set": "151",
    "number": "6",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/502558_in_400x400.jpg",
    "grades": {
     "4": 1999,
     "7": 1750,
