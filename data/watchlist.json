@@ -9,7 +9,7 @@
     { "id": "base1-63",  "name": "Squirtle",   "setName": "Base",            "number": "63",  "setTotal": 102, "pptSetId": 604, "pcQuery": "squirtle base set 63/102 pokemon" },
     { "id": "base1-44",  "name": "Bulbasaur",  "setName": "Base",            "number": "44",  "setTotal": 102, "pptSetId": 604, "pcQuery": "bulbasaur base set 44/102 pokemon" },
     { "id": "gym2-118",  "name": "Misty's Tears", "setName": "Gym Challenge", "number": "118", "setTotal": 132, "pcQuery": "misty's tears gym challenge 118/132 pokemon" },
-    { "id": "gym2-118@jp", "name": "Misty's Tears", "setName": "Hanada City Gym", "language": "japanese", "pcQuery": "misty's tears japanese gym pokemon" },
+    { "id": "psa-77452905@jp", "name": "Misty's Tears", "setName": "Hanada City Gym", "language": "japanese", "pptSetId": 24175, "pcQuery": "misty's tears japanese gym pokemon" },
     { "id": "psa-154146687@jp", "name": "Togepi", "setName": "Gold Silver to a New World", "language": "japanese", "pcQuery": "togepi japanese gold silver new world pokemon" },
     { "id": "neo1-9",    "name": "Lugia",      "setName": "Neo Genesis",     "number": "9",   "setTotal": 111, "pcQuery": "lugia neo genesis 9/111 pokemon" },
     { "id": "base5-73",  "name": "The Boss's Way", "setName": "Team Rocket",  "number": "73",  "setTotal": 82,  "pcQuery": "the boss's way team rocket 73/82 pokemon" },

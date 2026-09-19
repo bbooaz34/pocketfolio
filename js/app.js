@@ -371,8 +371,19 @@
 
   /* ---------- holding card component ---------- */
 
-  function thumbEl(cardId, fallbackCls, imgCls) {
-    const image = cards.get(cardId)?.image;
+  /* The English catalogs have no Japanese sets, and a cert-only slab has no
+     catalog entry at all — so those holdings carry no image. The daily job
+     already receives one on the row it prices, so the snapshot is the
+     fallback. */
+  function imageFor(cardId, jp) {
+    const local = cards.get(cardId)?.image;
+    if (local) return local;
+    const entry = (jp && snapLatest?.cards?.[cardId + "@jp"]) || snapLatest?.cards?.[cardId];
+    return entry?.image || null;
+  }
+
+  function thumbEl(cardId, fallbackCls, imgCls, jp) {
+    const image = imageFor(cardId, jp);
     if (image) {
       const img = h("img", imgCls);
       img.src = image;
@@ -409,7 +420,7 @@
     const setBits = [displaySet(hh.setName), hh.number].filter(Boolean).join(" ");
     if (setBits) txt.appendChild(h("span", "setnum num", setBits));
     r1.appendChild(txt);
-    r1.appendChild(thumbEl(hh.cardId, null, "thumb"));
+    r1.appendChild(thumbEl(hh.cardId, null, "thumb", hh.jp));
     a.appendChild(r1);
 
     const r2 = h("span", "r2");
@@ -546,7 +557,7 @@
     if (top.length) {
       const stack = fan.querySelector(".fan");
       stack.replaceChildren();
-      for (const p of top) stack.appendChild(thumbEl(p.h.cardId, null, "fan-card"));
+      for (const p of top) stack.appendChild(thumbEl(p.h.cardId, null, "fan-card", p.h.jp));
       const totalQty = pos.reduce((s, p) => s + p.h.qty, 0);
       const rest = totalQty - top.length;
       const chip = fan.querySelector(".fan-count");
@@ -801,7 +812,7 @@
     pin.hidden = hh.value == null;
     pin.setAttribute("aria-pressed", String(!!hh.valuePinned));
     head.appendChild(txt);
-    head.appendChild(thumbEl(hh.cardId, null, "detail-figure"));
+    head.appendChild(thumbEl(hh.cardId, null, "detail-figure", hh.jp));
     vc.appendChild(head);
 
     const split = h("div", "change-split divider mt14");

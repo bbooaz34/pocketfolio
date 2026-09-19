@@ -543,6 +543,9 @@ async function priceWithPPT(cards, out, prev) {
         name: card.name,
         set: card.setName || null,
         number: card.number || null,
+        /* the app's catalogs are English-only and a cert-only slab has no
+           catalog entry, so this is the only picture those holdings get */
+        image: row.imageCdnUrl400 ?? row.imageCdnUrl200 ?? row.imageCdnUrl ?? row.imageUrl ?? null,
         grades: priced.grades,
         metrics: priced.metrics,
         salesVelocityWeekly: priced.velocity,
