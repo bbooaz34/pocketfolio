@@ -1,0 +1,20 @@
+# One-off diagnostic: what PPT's eBay numbers mean (TASK-verify-ppt-ebay-data.md).
+# Manual only — it spends ~9 credits and writes nothing.
+name: probe ebay
+on:
+  workflow_dispatch:
+    inputs:
+      cardId:
+        description: 'watchlist card id to probe (default: first in ppt-map.json)'
+        required: false
+        default: ''
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/probe-ebay.mjs ${{ inputs.cardId }}
+        env:
+          PPT_TOKEN: ${{ secrets.PPT_TOKEN }}
