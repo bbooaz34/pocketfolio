@@ -37,8 +37,8 @@ const PPT_BASE = process.env.PPT_BASE || "https://www.pokemonpricetracker.com";
    So the budget must be counted in credits, not calls: 80 calls at limit=5 is
    up to 800 credits against a 100-credit free tier. */
 const PPT_CREDIT_BUDGET = Number(process.env.PPT_CREDIT_BUDGET || 90);
-const PPT_LIMIT_TARGETED = 1;   // we know the set — ask for one row
-const PPT_LIMIT_BROAD = 3;      // no set id — allow a little room to match
+const PPT_LIMIT_RESOLVED = 1;   // identity known from ppt-map — one row is the card
+const PPT_LIMIT_FIRST = 3;      // first touch — room to match by number/name locally
 
 if (!PC_TOKEN && !PPT_TOKEN) {
   console.error("need PC_TOKEN and/or PPT_TOKEN");
@@ -219,13 +219,15 @@ async function priceWithPPT(cards, out, prev) {
     }
     const known = pptMap[card.id];
     const setId = known?.setId || (card.id.includes("-") ? card.id.split("-")[0] : null);
-    const targeted = Boolean(setId);
+    /* The real API accepts only documented params and answers 400 to unknown
+       ones — `number` is not accepted (`search` spans name/set/number/rarity
+       server-side; run #1 failed on this). The number is matched locally
+       below instead. */
     const params = new URLSearchParams({
       search: known?.search || card.name,
       includeEbay: "true",
-      limit: String(targeted ? PPT_LIMIT_TARGETED : PPT_LIMIT_BROAD),
+      limit: String(known?.search ? PPT_LIMIT_RESOLVED : PPT_LIMIT_FIRST),
       ...(setId ? { setId } : {}),
-      ...(card.number ? { number: String(card.number) } : {}),
     });
     let rows;
     try {

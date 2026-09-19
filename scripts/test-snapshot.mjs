@@ -33,15 +33,22 @@ const CARDS = Array.from({ length: 8 }, (_, i) => ({
   number: String(i + 1),
 }));
 
-let rowsServed = 0, requests = 0, force429After = Infinity;
+let rowsServed = 0, requests = 0, force429After = Infinity, limitsSeen = [];
 
 const server = createServer((req, res) => {
   requests++;
   if (requests > force429After) { res.writeHead(429).end("{}"); return; }
   const url = new URL(req.url, "http://x");
+  // the real API rejects unknown params with 400 — enforce that here so a
+  // regression to e.g. `number` fails this test the way run #1 failed live
+  const allowed = new Set(["search", "setId", "limit", "includeEbay", "language", "sortBy"]);
+  for (const k of url.searchParams.keys()) {
+    if (!allowed.has(k)) { res.writeHead(400).end(`{"error":"unknown param ${k}"}`); return; }
+  }
   const limit = Number(url.searchParams.get("limit") || 5);
-  const number = url.searchParams.get("number");
-  const match = CARDS.find((c) => c.number === number) || CARDS[0];
+  limitsSeen.push(limit);
+  const search = url.searchParams.get("search") || "";
+  const match = CARDS.find((c) => c.name === search) || CARDS[0];
   // Serve `limit` rows — the real API bills per row, doubled by includeEbay.
   const rows = Array.from({ length: limit }, (_, i) => ({
     name: i === 0 ? match.name : `Filler ${i}`,
@@ -86,14 +93,15 @@ const check = (name, ok, detail = "") => {
 };
 
 /* ---- day 1: small budget, expect a partial run ---- */
-rowsServed = 0;
+rowsServed = 0; limitsSeen = [];
 const d1 = await run("2026-09-20", { PPT_CREDIT_BUDGET: "6" });
 if (d1.status !== 0) { console.log(d1.stdout, d1.stderr); throw new Error("day 1 failed"); }
 const s1 = snap("2026-09-20");
 const n1 = Object.keys(s1.cards).length;
 check("day 1 priced only what the budget allows", n1 > 0 && n1 <= 4, `${n1} cards, ${rowsServed} rows served`);
 check("credits counted as rows x2", rowsServed * 2 <= 6 + 4, `~${rowsServed * 2} credits for a budget of 6`);
-check("targeted query asked for 1 row", rowsServed === requests, `${rowsServed} rows over ${requests} requests`);
+check("first touch searches with limit=3", limitsSeen.every((l) => l === 3), `limits: ${limitsSeen.join(",")}`);
+check("only documented params are sent (no 400s)", !d1.stdout.includes("HTTP 400"));
 
 /* ---- day 2: leftovers first, day 1 carried ---- */
 const before = new Set(Object.keys(s1.cards));
@@ -116,6 +124,16 @@ check("a 429 day still writes a complete snapshot", existsSync(join(work, "data"
 const raw2 = readFileSync(join(work, "data", "snapshots", "2026-09-21.json"), "utf8");
 await run("2026-09-23", { PPT_CREDIT_BUDGET: "6" });
 check("older snapshots are immutable", readFileSync(join(work, "data", "snapshots", "2026-09-21.json"), "utf8") === raw2);
+
+/* ---- resolved cards re-query at limit=1 ---- */
+limitsSeen = [];
+const d5 = await run("2026-09-24", { PPT_CREDIT_BUDGET: "200" });
+if (d5.status !== 0) { console.log(d5.stdout, d5.stderr); throw new Error("day 5 failed"); }
+const s5 = snap("2026-09-24");
+const fresh5 = Object.values(s5.cards).filter((c) => !c.carried).length;
+check("full budget prices the whole watchlist", fresh5 === CARDS.length, `${fresh5}/${CARDS.length} fresh`);
+check("resolved identities re-query at limit=1", limitsSeen.includes(1) && limitsSeen.includes(3),
+  `limits: ${limitsSeen.join(",")}`);
 
 server.close();
 console.log(`\nworkspace: ${work}`);
