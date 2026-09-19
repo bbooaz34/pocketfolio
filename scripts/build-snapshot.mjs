@@ -227,9 +227,28 @@ function pptAttempts(card) {
   const catalogSetId = card.id.includes("-") ? card.id.split("-")[0] : null;
   const attempts = [];
   if (catalogSetId) attempts.push({ search: card.name, setId: catalogSetId, limit: String(PPT_LIMIT_FIRST) });
+  /* a sibling card from the same catalog set may already have learned PPT's
+     real setId — the most reliable filter we have (run #4: a broad name
+     search missed Blastoise/Venusaur while every setId-learned card hit) */
+  const sibling = siblingSetId(catalogSetId);
+  if (sibling) attempts.push({ search: card.name, setId: String(sibling), limit: String(PPT_LIMIT_FIRST) });
   if (card.setName) attempts.push({ search: `${card.name} ${card.setName}`, limit: String(PPT_LIMIT_FIRST) });
   attempts.push({ search: card.name, limit: String(PPT_LIMIT_FIRST) });
   return attempts;
+}
+
+/* The PPT setId most often learned for cards of this catalog set. */
+function siblingSetId(catalogSetId) {
+  if (!catalogSetId) return null;
+  const counts = new Map();
+  for (const [id, m] of Object.entries(pptMap)) {
+    if (id.startsWith(catalogSetId + "-") && m.setId != null) {
+      counts.set(m.setId, (counts.get(m.setId) || 0) + 1);
+    }
+  }
+  let best = null, n = 0;
+  for (const [s, c] of counts) if (c > n) { best = s; n = c; }
+  return best;
 }
 
 async function priceWithPPT(cards, out, prev) {

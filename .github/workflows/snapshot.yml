@@ -1,7 +1,8 @@
 # Daily price snapshot (POCKETFOLIO-PRICING.md §5).
 # Prices data/watchlist.json via PriceCharting (+ PPT fallback) and commits
-# the result under data/ — the push to main triggers the Pages mirror, so
-# the app picks the new snapshot up automatically.
+# the result under data/. GITHUB_TOKEN pushes do NOT trigger other workflows,
+# so deploy-pages.yml never sees the data commit — the gh-pages mirror is a
+# step of this job instead.
 #
 # Secrets: PRICECHARTING_TOKEN (optional but primary), PPT_TOKEN (fallback).
 name: price snapshot
@@ -29,3 +30,5 @@ jobs:
         with:
           commit_message: 'prices: snapshot ${{ github.run_id }}'
           file_pattern: 'data/**'
+      - name: Mirror to gh-pages
+        run: git push origin HEAD:gh-pages
