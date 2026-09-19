@@ -290,17 +290,20 @@ function rotate(cards, prev) {
    5. Name alone — matched locally by card id, then number, then exact name. */
 function pptAttempts(card) {
   const known = pptMap[card.id];
+  const attempts = [];
   const tcgPlayerId = card.tcgPlayerId || known?.tcgPlayerId || null;
-  if (tcgPlayerId) return [{ tcgPlayerId: String(tcgPlayerId) }];
+  /* run #6: an exact lookup WITHOUT limit answers total=1, count=0 (and still
+     bills) — always send limit. And the ladder never shrinks to one attempt:
+     a disappointing exact lookup falls through to the search attempts below. */
+  if (tcgPlayerId) attempts.push({ tcgPlayerId: String(tcgPlayerId), limit: String(PPT_LIMIT_RESOLVED) });
   if (known?.search) {
-    return [{
+    attempts.push({
       search: known.search,
       ...(known.setId != null ? { setId: String(known.setId) } : {}),
       limit: String(known.setId != null ? PPT_LIMIT_RESOLVED : PPT_LIMIT_FIRST),
-    }];
+    });
   }
   const catalogSetId = card.id.includes("-") ? card.id.split("-")[0] : null;
-  const attempts = [];
   const sibling = siblingSetId(catalogSetId);
   if (sibling != null) attempts.push({ search: card.name, setId: String(sibling), limit: String(PPT_LIMIT_FIRST) });
   if (card.setName) attempts.push({ search: `${card.name} ${card.setName}`, limit: String(PPT_LIMIT_FIRST) });

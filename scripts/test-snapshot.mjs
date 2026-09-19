@@ -105,6 +105,9 @@ const server = createServer((req, res) => {
   });
   const byId = url.searchParams.get("tcgPlayerId");
   if (byId) {
+    // run #6 live: an exact lookup without `limit` answers total=1, count=0
+    // and still bills — reproduce it so a regression fails here first
+    if (!url.searchParams.get("limit")) return send([], 1);
     byIdRequests++;
     const match = CARDS.find((c) => `9000${c.number}` === byId) || CARDS[0];
     return send([rowFor(match, 0)], 1); // exact key: one row
