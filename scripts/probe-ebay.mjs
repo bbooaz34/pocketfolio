@@ -50,6 +50,11 @@ async function ask(params) {
     remaining: res.headers.get("x-ratelimit-daily-remaining") };
 }
 
+/* PSA only — a response carries ~45 grading-company buckets (cgc/bgs/ace/tag…)
+   and the noise buries the answers. */
+const isPsa = (k) => /^psa(10|[1-9])(_5)?$/i.test(k);
+const pick = (o) => Object.fromEntries(Object.entries(o || {}).filter(([k]) => isPsa(k)));
+
 const byWindow = {};
 for (const days of [7, 30, 180]) {
   const r = await ask({
@@ -62,43 +67,60 @@ for (const days of [7, 30, 180]) {
   if (!row) { console.log("  (no row)\n"); continue; }
   byWindow[days] = row.ebay;
 
-  /* Q1/Q2: per-grade windowed vs lifetime figures */
-  const buckets = row.ebay?.salesByGrade || {};
-  console.log(`  ebay top-level keys: ${Object.keys(row.ebay || {}).join(",")}`);
-  console.log(`  ebay.totalSales=${row.ebay?.totalSales} totalValue=${row.ebay?.totalValue}` +
-    ` salesVelocity=${JSON.stringify(row.ebay?.salesVelocity)}` +
-    ` dateRange=${row.ebay?.dateRangeStart}..${row.ebay?.dateRangeEnd}`);
-  for (const [g, v] of Object.entries(buckets)) {
+  console.log(`  ebay keys: ${Object.keys(row.ebay || {}).join(",")}`);
+  console.log(`  totalSales=${row.ebay?.totalSales} salesVelocity=${JSON.stringify(row.ebay?.salesVelocity)}` +
+    ` range=${String(row.ebay?.dateRangeStart).slice(0, 10)}..${String(row.ebay?.dateRangeEnd).slice(0, 10)}`);
+
+  /* Q1/Q2/Q4: which fields exist per PSA grade, and do they move with the window */
+  for (const [g, v] of Object.entries(pick(row.ebay?.salesByGrade))) {
     if (!v || typeof v !== "object") { console.log(`  ${g}: ${v}`); continue; }
     console.log(`  ${g}: ` + Object.entries(v)
       .map(([k, val]) => `${k}=${typeof val === "object" ? JSON.stringify(val) : val}`).join(" "));
   }
 
-  /* Q3: is graded history a dated series? */
-  const eh = row.ebay?.priceHistory;
-  if (eh && typeof eh === "object") {
-    for (const [g, series] of Object.entries(eh)) {
-      const dates = series && typeof series === "object" ? Object.keys(series) : [];
-      console.log(`  history ${g}: ${Array.isArray(series) ? `array[${series.length}]` : `${dates.length} dated keys`}` +
-        (dates.length ? ` ${dates[0]}..${dates[dates.length - 1]} · sample ${JSON.stringify(series[dates[0]])}` : ""));
-    }
-  } else {
-    console.log(`  ebay.priceHistory: ${JSON.stringify(eh)}`);
+  /* Q3: is graded history a dated series, and does its span follow `days`? */
+  const eh = pick(row.ebay?.priceHistory);
+  const spans = Object.entries(eh).map(([g, series]) => {
+    const dates = series && typeof series === "object" && !Array.isArray(series) ? Object.keys(series).sort() : [];
+    return `${g}:${Array.isArray(series) ? `arr[${series.length}]` : dates.length}` +
+      (dates.length ? `(${dates[0]}..${dates[dates.length - 1]})` : "");
+  });
+  console.log(`  history spans: ${spans.join(" ") || "(none)"}`);
+  const firstG = Object.keys(eh)[0];
+  if (firstG) {
+    const s = eh[firstG];
+    const d0 = Object.keys(s)[0];
+    console.log(`  history sample ${firstG}[${d0}] = ${JSON.stringify(s[d0])}`);
   }
-  console.log(`  raw priceHistory type: ${typeof row.priceHistory}` +
-    ` keys=${row.priceHistory && typeof row.priceHistory === "object" ? Object.keys(row.priceHistory).join(",") : "-"}`);
   console.log("");
 }
 
-/* Q1 verdict: does anything change between windows? */
-const counts = (o) => Object.fromEntries(Object.entries(o?.salesByGrade || {})
+/* Q1 verdict: does the count change between windows? */
+const counts = (o) => Object.fromEntries(Object.entries(pick(o?.salesByGrade))
   .map(([g, v]) => [g, v?.salesCount ?? v?.count ?? null]));
-console.log("=== salesCount per window");
+const histLen = (o) => Object.fromEntries(Object.entries(pick(o?.priceHistory))
+  .map(([g, s]) => [g, s && typeof s === "object" ? Object.keys(s).length : 0]));
+console.log("=== Q1 salesCount per window (PSA)");
 for (const d of [7, 30, 180]) console.log(`  days=${d}: ${JSON.stringify(counts(byWindow[d]))}`);
 console.log(`  totalSales: ${[7, 30, 180].map((d) => `${d}=${byWindow[d]?.totalSales}`).join(" ")}`);
-const same = JSON.stringify(counts(byWindow[7])) === JSON.stringify(counts(byWindow[180]));
-console.log(`  VERDICT: salesCount is ${same ? "LIFETIME (identical across windows)" : "WINDOWED"}`);
+console.log(`  VERDICT: salesCount is ${
+  JSON.stringify(counts(byWindow[7])) === JSON.stringify(counts(byWindow[180]))
+    ? "LIFETIME/FIXED (identical at days=7 and days=180)" : "WINDOWED"}`);
 
-console.log("\n=== full ebay object (days=30), for the PRICING-ATTEMPTS.md fixture");
-console.log(JSON.stringify(byWindow[30], null, 1));
+console.log("=== Q3 graded-history length per window (PSA)");
+for (const d of [7, 30, 180]) console.log(`  days=${d}: ${JSON.stringify(histLen(byWindow[d]))}`);
+console.log(`  VERDICT: graded history ${
+  JSON.stringify(histLen(byWindow[7])) === JSON.stringify(histLen(byWindow[180]))
+    ? "IGNORES `days` (same length)" : "RESPECTS `days`"}`);
+
+console.log("\n=== fixture: PSA slice of the ebay object (days=30)");
+console.log(JSON.stringify({
+  totalSales: byWindow[30]?.totalSales,
+  salesVelocity: byWindow[30]?.salesVelocity,
+  dateRangeStart: byWindow[30]?.dateRangeStart,
+  dateRangeEnd: byWindow[30]?.dateRangeEnd,
+  salesByGrade: pick(byWindow[30]?.salesByGrade),
+  smartPriceOutlierByGrade: pick(byWindow[30]?.smartPriceOutlierByGrade),
+  priceHistory_psa9_sample: Object.entries(pick(byWindow[30]?.priceHistory).psa9 || {}).slice(0, 3),
+}, null, 1));
 console.log(`\ntotal credits spent: ${credits}`);
