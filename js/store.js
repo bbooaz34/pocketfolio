@@ -42,15 +42,30 @@
   let holdings = loadJSON(KEY, []).filter((h) => h && h.uid && h.qty > 0);
   let snapshots = loadJSON(SNAP_KEY, []);
 
-  /* migration for the snapshot-pricing model (POCKETFOLIO-PRICING.md §4):
-     a manual value carries when it was set (so a newer snapshot supersedes
-     it) and whether the user pinned it. Legacy manual values get an ancient
-     valueSetAt so the first snapshot takes over — the common case is
-     "I typed a rough number, fix it for me later". */
+  /* migration for the snapshot-pricing model (POCKETFOLIO-PRICING.md §4).
+     A manual market price is a stopgap, not an override: it carries when it
+     was typed so the next snapshot built after that supersedes it on its own.
+     Legacy values get an ancient manualSetAt so the first snapshot takes over.
+     Pinning is gone — a number that cannot be superseded is a number that
+     goes stale in silence, which is what this model exists to prevent — so a
+     stored valuePinned is simply dropped. */
   let migrated = false;
   for (const hh of holdings) {
-    if (hh.value != null && !hh.valueSetAt) { hh.valueSetAt = "1970-01-01T00:00:00Z"; migrated = true; }
-    if (hh.valuePinned === undefined) { hh.valuePinned = false; migrated = true; }
+    if (hh.value !== undefined) {
+      if (hh.manualValue === undefined) hh.manualValue = hh.value;
+      delete hh.value;
+      migrated = true;
+    }
+    if (hh.valueSetAt !== undefined) {
+      if (hh.manualSetAt === undefined) hh.manualSetAt = hh.valueSetAt;
+      delete hh.valueSetAt;
+      migrated = true;
+    }
+    if (hh.valuePinned !== undefined) { delete hh.valuePinned; migrated = true; }
+    if (hh.manualValue != null && !hh.manualSetAt) { hh.manualSetAt = "1970-01-01T00:00:00Z"; migrated = true; }
+    if (hh.manualValue === undefined) { hh.manualValue = null; migrated = true; }
+    /* a real "unknown": existing holdings are never given a guessed date */
+    if (hh.purchaseDate === undefined) { hh.purchaseDate = null; migrated = true; }
     if (hh.addedAt === undefined) { hh.addedAt = 0; migrated = true; }
   }
   if (migrated) saveJSON(KEY, holdings);
@@ -79,10 +94,11 @@
         existing.cost = pos.cost;
       }
       existing.qty = totalQty;
-      if (pos.value != null) {
-        existing.value = pos.value;
-        existing.valueSetAt = new Date().toISOString();
+      if (pos.manualValue != null) {
+        existing.manualValue = pos.manualValue;
+        existing.manualSetAt = new Date().toISOString();
       }
+      if (pos.purchaseDate) existing.purchaseDate = pos.purchaseDate;
       if (pos.cert) existing.cert = pos.cert;
       if (pos.jp) existing.jp = true;
     } else {
@@ -97,9 +113,9 @@
         grade: pos.grade,
         qty: pos.qty,
         cost: pos.cost ?? null,
-        value: pos.value ?? null,
-        valueSetAt: pos.value != null ? new Date().toISOString() : null,
-        valuePinned: false,
+        manualValue: pos.manualValue ?? null,
+        manualSetAt: pos.manualValue != null ? new Date().toISOString() : null,
+        purchaseDate: pos.purchaseDate || null,
         cert: pos.cert || null,
         /* a Japanese print prices from the snapshot's "<cardId>@jp" entry */
         jp: !!pos.jp,
@@ -115,22 +131,21 @@
     saveJSON(KEY, holdings);
   }
 
-  function setValueOverride(uid, value) {
+  /** The purchase-details sheet writes all three fields at once. `undefined`
+      leaves a field alone; `null` clears it — clearing the manual value is how
+      the user returns to the market number without waiting for a snapshot.
+      A cost of 0 is a real answer (the card was free), so only `null` is
+      "unknown". */
+  function setPurchase(uid, patch) {
     const h = holdings.find((x) => x.uid === uid);
-    if (h) {
-      h.value = value;
-      h.valueSetAt = value != null ? new Date().toISOString() : null;
-      if (value == null) h.valuePinned = false;
-      saveJSON(KEY, holdings);
+    if (!h) return;
+    if (patch.cost !== undefined) h.cost = patch.cost;
+    if (patch.purchaseDate !== undefined) h.purchaseDate = patch.purchaseDate || null;
+    if (patch.manualValue !== undefined) {
+      h.manualValue = patch.manualValue;
+      h.manualSetAt = patch.manualValue != null ? new Date().toISOString() : null;
     }
-  }
-
-  function setValuePinned(uid, pinned) {
-    const h = holdings.find((x) => x.uid === uid);
-    if (h) {
-      h.valuePinned = !!pinned;
-      saveJSON(KEY, holdings);
-    }
+    saveJSON(KEY, holdings);
   }
 
   /** Record today's collection value (replaces an earlier snapshot from today). */
@@ -160,5 +175,5 @@
     } catch { /* storage unavailable */ }
   }
 
-  window.PocketfolioStore = { getAll, upsert, remove, setValueOverride, setValuePinned, recordSnapshot, getSnapshots, clearAll };
+  window.PocketfolioStore = { getAll, upsert, remove, setPurchase, recordSnapshot, getSnapshots, clearAll };
 })();

@@ -63,10 +63,9 @@
     removeHolding: "הסרה מהתיק",
     save: "שמירה",
     cancel: "ביטול",
-    manualValueLabel: "שווי ידני ליחידה (ריק = חזרה למחיר האוטומטי)",
     holdingValue: "שווי האחזקה",
     trend: "מגמה",
-    costPerUnit: "עלות רכישה ליחידה",
+    costPerUnit: "מחיר רכישה",
     rawMarket: "מחיר סינגל",
     psaCert: "מספר תעודת PSA",
     certLooking: (c) => `מאתר תעודת PSA ‎#${c}…`,
@@ -87,9 +86,20 @@
     noCards: "לא נמצאו קלפים",
     newsEmpty: "אין חדשות חדשות",
     rawMarketShort: "שוק גולמי",
-    manualPinnedLine: "שווי שהזנת ידנית · נעוץ",
-    manualPendingLine: "שווי שהזנת ידנית · יוחלף בעדכון הבא",
-    autoUpdated: "עודכן אוטומטית",
+    manualLine: "מחיר שוק שהזנת · יוחלף בעדכון הבא",
+    purchaseDate: "תאריך רכישה",
+    noPriceCount: (n) => `${n} קלפים ללא מחיר`,
+    sheetTitle: "עריכת פרטי הרכישה",
+    sheetClose: "סגירה",
+    fldBuyPrice: "מחיר רכישה",
+    fldBuyPriceHint: "המחיר ששילמת ליחידה. משמש לחישוב התשואה.",
+    fldMarket: "מחיר שוק ליחידה",
+    fldMarketHint: "דריסה ידנית של מחיר השוק. תוחלף אוטומטית בעדכון הבא.",
+    fldDate: "תאריך רכישה",
+    fldDateHint: "פותח את לוח השנה של המכשיר.",
+    days: (n) => (n === 1 ? "יום" : `${n} ימים`),
+    months: (n) => (n === 1 ? "חודש" : n === 2 ? "חודשיים" : `${n} חודשים`),
+    years: (n) => (n === 1 ? "שנה" : n === 2 ? "שנתיים" : `${n} שנים`),
     noPrice: "אין נתוני מחיר לקלף הזה",
     backToToday: "חזרה להיום",
     pastViewing: (d) => `צפייה בנתונים מ-${d}`,
@@ -221,22 +231,23 @@
     const entry = jpEntry || snap?.cards?.[hh.cardId] || null;
     const jpFallback = !!hh.jp && !jpEntry && !!entry;
     const g = entry?.grades?.[hh.grade];
-    const manualAt = hh.valueSetAt ? Date.parse(hh.valueSetAt) : 0;
+    const manualAt = hh.manualSetAt ? Date.parse(hh.manualSetAt) : 0;
     const builtAt = snap ? Date.parse(snap.builtAt) || 0 : 0;
     const historic = !!snap && !!snapLatest && snap.date !== snapLatest.date;
-    const manual = hh.value != null && (!historic || manualAt <= builtAt);
-    if (manual && hh.valuePinned) return { each: hh.value, src: "manual-pinned" };
+    const manual = hh.manualValue != null && (!historic || manualAt <= builtAt);
+    /* a manual price is a stopgap: the first snapshot built after it wins,
+       with nothing for the user to clear (POCKETFOLIO-PRICING.md §4) */
     if (g != null && (!manual || builtAt > manualAt)) {
       return {
         each: g / 100, src: "snapshot", date: snap.date, builtAt: snap.builtAt,
-        superseded: manual && builtAt > manualAt, confidence: entry.confidence,
+        confidence: entry.confidence,
         /* per-grade provenance: which field the number came from, how active
            that grade is, how wide the sample spread is */
         m: entry.metrics?.[String(hh.grade)] ?? null,
         jpFallback,
       };
     }
-    if (manual) return { each: hh.value, src: "manual-pending" };
+    if (manual) return { each: hh.manualValue, src: "manual" };
     const rawP = entry?.grades?.raw;
     if (rawP != null) {
       if (hh.grade === "raw") return { each: rawP / 100, src: "raw", jpFallback };
@@ -287,16 +298,28 @@
     return out.length ? ` · ${out.join(" · ")}` : "";
   }
 
+  /** How long the card has been held, in the largest unit that fits. */
+  function holdingPeriod(purchaseDate) {
+    if (!purchaseDate) return null;
+    const then = Date.parse(purchaseDate + "T00:00:00");
+    if (!Number.isFinite(then)) return null;
+    const days = Math.floor((Date.now() - then) / 864e5);
+    if (days < 0) return null;
+    if (days < 31) return T.days(Math.max(days, 1));
+    const months = Math.floor(days / 30.44);
+    return months < 12 ? T.months(months) : T.years(Math.floor(months / 12));
+  }
+
+  /* The date chip beside the value carries the timestamp, so this line is
+     only ever about WHERE the number came from — no "נכון ל:" here. */
   function sourceLine(val, grade) {
     if (!val) return T.noPrice;
-    if (val.src === "manual-pinned") return T.manualPinnedLine;
-    if (val.src === "manual-pending") return T.manualPendingLine;
+    if (val.src === "manual") return T.manualLine;
     const en = val.jpFallback ? ` · ${T.enFallback}` : "";
     if (val.src === "snapshot") {
-      const d = fmtDM(val.date);
       return (grade && grade !== "raw"
-        ? `${T.asOf} ${d} · ${methodName(val.m?.priceField, grade)}`
-        : `${T.asOf} ${d} · ${T.rawMarket}`) + en + caveats(val.m);
+        ? methodName(val.m?.priceField, grade)
+        : T.rawMarket) + en + caveats(val.m);
     }
     if (val.src === "raw") return T.rawMarket + en;
     return T.srcEst + en;
@@ -534,7 +557,11 @@
     const when = snapActive ? fmtDM(snapActive.date)
       : fmtTime(lastUpdatedAt ? new Date(lastUpdatedAt) : new Date());
     const src = manualOnly ? T.srcManual : snapCount > 0 ? T.srcEbay : T.srcEst;
-    $("kpi-total-note").textContent = `${T.asOf} ${when} · ${src}`;
+    /* unpriced cards still count as cards; the total says how many it left out
+       rather than quietly pretending they are worth nothing */
+    const unpriced = pos.length - valued.length;
+    $("kpi-total-note").textContent = `${T.asOf} ${when} · ${src}` +
+      (unpriced ? ` · ${T.noPriceCount(unpriced)}` : "");
 
     setPillPair($("kpi-day-pill"), $("kpi-day-amount"),
       valued.length
@@ -794,23 +821,12 @@
     txt.appendChild(vl);
     const srcRow = h("div", "t-text4 faint");
     srcRow.appendChild(document.createTextNode(sourceLine(p.val, hh.grade)));
-    /* a snapshot that just superseded a manual value says so for 24h */
-    if (p.val && p.val.src === "snapshot" && p.val.superseded &&
-        Date.now() - Date.parse(p.val.builtAt) < 24 * 3600 * 1000) {
-      const auto = h("span", "tag tag--psa", T.autoUpdated);
-      auto.style.marginInlineStart = "6px";
-      srcRow.appendChild(auto);
-    }
     txt.appendChild(srcRow);
     const chipDate = snapActive?.date || todayISO();
     const chip = h("span", "chip sm num",
       chipDate === todayISO() ? fmtDateChip(new Date()) : fmtDMY(chipDate));
     chip.style.marginTop = "10px";
     txt.appendChild(chip);
-    /* pin: the user insists on their own number (visible once one exists) */
-    const pin = $("cd-pin");
-    pin.hidden = hh.value == null;
-    pin.setAttribute("aria-pressed", String(!!hh.valuePinned));
     head.appendChild(txt);
     head.appendChild(thumbEl(hh.cardId, null, "detail-figure", hh.jp));
     vc.appendChild(head);
@@ -823,35 +839,12 @@
     const buyDelta = (hh.cost != null && p.val)
       ? { amt: (p.val.each - hh.cost) * hh.qty, pct: hh.cost ? ((p.val.each - hh.cost) / hh.cost) * 100 : 0 }
       : undefined;
-    split.appendChild(changeBlock(T.changeBuy, buyDelta));
+    /* with a purchase date the return can say over what period — never
+       annualised, which would read as a rate the data cannot support */
+    const held = holdingPeriod(hh.purchaseDate);
+    split.appendChild(changeBlock(held ? `${T.changeBuy} · ${held}` : T.changeBuy, buyDelta));
     vc.appendChild(split);
 
-    /* inline manual-value editor, opened by the header pencil */
-    const edit = h("div", "inline-edit");
-    edit.hidden = true;
-    edit.id = "cd-edit-row";
-    const wrap = h("div", "input-wrap");
-    const inp = document.createElement("input");
-    inp.type = "number"; inp.step = "any"; inp.min = "0";
-    inp.id = "cd-value-input";
-    inp.setAttribute("aria-label", T.manualValueLabel);
-    inp.placeholder = T.manualValueLabel;
-    if (hh.value != null) inp.value = hh.value;
-    wrap.appendChild(inp);
-    edit.appendChild(wrap);
-    const saveB = h("button", "btn-outline", T.save);
-    saveB.type = "button";
-    saveB.addEventListener("click", () => {
-      const v = parseFloat(inp.value);
-      Store.setValueOverride(hh.uid, Number.isFinite(v) && v > 0 ? v : null);
-      renderAll();
-    });
-    edit.appendChild(saveB);
-    const cancelB = h("button", "text-btn", T.cancel);
-    cancelB.type = "button";
-    cancelB.addEventListener("click", () => { edit.hidden = true; });
-    edit.appendChild(cancelB);
-    vc.appendChild(edit);
     body.appendChild(vc);
 
     /* trend card */
@@ -936,6 +929,7 @@
       dc.appendChild(row);
     };
     kv(T.costPerUnit, h("span", "v", hh.cost != null ? show(fmtUSD(hh.cost, false)) : "— —"));
+    kv(T.purchaseDate, h("span", "v num", hh.purchaseDate ? fmtDMY(hh.purchaseDate) : "— —"));
     const raw = rawPriceOf(hh.cardId);
     kv(T.rawMarket, h("span", "v", raw ? show(fmtMoney(raw.value, raw.currency)) : "— —"));
     if (hh.cert) {
@@ -1196,7 +1190,9 @@
   function setGrade(g) {
     gradeValue = g;
     document.querySelectorAll("#grade-pills .grade-pill").forEach((b) => {
-      b.setAttribute("aria-pressed", String(b.dataset.grade === g));
+      const on = b.dataset.grade === g;
+      b.setAttribute("aria-checked", String(on));
+      b.tabIndex = on ? 0 : -1;
     });
     updateEstimate();
   }
@@ -1327,20 +1323,39 @@
 
   /* ---------- add form ---------- */
 
+  /* PSA 10 down to PSA 1, then Raw — "Raw" in Latin to match the tag on the
+     holdings list. One scrollable row, never wrapped. */
   const GRADES = [
     ["10", "PSA 10"], ["9", "PSA 9"], ["8", "PSA 8"], ["7", "PSA 7"], ["6", "PSA 6"],
     ["5", "PSA 5"], ["4", "PSA 4"], ["3", "PSA 3"], ["2", "PSA 2"], ["1", "PSA 1"],
-    ["raw", "גולמי"],
+    ["raw", "Raw"],
   ];
 
+  /* A radio group, not eleven buttons: arrows move the selection and only the
+     selected chip is in the tab order. */
   function buildGradePills() {
     const host = $("grade-pills");
+    host.setAttribute("role", "radiogroup");
     for (const [val, label] of GRADES) {
       const b = h("button", "grade-pill", label);
       b.type = "button";
       b.dataset.grade = val;
-      b.setAttribute("aria-pressed", String(val === gradeValue));
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(val === gradeValue));
+      b.tabIndex = val === gradeValue ? 0 : -1;
       b.addEventListener("click", () => setGrade(val));
+      b.addEventListener("keydown", (ev) => {
+        const step = ev.key === "ArrowLeft" ? 1 : ev.key === "ArrowRight" ? -1
+          : ev.key === "Home" ? "first" : ev.key === "End" ? "last" : null;
+        if (step === null) return;
+        ev.preventDefault();
+        const i = GRADES.findIndex(([v]) => v === gradeValue);
+        const next = step === "first" ? 0 : step === "last" ? GRADES.length - 1
+          : Math.min(GRADES.length - 1, Math.max(0, i + step));
+        setGrade(GRADES[next][0]);
+        const el = host.querySelector(`[data-grade="${CSS.escape(GRADES[next][0])}"]`);
+        if (el) { el.focus(); el.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+      });
       host.appendChild(b);
     }
   }
@@ -1373,7 +1388,8 @@
       grade: gradeValue,
       qty: qtyVal,
       cost,
-      value: null, // the API fills the value (eBay median / estimate); ✎ overrides later
+      manualValue: null, // the snapshot supplies the market price
+      purchaseDate: $("date-input").value || null,
       cert: $("cert-input").value.trim().replace(/[^\w-]/g, "") || null,
       jp: !!selectedCard.jp,
     });
@@ -1384,6 +1400,7 @@
     $("selected-card").replaceChildren();
     $("card-search").value = "";
     $("cost-input").value = "";
+    $("date-input").value = todayISO();
     $("cert-input").value = "";
     setQty(1);
     updateAddButton();
@@ -1562,12 +1579,100 @@
     renderMarket(positions());
   });
 
-  $("cd-edit").addEventListener("click", () => {
-    const row = $("cd-edit-row");
-    if (row) {
-      row.hidden = !row.hidden;
-      if (!row.hidden) $("cd-value-input")?.focus();
-    }
+  $("cd-edit").addEventListener("click", () => openSheet());
+
+  /* ---------- purchase-details sheet ---------- */
+
+  let sheetUid = null;
+  let sheetReturnFocus = null;
+
+  const sheetFields = () => [$("sheet-cost"), $("sheet-market"), $("sheet-date")];
+  const numVal = (el) => {
+    const v = parseFloat(el.value);
+    /* 0 is a real answer — the card was free. Only empty is "unknown". */
+    return el.value.trim() === "" || !Number.isFinite(v) || v < 0 ? null : v;
+  };
+
+  function sheetSnapshotOfInputs() {
+    return JSON.stringify([numVal($("sheet-cost")), numVal($("sheet-market")), $("sheet-date").value || null]);
+  }
+  let sheetBaseline = "";
+
+  function syncSheetSave() {
+    $("sheet-save").disabled = sheetSnapshotOfInputs() === sheetBaseline;
+  }
+
+  function openSheet() {
+    const hh = Store.getAll().find((x) => x.uid === currentUid);
+    if (!hh) return;
+    sheetUid = hh.uid;
+    sheetReturnFocus = document.activeElement;
+
+    $("sheet-sub").textContent =
+      [hh.name, gradeLabel(hh.grade), `${hh.qty} ${T.units}`].join(" · ");
+    $("sheet-cost").value = hh.cost != null ? hh.cost : "";
+    $("sheet-market").value = hh.manualValue != null ? hh.manualValue : "";
+    /* an empty market field means "use the market number", so show that number
+       as the placeholder rather than leaving a blank that reads as missing */
+    const p = positions(snapLatest).find((x) => x.h.uid === hh.uid);
+    const resolved = p?.val ? p.val.each : null;
+    $("sheet-market").placeholder = resolved != null ? fmtUSD(resolved, false).replace("$", "") : "";
+    const today = todayISO();
+    $("sheet-date").max = today;
+    $("sheet-date").value = hh.purchaseDate || "";
+
+    sheetBaseline = sheetSnapshotOfInputs();
+    syncSheetSave();
+
+    $("sheet-scrim").hidden = false;
+    $("purchase-sheet").hidden = false;
+    requestAnimationFrame(() => {
+      $("sheet-scrim").classList.add("open");
+      $("purchase-sheet").classList.add("open");
+    });
+    /* focus the first field, but do not summon the keyboard: a sheet that
+       jumps the instant it lands is worse than one extra tap */
+    $("sheet-cost").focus({ preventScroll: true });
+  }
+
+  function closeSheet() {
+    if (sheetUid == null) return;
+    sheetUid = null;
+    $("sheet-scrim").classList.remove("open");
+    $("purchase-sheet").classList.remove("open");
+    const done = () => { $("sheet-scrim").hidden = true; $("purchase-sheet").hidden = true; };
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) done();
+    else setTimeout(done, 320);
+    if (sheetReturnFocus && document.contains(sheetReturnFocus)) sheetReturnFocus.focus();
+    sheetReturnFocus = null;
+  }
+
+  function saveSheet() {
+    if (sheetUid == null) return;
+    Store.setPurchase(sheetUid, {
+      cost: numVal($("sheet-cost")),
+      manualValue: numVal($("sheet-market")),
+      purchaseDate: $("sheet-date").value || null,
+    });
+    closeSheet();
+    renderAll();
+  }
+
+  for (const el of sheetFields()) el.addEventListener("input", syncSheetSave);
+  $("sheet-save").addEventListener("click", saveSheet);
+  /* unsaved edits are discarded without a prompt — two cheap fields do not
+     warrant a dialog stacked on a sheet */
+  $("sheet-cancel").addEventListener("click", closeSheet);
+  $("sheet-close").addEventListener("click", closeSheet);
+  $("sheet-scrim").addEventListener("click", closeSheet);
+  $("purchase-sheet").addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") { ev.preventDefault(); closeSheet(); return; }
+    if (ev.key !== "Tab") return;
+    const f = [...$("purchase-sheet").querySelectorAll("button, input")].filter((e) => !e.disabled);
+    if (!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
   });
 
   $("refresh-btn").addEventListener("click", () => refresh());
@@ -1584,13 +1689,6 @@
     if (snapIndex?.dates?.length) selectDate(snapIndex.dates[0]);
   });
 
-  /* pin / unpin the manual value (POCKETFOLIO-PRICING.md §4) */
-  $("cd-pin").addEventListener("click", () => {
-    const hh = Store.getAll().find((x) => x.uid === currentUid);
-    if (!hh || hh.value == null) return;
-    Store.setValuePinned(hh.uid, !hh.valuePinned);
-    renderAll();
-  });
 
   /* ---------- init ---------- */
 
@@ -1644,6 +1742,9 @@
   }
 
   buildGradePills();
+  /* a purchase defaults to today, and cannot be in the future */
+  $("date-input").max = todayISO();
+  $("date-input").value = todayISO();
   route();
   if (refreshOnOpen()) refresh();
   else { loadSnapshots().then(renderAll); renderAll(); }

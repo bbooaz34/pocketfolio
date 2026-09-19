@@ -102,6 +102,8 @@ missing.
 
 ## 4. Manual values and reconciliation
 
+*(rewritten 19.09.26 — pinning removed)*
+
 A card added today has no snapshot entry until tomorrow's build. The user types a
 value; the next snapshot supersedes it **without the user deleting anything**.
 
@@ -113,39 +115,53 @@ Each holding carries:
   grade: '10',
   manualValue: 145000,        // pennies, null if never set
   manualSetAt: '2026-09-19T11:02:00Z',
-  manualPinned: false,        // true = user insists on their own number
 }
 ```
 
+There is no `manualPinned`, and no way to make a typed number permanent. A number
+that cannot be superseded is a number that goes stale in silence, which is the
+one failure this whole model exists to prevent. A stored `manualPinned` from an
+older build is ignored and dropped on load. A user who disagrees with the market
+number types their own; it holds until the next snapshot covers that card, and
+then it yields. If they disagree again, they type it again.
+
 Resolution, in order:
 
-1. `manualPinned === true` → manual value. Always.
-2. A snapshot entry for `cardId` + `grade` **built after `manualSetAt`** → snapshot
-   value. The manual value is kept on the record, not erased; it just stops being
-   the displayed one.
-3. A manual value with no newer snapshot → manual value.
-4. Neither → estimate from raw × grade multiplier (existing logic).
-5. Nothing → the "no data" state.
+1. a snapshot entry for `cardId` + `grade` **built after `manualSetAt`** →
+   snapshot value. The manual value is kept on the record, not erased; it just
+   stops being the displayed one.
+2. a manual value newer than the snapshot → manual value, marked temporary.
+3. a snapshot entry, no manual value ever set → snapshot value.
+4. neither → estimate from raw × grade multiplier (existing logic).
+5. nothing → the "no data" state.
 
 The method must be visible on the card, because a number whose origin is invisible
 is a number the user cannot trust. One line under the value, `.t-text4`,
 `--ink-faint`:
 
-| Case | Line |
+| State | Line |
 |---|---|
-| 2 | `נכון ל: 19.09 · ` + the method, named after the field the number actually came from |
-| 2, just superseded a manual value | same line + a `--primary-soft` chip `עודכן אוטומטית` for 24h |
-| 1 | `שווי שהזנת ידנית · נעוץ` + an unpin affordance |
-| 3 | `שווי שהזנת ידנית · יוחלף בעדכון הבא` |
+| 1, 3 | the method, named after the field the number actually came from |
+| 2 | `מחיר שוק שהזנת · יוחלף בעדכון הבא` |
 | 4 | `הערכה משער השוק הגולמי` |
 | 5 | `אין נתוני מחיר לקלף הזה` |
+
+The timestamp is **not** in this line: the date chip beside the value already
+carries it, and `נכון ל:` here would be the same fact printed twice. For the same
+reason there is no `עודכן אוטומטית` chip — the method line already says the
+number came from a snapshot.
+
+State 5 renders the value as `— —`. Never `$0`, and never a blank that reads as
+zero: a card nobody has priced is not a card worth nothing. Such cards count in
+the portfolio's card count, are excluded from the total, and the total's own
+method line says how many: `{n} קלפים ללא מחיר`.
 
 The method is named per `metrics[grade].priceField`, because calling a
 filtered weighted price a median is exactly the overclaim this line exists to
 prevent: `smartMarketPrice` → `מחיר eBay מסונן לדירוג N`, `marketPrice7Day` →
 `מחיר eBay ב-7 ימים לדירוג N`, `medianPrice` → `חציון מכירות eBay לדירוג N`.
 
-Two caveats append to case 2, because the number cannot carry them itself
+Two caveats append to states 1 and 3, because the number cannot carry them itself
 (see the 19.09 investigation in PRICING-ATTEMPTS.md — the provider's
 aggregates are not bounded by the window we ask for):
 
@@ -162,9 +178,11 @@ scattered, and calling it scattered would be its own small overclaim.
 A lifetime sales count is never printed beside a date. If it is ever shown it
 reads `סה"כ מכירות מאז ומעולם`, never `מכירות אחרונות`.
 
-Pinning belongs on the card detail screen, next to the pencil the user already has
-there — not in Settings. Default is unpinned: the common case is "I know roughly
-what it's worth, fix it for me later".
+The manual value is typed in the purchase-details sheet, behind the pencil on
+card detail — beside the purchase price and purchase date, which is where the
+user's own three numbers belong. Clearing that field is how they hand the card
+back to the market price without waiting for a snapshot. Everything in the sheet
+is optional: an empty field is "unknown", and `0` is a real answer.
 
 ---
 

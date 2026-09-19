@@ -417,6 +417,21 @@ input, select {
 
 /* grade pills */
 .grade-pills { margin-top: var(--space-2); display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* grade rail — one row, never wrapped. The leftmost chip bleeds past the
+   screen edge so the row reads as "there is more" rather than as an end:
+   cancel the screen's side padding on that edge and re-add it inside. */
+.grade-rail {
+  margin-top: var(--space-2);
+  display: flex; gap: var(--space-2);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  margin-left: calc(var(--space-4) * -1);
+  padding-left: var(--space-4);
+}
+.grade-rail::-webkit-scrollbar { display: none; }
+.grade-rail .grade-pill { flex: none; scroll-snap-align: end; }
 .grade-pill {
   height: 42px; padding: 0 14px;
   border-radius: var(--radius-pill);
@@ -425,7 +440,8 @@ input, select {
   color: var(--ink-muted);
   font-size: 14px; font-weight: 500;
 }
-.grade-pill[aria-pressed="true"] {
+.grade-pill[aria-pressed="true"],
+.grade-pill[aria-checked="true"] {
   border-color: var(--primary);
   background: var(--primary);
   color: var(--surface);
@@ -748,8 +764,6 @@ input, select {
 .round-action.inert .disc { background: var(--surface-muted); border-color: var(--surface-muted); }
 .round-action.inert .disc svg { stroke: var(--ink-faint); }
 
-/* pinned manual value */
-#cd-pin[aria-pressed="true"] { color: var(--primary); }
 .t-value-lg { font-size: 30px; line-height: 36px; font-weight: 500; letter-spacing: -0.4px; }
 
 .movers { display: flex; gap: 10px; margin-top: var(--space-2); }
@@ -853,3 +867,53 @@ a.article-card { color: var(--ink); }
 .tooltip .tip-title { color: var(--ink-faint); margin-bottom: 2px; }
 .tooltip .tip-value { font-size: 14px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
 .tooltip .tip-sub { color: var(--ink-muted); }
+
+/* ---------- purchase-details sheet ---------- */
+
+.sheet-scrim {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(29, 29, 32, 0.38);
+  opacity: 0; transition: opacity 240ms ease;
+}
+.sheet-scrim.open { opacity: 1; }
+
+.sheet {
+  position: fixed; z-index: 61;
+  inset-inline: 0; bottom: 0;
+  margin-inline: auto; width: 100%; max-width: 480px;
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -8px 32px rgba(29, 29, 32, 0.18);
+  padding: 8px var(--space-4) 20px;
+  max-height: 92vh; overflow-y: auto;
+  transform: translateY(102%);
+  /* the nav bar's curve — one easing in the app, not two */
+  transition: transform 320ms cubic-bezier(.2, .8, .2, 1);
+}
+.sheet.open { transform: translateY(0); }
+
+.sheet-grabber {
+  width: 40px; height: 4px; margin: 0 auto 14px;
+  border-radius: 2px; background: var(--border);
+}
+.sheet-head { display: flex; align-items: flex-start; gap: var(--space-3); }
+.sheet-title { font-size: 18px; font-weight: 500; }
+.sheet-x {
+  flex: none; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--surface-muted); color: var(--ink-muted);
+}
+.sheet .form-field { margin-top: var(--space-4); }
+.field-hint { margin-top: 6px; font-size: 13px; color: var(--ink-faint); }
+.sheet .input-wrap:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px #DBEAFE;
+}
+.sheet-foot { display: flex; gap: var(--space-3); margin-top: 22px; }
+.sheet-cancel { flex: none; width: 104px; height: 52px; border-radius: 26px; }
+.sheet-save { flex: 1 1 auto; height: 52px; border-radius: 26px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet { transition: none; transform: none; }
+  .sheet[hidden] { display: none; }
+}
