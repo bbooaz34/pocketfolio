@@ -33,12 +33,17 @@ const PC_TOKEN = process.env.PC_TOKEN || "";
 const PPT_TOKEN = process.env.PPT_TOKEN || "";
 const PC_BASE = process.env.PC_BASE || "https://www.pricecharting.com";
 const PPT_BASE = process.env.PPT_BASE || "https://www.pokemonpricetracker.com";
-/* PPT bills per RESPONSE ROW, doubled by includeEbay (PRICING-ATTEMPTS.md §1).
-   So the budget must be counted in credits, not calls: 80 calls at limit=5 is
-   up to 800 credits against a 100-credit free tier. */
-const PPT_CREDIT_BUDGET = Number(process.env.PPT_CREDIT_BUDGET || 90);
+/* PPT bills per RESPONSE ROW and per include (PRICING-ATTEMPTS.md §1) — the
+   budget is counted in credits, not calls. The provider states the real charge
+   in x-api-calls-consumed; our own estimate is only the fallback. The default
+   fits the paid API tier; the free tier should set PPT_CREDIT_BUDGET=90. */
+const PPT_CREDIT_BUDGET = Number(process.env.PPT_CREDIT_BUDGET || 18000);
 const PPT_LIMIT_RESOLVED = 1;   // identity known from ppt-map — one row is the card
 const PPT_LIMIT_FIRST = 3;      // first touch — room to match by number/name locally
+/* The API tier serves 6 months of history; Free serves 3 days. Backfilling
+   the chart from the provider beats waiting for our snapshots to accumulate. */
+const PPT_HISTORY_DAYS = Number(process.env.PPT_HISTORY_DAYS || 180);
+const HIST = join(DATA, "history");
 
 if (!PC_TOKEN && !PPT_TOKEN) {
   console.error("need PC_TOKEN and/or PPT_TOKEN");
@@ -168,8 +173,8 @@ async function priceWithPC(cards) {
 
 /* ---------------- Pokémon Price Tracker fallback ---------------- */
 
-function pptGrades(row) {
-  // deep-scan for the psaN buckets (shape has drifted before)
+function pptBuckets(row) {
+  // deep-scan for the psaN buckets (the shape has drifted before)
   const find = (obj, depth = 0) => {
     if (!obj || typeof obj !== "object" || depth > 5) return null;
     if (Object.keys(obj).some((k) => /^psa[\s_-]?(10|[1-9])(\.5)?$/i.test(k))) return obj;
@@ -179,23 +184,89 @@ function pptGrades(row) {
     }
     return null;
   };
-  const buckets = find(row);
-  if (!buckets) return null;
+  return find(row);
+}
+
+const pennies = (n) => (typeof n === "number" && n > 0 ? Math.round(n * 100) : null);
+
+function pptGrades(row) {
+  const buckets = pptBuckets(row);
   const grades = {};
-  for (const [k, v] of Object.entries(buckets)) {
+  const metrics = {};
+  for (const [k, v] of Object.entries(buckets || {})) {
     const m = k.toLowerCase().match(/^psa[\s_-]?((10|[1-9])(\.5)?)$/);
     if (!m) continue;
+    const g = m[1];
+    /* smartMarketPrice is PPT's own outlier-filtered figure; prefer it over a
+       bare median, but keep the median when it is all we get. */
     const price = typeof v === "number" ? v
       : v && typeof v === "object"
-        ? [v.medianPrice, v.median, v.averagePrice, v.avgPrice, v.price].find((x) => typeof x === "number" && x > 0)
+        ? [v.smartMarketPrice, v.medianPrice, v.median, v.marketPrice7Day, v.averagePrice, v.avgPrice, v.price]
+            .find((x) => typeof x === "number" && x > 0)
         : null;
-    if (price > 0) grades[m[1]] = Math.round(price * 100); // dollars -> pennies
+    const p = pennies(price);
+    if (!p) continue;
+    grades[g] = p;
+    const daily = [v?.dailyVolume7Day, v?.dailyVolume].find((x) => typeof x === "number");
+    metrics[g] = {
+      confidence: v?.smartMarketConfidence ?? null,
+      trend: v?.marketTrend ?? null,
+      dailyVolume7Day: Number.isFinite(daily) ? daily : null,
+      salesCount: Number.isFinite(v?.salesCount) ? v.salesCount : null,
+    };
   }
-  // raw market where present
   const raw = [row.prices?.market, row.price?.market, row.marketPrice]
     .find((x) => typeof x === "number" && x > 0);
-  if (raw) grades.raw = Math.round(raw * 100);
-  return Object.keys(grades).length ? grades : null;
+  if (raw) grades.raw = pennies(raw);
+  if (!Object.keys(grades).length) return null;
+  const velocity = [row.salesVelocityWeekly, row.ebay?.salesVelocityWeekly]
+    .find((x) => typeof x === "number");
+  return { grades, metrics, velocity: Number.isFinite(velocity) ? velocity : null };
+}
+
+/* Map the provider's own confidence onto ours, falling back to activity.
+   "high" must mean a number we would defend, not merely a number we received. */
+function gradeConfidence(metrics, velocity) {
+  const vals = Object.values(metrics || {});
+  const stated = vals.map((m) => String(m.confidence || "").toLowerCase()).filter(Boolean);
+  if (stated.length) {
+    if (stated.some((c) => c === "high")) return "high";
+    if (stated.every((c) => c === "low")) return "low";
+    return "medium";
+  }
+  const daily = vals.map((m) => m.dailyVolume7Day).filter((x) => Number.isFinite(x));
+  const weekly = daily.length ? Math.max(...daily) * 7 : velocity;
+  if (!Number.isFinite(weekly)) return "low";
+  return weekly >= SALES_VOLUME_FLOOR ? "high" : "low";
+}
+
+/* priceHistory arrives in several shapes; normalise to [{d, v}] in pennies. */
+function pptSeries(node) {
+  const out = [];
+  const push = (d, v) => {
+    const date = String(d || "").slice(0, 10);
+    const p = pennies(typeof v === "number" ? v : v?.market ?? v?.price ?? v?.medianPrice);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date) && p) out.push({ d: date, v: p });
+  };
+  if (Array.isArray(node)) for (const e of node) push(e?.date ?? e?.d ?? e?.t, e?.value ?? e?.v ?? e?.market ?? e?.price ?? e);
+  else if (node && typeof node === "object") for (const [d, v] of Object.entries(node)) push(d, v);
+  out.sort((a, b) => a.d.localeCompare(b.d));
+  return out.length ? out : null;
+}
+
+function pptHistory(row) {
+  const series = {};
+  const rawNode = row.priceHistory?.market ?? row.priceHistory ?? row.history;
+  const raw = pptSeries(rawNode);
+  if (raw) series.raw = raw;
+  const graded = row.ebay?.history ?? row.ebayHistory ?? row.priceHistory?.ebay;
+  for (const [k, v] of Object.entries(graded || {})) {
+    const m = k.toLowerCase().match(/^psa[\s_-]?((10|[1-9])(\.5)?)$/);
+    if (!m) continue;
+    const s = pptSeries(v);
+    if (s) series[m[1]] = s;
+  }
+  return Object.keys(series).length ? series : null;
 }
 
 /* Cards the budget cannot cover today are not dropped — they go first
@@ -209,29 +280,29 @@ function rotate(cards, prev) {
   });
 }
 
-/* PPT's setId is its own slug format (e.g. "sv-black-bolt"), NOT the catalog
-   set id ("swsh7"): sending ours filters every row out — run #3 answered
-   total>0 with count=0 on all 12 cards. So the catalog id is only the first,
-   zero-cost attempt (0 rows bill 0 credits); the fallbacks search without it,
-   and the setId PPT itself puts on the matched row is stored in ppt-map.json
-   for precise limit=1 re-queries. */
+/* Attempt ladder, ordered by precision. Two hard-won rules (runs #1-#4):
+   `number` is not an accepted param (400), and PPT's setId is its own format —
+   NOT the catalog id ("base1"), which filters every row out (total>0, count=0).
+   1. tcgPlayerId (watchlist or learned) — an exact key, one row, no matching.
+   2. A stored search + the setId PPT itself put on a previous hit.
+   3. A sibling card of the same catalog set may have learned that setId.
+   4. "name + set name" search (search spans name/set/number/rarity).
+   5. Name alone — matched locally by card id, then number, then exact name. */
 function pptAttempts(card) {
   const known = pptMap[card.id];
+  const tcgPlayerId = card.tcgPlayerId || known?.tcgPlayerId || null;
+  if (tcgPlayerId) return [{ tcgPlayerId: String(tcgPlayerId) }];
   if (known?.search) {
     return [{
       search: known.search,
-      ...(known.setId ? { setId: known.setId } : {}),
-      limit: String(known.setId ? PPT_LIMIT_RESOLVED : PPT_LIMIT_FIRST),
+      ...(known.setId != null ? { setId: String(known.setId) } : {}),
+      limit: String(known.setId != null ? PPT_LIMIT_RESOLVED : PPT_LIMIT_FIRST),
     }];
   }
   const catalogSetId = card.id.includes("-") ? card.id.split("-")[0] : null;
   const attempts = [];
-  if (catalogSetId) attempts.push({ search: card.name, setId: catalogSetId, limit: String(PPT_LIMIT_FIRST) });
-  /* a sibling card from the same catalog set may already have learned PPT's
-     real setId — the most reliable filter we have (run #4: a broad name
-     search missed Blastoise/Venusaur while every setId-learned card hit) */
   const sibling = siblingSetId(catalogSetId);
-  if (sibling) attempts.push({ search: card.name, setId: String(sibling), limit: String(PPT_LIMIT_FIRST) });
+  if (sibling != null) attempts.push({ search: card.name, setId: String(sibling), limit: String(PPT_LIMIT_FIRST) });
   if (card.setName) attempts.push({ search: `${card.name} ${card.setName}`, limit: String(PPT_LIMIT_FIRST) });
   attempts.push({ search: card.name, limit: String(PPT_LIMIT_FIRST) });
   return attempts;
@@ -252,7 +323,8 @@ function siblingSetId(catalogSetId) {
 }
 
 async function priceWithPPT(cards, out, prev) {
-  let credits = 0;
+  let credits = 0, remaining = null, resolvedToday = 0;
+  const histories = new Map();
   const norm = (n) => String(n ?? "").split("/")[0].toLowerCase().replace(/[^a-z0-9]/g, "").replace(/^0+(?=.)/, "");
   outer: for (const card of rotate(cards, prev)) {
     if (out.has(card.id)) continue;
@@ -265,7 +337,11 @@ async function priceWithPPT(cards, out, prev) {
         console.log(`PPT credit budget spent (${credits}) — remaining cards roll to tomorrow`);
         break outer;
       }
-      const params = new URLSearchParams({ includeEbay: "true", ...attempt });
+      const params = new URLSearchParams(attempt);
+      params.set("includeEbay", "true");
+      params.set("includeHistory", "true");
+      params.set("days", String(PPT_HISTORY_DAYS));
+      if (card.language) params.set("language", card.language);
       let rows;
       try {
         const res = await fetch(PPT_BASE + "/api/v2/cards?" + params, {
@@ -273,12 +349,18 @@ async function priceWithPPT(cards, out, prev) {
         });
         if (!res.ok) {
           console.log(`  PPT HTTP ${res.status} for ${card.id}`);
-          if (res.status === 429) { console.log("  quota exhausted — stopping"); break outer; }
+          if (res.status === 429) { console.log("  quota or rate limit hit — stopping"); break outer; }
           continue;
         }
         const data = await res.json();
         rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? data.results ?? []);
         if (!Array.isArray(rows)) rows = [];
+        /* Bill from what the provider says it charged, not from our own guess. */
+        const header = Number(res.headers.get("x-api-calls-consumed"));
+        const stated = Number(data?.metadata?.apiCallsConsumed?.total);
+        credits += [header, stated].find(Number.isFinite) ?? rows.length * 3;
+        const left = Number(res.headers.get("x-ratelimit-daily-remaining"));
+        if (Number.isFinite(left)) remaining = left;
         if (!rows.length) {
           const total = data?.metadata?.total;
           console.log(`  PPT 0 rows for ${card.id} [${params}]` +
@@ -291,32 +373,68 @@ async function priceWithPPT(cards, out, prev) {
       } finally {
         await sleep(1100);
       }
-      credits += rows.length * 2; // rows x2 with includeEbay
-      /* strongest match first: PPT rows carry catalog-style card ids */
-      const row = rows.find((r) => (r.id ?? r.cardId) === card.id) ||
+      /* strongest match first: an exact-id lookup is its own answer, and PPT
+         rows carry catalog-style card ids */
+      const row = attempt.tcgPlayerId ? rows[0] :
+        rows.find((r) => (r.id ?? r.cardId) === card.id) ||
         rows.find((r) => norm(r.number ?? r.cardNumber ?? r.localId) === norm(card.number)) ||
         rows.find((r) => (r.name || "").toLowerCase() === card.name.toLowerCase());
       if (!row) { console.log(`  PPT no matching row for ${card.id} [${params}]`); continue; }
-      const grades = pptGrades(row);
-      if (!grades) { console.log(`  PPT no grade buckets for ${card.id}`); continue; }
+      const priced = pptGrades(row);
+      if (!priced) { console.log(`  PPT no grade buckets for ${card.id}`); continue; }
+      const known = pptMap[card.id];
+      const resolvedId = row.tcgPlayerId ?? row.tcgplayerId ?? attempt.tcgPlayerId ?? null;
+      if (resolvedId && !known?.tcgPlayerId) resolvedToday++;
       pptMap[card.id] = {
-        setId: row.setId ?? row.set?.id ?? null, // PPT's own format, learned from the row
+        tcgPlayerId: resolvedId ? String(resolvedId) : null,
+        setId: row.setId ?? row.set?.id ?? known?.setId ?? null, // PPT's own format, learned from the row
         search: row.name || card.name,
         lastPriced: today,
       };
+      const hist = pptHistory(row);
+      if (hist) histories.set(card.id, hist);
       out.set(card.id, {
         pcId: null,
+        tcgPlayerId: resolvedId ? String(resolvedId) : null,
         name: card.name,
         set: card.setName || null,
         number: card.number || null,
-        grades,
+        grades: priced.grades,
+        metrics: priced.metrics,
+        salesVelocityWeekly: priced.velocity,
         salesVolume: null,
-        confidence: "fallback",
+        confidence: gradeConfidence(priced.metrics, priced.velocity),
       });
       break; // priced — next card
     }
   }
-  console.log(`PPT: ~${credits} credits spent`);
+  writeHistories(histories);
+  console.log(`PPT: ~${credits} credits spent` +
+    (remaining !== null ? ` · ${remaining} left today` : "") +
+    (resolvedToday ? ` · resolved ${resolvedToday} new tcgPlayerId(s)` : ""));
+}
+
+/* One file per card: the card-detail chart becomes a single request instead of
+   walking 30 snapshot files. Provider history is merged under our own — ours
+   wins on a shared date, because it is what the app showed that day. */
+function writeHistories(fresh) {
+  if (!fresh.size) return;
+  mkdirSync(HIST, { recursive: true });
+  for (const [cardId, series] of fresh) {
+    const file = join(HIST, `${cardId}.json`);
+    const prev = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : { cardId, series: {} };
+    for (const [grade, points] of Object.entries(series)) {
+      const byDate = new Map((points || []).map((p) => [p.d, p.v]));
+      for (const p of prev.series?.[grade] || []) byDate.set(p.d, p.v); // ours wins
+      prev.series[grade] = [...byDate.entries()]
+        .map(([d, v]) => ({ d, v }))
+        .sort((a, b) => a.d.localeCompare(b.d));
+    }
+    prev.cardId = cardId;
+    prev.updatedAt = today;
+    writeFileSync(file, JSON.stringify(prev));
+  }
+  console.log(`history: wrote ${fresh.size} card series`);
 }
 
 /* ---------------- write ---------------- */
@@ -364,6 +482,24 @@ writeFileSync(join(SNAPS, `${today}.json`), JSON.stringify(snapshot, null, 1));
 writeFileSync(join(DATA, "latest.json"), JSON.stringify(snapshot, null, 1));
 writeFileSync(pcMapPath, JSON.stringify(pcMap, null, 1));
 writeFileSync(pptMapPath, JSON.stringify(pptMap, null, 1));
+
+/* Today's own numbers join each card's series, so the chart keeps growing even
+   if a future provider serves no history at all. */
+mkdirSync(HIST, { recursive: true });
+for (const [cardId, entry] of entries) {
+  if (entry.carried) continue;
+  const file = join(HIST, `${cardId}.json`);
+  const doc = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : { cardId, series: {} };
+  for (const [grade, value] of Object.entries(entry.grades || {})) {
+    const arr = (doc.series[grade] ||= []);
+    const i = arr.findIndex((p) => p.d === today);
+    if (i >= 0) arr[i] = { d: today, v: value };
+    else arr.push({ d: today, v: value });
+    arr.sort((a, b) => a.d.localeCompare(b.d));
+  }
+  doc.updatedAt = today;
+  writeFileSync(file, JSON.stringify(doc));
+}
 
 const dates = readdirSync(SNAPS).filter((f) => f.endsWith(".json"))
   .map((f) => f.replace(".json", "")).sort().reverse();

@@ -826,9 +826,23 @@
       }
     };
     draw(localPts);
-    if (snapIndex && snapIndex.dates.length >= 2) {
+    /* One history file per card, built by the daily job (§6) — the provider's
+       backfilled months plus our own snapshot values. Walking snapshot files
+       remains the fallback for cards with no history yet. */
+    {
       const uid = hh.uid;
       (async () => {
+        const doc = await API.loadHistory(hh.cardId);
+        const series = doc && doc.series
+          ? doc.series[String(hh.grade ?? "raw")] || doc.series.raw
+          : null;
+        if (series && series.length >= 2) {
+          const pts = series
+            .map((p) => ({ t: Date.parse(p.d + "T12:00:00"), v: (p.v / 100) * hh.qty }))
+            .filter((p) => !cutoff || p.t >= cutoff);
+          if (currentUid === uid && pts.length >= 2) { draw(pts); return; }
+        }
+        if (!snapIndex || snapIndex.dates.length < 2) return;
         const pts = [];
         for (const d of snapIndex.dates.slice(0, 30)) {
           const t = Date.parse(d + "T12:00:00");

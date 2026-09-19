@@ -354,6 +354,21 @@
     return snap;
   }
 
+  /* Per-card price history, built by the daily job from the provider's
+     6-month window plus our own snapshots. One request replaces walking 30
+     snapshot files; the file is append-only, so it caches hard. */
+  const histCache = new Map();
+  async function loadHistory(cardId) {
+    if (histCache.has(cardId)) return histCache.get(cardId);
+    const p = (async () => {
+      const res = await fetch(`${SNAP_BASE}/history/${encodeURIComponent(cardId)}.json`);
+      if (!res.ok) return null;
+      return res.json();
+    })().catch(() => null);
+    histCache.set(cardId, p);
+    return p;
+  }
+
   async function loadIndex() {
     const res = await fetch(`${SNAP_BASE}/index.json`, { cache: "no-cache" });
     if (!res.ok) throw new Error("index unavailable");
@@ -535,6 +550,6 @@
   window.PocketfolioAPI = {
     searchCards, getCard, getCards, lookupCert, certCardQuery,
     hasGradedProxy, fetchNews,
-    loadSnapshot, loadIndex, cachedLatestSnapshot,
+    loadSnapshot, loadIndex, loadHistory, cachedLatestSnapshot,
   };
 })();
