@@ -63,6 +63,8 @@
     certNoMatch: (s) => `לא נמצאה הדפסה תואמת בקטלוג עבור ${s}.`,
     certJapanese: "שימו לב: התעודה היא של הדפסה יפנית, וההתאמות למטה הן הגרסאות האנגליות מהקטלוג — מחיר השוק שלהן שונה. אחרי ההוספה יוצג מחיר הגרסה היפנית כשהיא נכללת בעדכון היומי; עד אז יוצג מחיר הגרסה האנגלית, מסומן ככזה.",
     enFallback: "לפי הגרסה האנגלית",
+    jpShort: "יפני",
+    enShort: "אנגלית",
     certAddAnyway: "➕ הוספת הסלאב לתיק",
     certNotThese: "לא אחד מאלה — הוספת הסלאב בכל זאת",
     certManualSub: "הדירוג והתעודה ימולאו — את השווי מגדירים ידנית",
@@ -995,7 +997,13 @@
     const col = h("span", "grow");
     col.appendChild(h("span", "rc-name", c.name));
     const bits = [c.setName, c.number, c.rarity].filter(Boolean);
-    if (c.price) bits.push(`${T.rawMarketShort} ${fmtMoney(c.price.value, c.price.currency)}`);
+    if (c.price) {
+      /* a Japanese cert's match shows the Japanese single price when the
+         daily update covers it — otherwise the English price, labeled */
+      const jpRaw = c.jp ? snapLatest?.cards?.[c.id + "@jp"]?.grades?.raw : null;
+      if (jpRaw != null) bits.push(`${T.rawMarketShort} (${T.jpShort}) ${fmtUSD(jpRaw / 100)}`);
+      else bits.push(`${T.rawMarketShort}${c.jp ? ` (${T.enShort})` : ""} ${fmtMoney(c.price.value, c.price.currency)}`);
+    }
     col.appendChild(h("span", "rc-sub num", bits.join(" · ")));
     btn.appendChild(col);
     if (opts && opts.selected) {
@@ -1164,7 +1172,7 @@
         /* a Japanese cert keeps its jp flag even when the English catalog
            printing is picked — value resolution reads the @jp entry first */
         const pick = japanese ? { ...c, jp: true } : c;
-        r.appendChild(resultCard(c, () => selectCertCard(pick, info)));
+        r.appendChild(resultCard(pick, () => selectCertCard(pick, info)));
       }
       const m = resultCard(manualCard, () => selectCertCard(manualCard, info));
       m.querySelector(".rc-name").textContent = T.certNotThese;
