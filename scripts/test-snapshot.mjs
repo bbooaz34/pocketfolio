@@ -103,7 +103,11 @@ const server = createServer((req, res) => {
         psa9: { medianPrice: 200, smartMarketConfidence: "low", dailyVolume7Day: 0 },
       },
       salesVelocity: 4,
-      priceHistory: { psa10: makeHistory(500) },
+      // the real graded-history shape (run #8): psaN → date → {average, count}
+      priceHistory: {
+        psa10: Object.fromEntries(Object.entries(makeHistory(500))
+          .map(([d, v]) => [d, { average: v, count: 1, sevenDayAverage: v }])),
+      },
     },
   });
   // runs #6-#7 live: tcgPlayerId lookups answer total=1 with count=0 (with or

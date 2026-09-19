@@ -245,8 +245,10 @@ function pptSeries(node) {
   const out = [];
   const push = (d, v) => {
     const date = String(d || "").slice(0, 10);
+    /* graded dates arrive as {average, count, sevenDayAverage, …} (run #8) */
     const p = pennies(typeof v === "number" ? v
-      : v?.market ?? v?.price ?? v?.medianPrice ?? v?.median ?? v?.smartMarketPrice ?? v?.value);
+      : v?.market ?? v?.price ?? v?.medianPrice ?? v?.median ?? v?.smartMarketPrice ?? v?.value
+        ?? v?.average ?? v?.sevenDayAverage);
     if (/^\d{4}-\d{2}-\d{2}$/.test(date) && p) out.push({ d: date, v: p });
   };
   if (Array.isArray(node)) for (const e of node) push(e?.date ?? e?.d ?? e?.t, e?.value ?? e?.v ?? e?.market ?? e?.price ?? e?.median ?? e?.medianPrice ?? e);
