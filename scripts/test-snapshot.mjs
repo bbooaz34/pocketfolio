@@ -46,6 +46,9 @@ const CARDS = Array.from({ length: 8 }, (_, i) => ({
 }));
 // a Japanese print: own @jp identity, language forwarded, no card number
 CARDS.push({ id: "base1-9@jp", name: "TestMon 9", setName: "Base JP", number: "9", language: "japanese" });
+/* a card whose name+number also exist in a reprint set of a different size —
+   the live case was Base Set Charizard 4/102 binding to Base Set 2 4/130 */
+CARDS.push({ id: "base1-10", name: "Reprinted", setName: "Base", number: "10", setTotal: 102 });
 
 const HISTORY_DAYS = 120;
 const makeHistory = (base) => {
@@ -92,12 +95,13 @@ const server = createServer((req, res) => {
   // the real raw-history shape (run #7): conditions-keyed arrays of {date, market}
   const histArr = (base) => Object.entries(makeHistory(base))
     .map(([date, market]) => ({ date: date + "T00:00:00.000Z", market, volume: 1 }));
-  const rowFor = (c, filler) => ({
+  const rowFor = (c, filler, total) => ({
     id: filler ? `zz9-${filler}` : c.id,
     setId: "ppt-base-set",
-    tcgPlayerId: `9000${c.number}`,
+    tcgPlayerId: `9000${c.number}${total === 130 ? "R" : ""}`,
     name: filler ? `Filler ${filler}` : c.name,
     number: filler ? `9${filler}` : c.number,
+    cardNumber: `${String(filler ? 90 + filler : c.number).padStart(3, "0")}/${total ?? 102}`,
     prices: { market: 12.34 },
     priceHistory: { conditions: { "Near Mint": { history: histArr(10) } } },
     /* the real shapes, from the 19.09 probe: smartMarketPrice is an OBJECT,
@@ -142,7 +146,11 @@ const server = createServer((req, res) => {
   const search = url.searchParams.get("search") || "";
   if (url.searchParams.get("language") === "japanese" && search.startsWith("TestMon 9")) jpLangSeen = true;
   const match = CARDS.find((c) => search.startsWith(c.name)) || CARDS[0];
-  const rows = Array.from({ length: limit }, (_, i) => rowFor(match, i));
+  /* "Reprinted" also exists in a 130-card reprint set, listed first — the
+     live Base Set 2 trap. Only the set size tells the two apart. */
+  const rows = match.id === "base1-10"
+    ? [rowFor(match, 0, 130), rowFor(match, 0, 102)]
+    : Array.from({ length: limit }, (_, i) => rowFor(match, i));
   if (dropEbayHistory) for (const r of rows) delete r.ebay.priceHistory;
   send(rows, limit);
 });
@@ -263,6 +271,11 @@ check("resolved identities re-query via stored search at limit=1",
 check("no tcgPlayerId lookups (they answer count=0 and still bill)", byIdRequests === 0, `${byIdRequests} exact lookups`);
 check("a Japanese print gets its own @jp snapshot entry", Boolean(s5.cards["base1-9@jp"]), Object.keys(s5.cards).join(","));
 check("language=japanese forwarded for @jp cards", jpLangSeen);
+/* the Base Set 2 trap: a same-name, same-number row from a 130-card set must
+   lose to the 102-card one, and setTotal is the only thing that says so */
+check("a row from a set of the wrong size cannot win on card number",
+  s5.cards["base1-10"]?.tcgPlayerId === "900010",
+  `bound to tcgPlayerId ${s5.cards["base1-10"]?.tcgPlayerId} (900010 = the /102 row, 900010R = the /130 reprint)`);
 
 /* ---- ebay.priceHistory absent: build still succeeds, raw-only history ---- */
 dropEbayHistory = true;

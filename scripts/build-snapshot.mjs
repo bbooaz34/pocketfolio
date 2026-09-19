@@ -382,7 +382,12 @@ function pptAttempts(card) {
      with count=0 EVERY time (with or without limit) and still bill 3 credits.
      The stored search + learned setId below costs the same and works; the id
      stays in ppt-map as metadata. The ladder never shrinks to one attempt. */
-  if (known?.search) {
+  const pinned = card.pptSetId != null ? String(card.pptSetId) : null;
+  if (pinned) {
+    /* the watchlist names PPT's set outright. It overrides anything learned,
+       which is how a card bound to the wrong printing gets corrected. */
+    attempts.push({ search: known?.search || card.name, setId: pinned, limit: String(PPT_LIMIT_RESOLVED) });
+  } else if (known?.search) {
     attempts.push({
       search: known.search,
       ...(known.setId != null ? { setId: String(known.setId) } : {}),
@@ -390,11 +395,18 @@ function pptAttempts(card) {
     });
   }
   const catalogSetId = card.id.includes("-") ? card.id.split("-")[0] : null;
-  const sibling = siblingSetId(catalogSetId);
+  const sibling = pinned ? null : siblingSetId(catalogSetId);
   if (sibling != null) attempts.push({ search: card.name, setId: String(sibling), limit: String(PPT_LIMIT_FIRST) });
   if (card.setName) attempts.push({ search: `${card.name} ${card.setName}`, limit: String(PPT_LIMIT_FIRST) });
   attempts.push({ search: card.name, limit: String(PPT_LIMIT_FIRST) });
   return attempts;
+}
+
+/* How many cards the row's set holds, from "004/130" or totalSetNumber. */
+function rowSetTotal(row) {
+  const m = String(row.cardNumber ?? row.number ?? "").match(/\/\s*(\d+)/);
+  if (m) return Number(m[1]);
+  return Number.isFinite(row.totalSetNumber) ? row.totalSetNumber : null;
 }
 
 /* The PPT setId most often learned for cards of this catalog set.
@@ -465,13 +477,23 @@ async function priceWithPPT(cards, out, prev) {
       } finally {
         await sleep(1100);
       }
+      /* A card number alone is not identity: "004/130" normalises to "4" and
+         matched Base Set 2 for a Base Set Charizard. When the watchlist
+         declares the set size, a row from a set of another size cannot be
+         this card, whatever its number says. */
+      const wrongSet = (r) => card.setTotal != null && rowSetTotal(r) != null &&
+        rowSetTotal(r) !== Number(card.setTotal);
+      const usable = rows.filter((r) => !wrongSet(r));
+      if (rows.length && !usable.length) {
+        console.log(`  PPT rows for ${card.id} are all from another set (want /${card.setTotal})`);
+      }
       /* strongest match first: an exact-id lookup is its own answer, and PPT
          rows carry catalog-style card ids */
-      const row = attempt.tcgPlayerId ? rows[0] :
-        rows.find((r) => (r.id ?? r.cardId) === card.id) ||
+      const row = attempt.tcgPlayerId ? usable[0] :
+        usable.find((r) => (r.id ?? r.cardId) === card.id) ||
         (card.number != null &&
-          rows.find((r) => norm(r.number ?? r.cardNumber ?? r.localId) === norm(card.number))) ||
-        rows.find((r) => (r.name || "").toLowerCase() === card.name.toLowerCase());
+          usable.find((r) => norm(r.number ?? r.cardNumber ?? r.localId) === norm(card.number))) ||
+        usable.find((r) => (r.name || "").toLowerCase() === card.name.toLowerCase());
       if (!row) { console.log(`  PPT no matching row for ${card.id} [${params}]`); continue; }
       const priced = pptGrades(row);
       if (!priced) { console.log(`  PPT no grade buckets for ${card.id}`); continue; }

@@ -1,20 +1,20 @@
 {
-  "comment": "Cards the daily snapshot job prices (POCKETFOLIO-PRICING.md §3). The app is backendless, so CI cannot know what users hold — add the cards you own here. `id` is the pokemontcg.io card id the app stores on holdings; `pcQuery` overrides the auto-built PriceCharting search when the default (name + set + number + pokemon) misses. A JAPANESE print gets its own entry: the English id with an `@jp` suffix plus `language: \"japanese\"` — the app reads the @jp snapshot entry for holdings flagged as Japanese slabs.",
+  "comment": "Cards the daily snapshot job prices (POCKETFOLIO-PRICING.md §3). The app is backendless, so CI cannot know what users hold — add the cards you own here (Settings lists the ones missing and copies these rows for you). `id` is the pokemontcg.io card id the app stores on holdings. `setTotal` is the printed set size (the 102 in 4/102): a row from a set of another size is rejected, because a card number alone matched Base Set 2 for a Base Set Charizard. `pptSetId` pins PPT's own set id when a name search keeps landing on the wrong printing. `pcQuery` overrides the auto-built PriceCharting search. A JAPANESE print gets its own entry: the English id with an `@jp` suffix plus `language: \"japanese\"` — the app reads the @jp snapshot entry for holdings flagged as Japanese slabs.",
   "cards": [
-    { "id": "base1-4",   "name": "Charizard",  "setName": "Base",            "number": "4",   "pcQuery": "charizard base set 4/102 pokemon" },
-    { "id": "base1-2",   "name": "Blastoise",  "setName": "Base",            "number": "2",   "pcQuery": "blastoise base set 2/102 pokemon" },
-    { "id": "base1-15",  "name": "Venusaur",   "setName": "Base",            "number": "15",  "pcQuery": "venusaur base set 15/102 pokemon" },
-    { "id": "base1-46",  "name": "Charmander", "setName": "Base",            "number": "46",  "pcQuery": "charmander base set 46/102 pokemon" },
-    { "id": "base1-58",  "name": "Pikachu",    "setName": "Base",            "number": "58",  "pcQuery": "pikachu base set 58/102 pokemon" },
-    { "id": "base1-63",  "name": "Squirtle",   "setName": "Base",            "number": "63",  "pcQuery": "squirtle base set 63/102 pokemon" },
-    { "id": "base1-44",  "name": "Bulbasaur",  "setName": "Base",            "number": "44",  "pcQuery": "bulbasaur base set 44/102 pokemon" },
-    { "id": "gym2-118",  "name": "Misty's Tears", "setName": "Gym Challenge", "number": "118", "pcQuery": "misty's tears gym challenge 118/132 pokemon" },
+    { "id": "base1-4",   "name": "Charizard",  "setName": "Base",            "number": "4",   "setTotal": 102, "pptSetId": 604, "pcQuery": "charizard base set 4/102 pokemon" },
+    { "id": "base1-2",   "name": "Blastoise",  "setName": "Base",            "number": "2",   "setTotal": 102, "pptSetId": 604, "pcQuery": "blastoise base set 2/102 pokemon" },
+    { "id": "base1-15",  "name": "Venusaur",   "setName": "Base",            "number": "15",  "setTotal": 102, "pptSetId": 604, "pcQuery": "venusaur base set 15/102 pokemon" },
+    { "id": "base1-46",  "name": "Charmander", "setName": "Base",            "number": "46",  "setTotal": 102, "pptSetId": 604, "pcQuery": "charmander base set 46/102 pokemon" },
+    { "id": "base1-58",  "name": "Pikachu",    "setName": "Base",            "number": "58",  "setTotal": 102, "pptSetId": 604, "pcQuery": "pikachu base set 58/102 pokemon" },
+    { "id": "base1-63",  "name": "Squirtle",   "setName": "Base",            "number": "63",  "setTotal": 102, "pptSetId": 604, "pcQuery": "squirtle base set 63/102 pokemon" },
+    { "id": "base1-44",  "name": "Bulbasaur",  "setName": "Base",            "number": "44",  "setTotal": 102, "pptSetId": 604, "pcQuery": "bulbasaur base set 44/102 pokemon" },
+    { "id": "gym2-118",  "name": "Misty's Tears", "setName": "Gym Challenge", "number": "118", "setTotal": 132, "pcQuery": "misty's tears gym challenge 118/132 pokemon" },
     { "id": "gym2-118@jp", "name": "Misty's Tears", "setName": "Hanada City Gym", "language": "japanese", "pcQuery": "misty's tears japanese gym pokemon" },
     { "id": "psa-154146687@jp", "name": "Togepi", "setName": "Gold Silver to a New World", "language": "japanese", "pcQuery": "togepi japanese gold silver new world pokemon" },
-    { "id": "neo1-9",    "name": "Lugia",      "setName": "Neo Genesis",     "number": "9",   "pcQuery": "lugia neo genesis 9/111 pokemon" },
-    { "id": "base5-73",  "name": "The Boss's Way", "setName": "Team Rocket",  "number": "73",  "pcQuery": "the boss's way team rocket 73/82 pokemon" },
-    { "id": "swsh7-215", "name": "Umbreon VMAX", "setName": "Evolving Skies", "number": "215", "pcQuery": "umbreon vmax alt art evolving skies 215/203 pokemon" },
-    { "id": "swsh4-188", "name": "Pikachu VMAX", "setName": "Vivid Voltage",  "number": "188", "pcQuery": "pikachu vmax vivid voltage 188/185 pokemon" },
-    { "id": "sv3pt5-6",  "name": "Charizard",  "setName": "151",             "number": "6",   "pcQuery": "charizard 151 6/165 pokemon" }
+    { "id": "neo1-9",    "name": "Lugia",      "setName": "Neo Genesis",     "number": "9",   "setTotal": 111, "pcQuery": "lugia neo genesis 9/111 pokemon" },
+    { "id": "base5-73",  "name": "The Boss's Way", "setName": "Team Rocket",  "number": "73",  "setTotal": 82,  "pcQuery": "the boss's way team rocket 73/82 pokemon" },
+    { "id": "swsh7-215", "name": "Umbreon VMAX", "setName": "Evolving Skies", "number": "215", "setTotal": 203, "pcQuery": "umbreon vmax alt art evolving skies 215/203 pokemon" },
+    { "id": "swsh4-188", "name": "Pikachu VMAX", "setName": "Vivid Voltage",  "number": "188", "setTotal": 185, "pcQuery": "pikachu vmax vivid voltage 188/185 pokemon" },
+    { "id": "sv3pt5-6",  "name": "Charizard",  "setName": "151",             "number": "6",   "setTotal": 165, "pcQuery": "charizard 151 6/165 pokemon" }
   ]
 }
