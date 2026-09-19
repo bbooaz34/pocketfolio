@@ -1,8 +1,87 @@
 {
  "date": "2026-09-19",
- "builtAt": "2026-09-19T13:04:49.577Z",
+ "builtAt": "2026-09-19T13:09:48.568Z",
  "source": "ppt",
  "cards": {
+  "base1-4": {
+   "pcId": null,
+   "tcgPlayerId": "42479",
+   "name": "Charizard",
+   "set": "Base",
+   "number": "4",
+   "grades": {
+    "1": 29548,
+    "2": 25000,
+    "3": 28000,
+    "4": 29000,
+    "5": 32500,
+    "6": 35000,
+    "7": 45500,
+    "8": 70500,
+    "9": 145000,
+    "raw": 51290
+   },
+   "metrics": {
+    "1": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "2": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "3": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "4": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "5": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "6": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": null
+    },
+    "7": {
+     "confidence": null,
+     "trend": "stable",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "8": {
+     "confidence": null,
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    },
+    "9": {
+     "confidence": null,
+     "trend": "down",
+     "dailyVolume7Day": 0,
+     "salesCount": null
+    }
+   },
+   "salesVelocityWeekly": null,
+   "salesVolume": null,
+   "confidence": "low",
+   "pricedOn": "2026-09-19"
+  },
   "base1-2": {
    "pcId": null,
    "tcgPlayerId": "42360",
@@ -152,85 +231,6 @@
     "9": {
      "confidence": null,
      "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    }
-   },
-   "salesVelocityWeekly": null,
-   "salesVolume": null,
-   "confidence": "low",
-   "pricedOn": "2026-09-19"
-  },
-  "base1-4": {
-   "pcId": null,
-   "tcgPlayerId": "42479",
-   "name": "Charizard",
-   "set": "Base",
-   "number": "4",
-   "grades": {
-    "1": 29548,
-    "2": 25000,
-    "3": 28000,
-    "4": 29000,
-    "5": 32500,
-    "6": 35000,
-    "7": 45500,
-    "8": 70500,
-    "9": 145000,
-    "raw": 51290
-   },
-   "metrics": {
-    "1": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "2": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "3": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
-    },
-    "4": {
-     "confidence": null,
-     "trend": "stable",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "5": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "6": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
-    },
-    "7": {
-     "confidence": null,
-     "trend": "stable",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "8": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "9": {
-     "confidence": null,
-     "trend": "down",
      "dailyVolume7Day": 0,
      "salesCount": null
     }
