@@ -341,8 +341,14 @@
     } catch { /* storage full — the app still works online */ }
   }
 
+  const snapToday = () => new Date().toISOString().slice(0, 10);
+
   async function loadSnapshot(date /* optional */) {
-    if (date) {
+    /* A dated snapshot is immutable only once its day is over. Today's file
+       is rewritten by every build, so the copy cached this morning is missing
+       any card added to the watchlist this afternoon — today always refetches.
+       Yesterday and earlier are settled and served from localStorage. */
+    if (date && date !== snapToday()) {
       const hit = readSnapCache(date);
       if (hit) return hit;
     }
