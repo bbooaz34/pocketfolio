@@ -544,8 +544,11 @@ async function priceWithPPT(cards, out, prev) {
         set: card.setName || null,
         number: card.number || null,
         /* the app's catalogs are English-only and a cert-only slab has no
-           catalog entry, so this is the only picture those holdings get */
-        image: row.imageCdnUrl400 ?? row.imageCdnUrl200 ?? row.imageCdnUrl ?? row.imageUrl ?? null,
+           catalog entry, so this is the only picture those holdings get.
+           A watchlist `image` overrides it: the Japanese catalog is missing
+           many scans, and a reprint that shares the artwork is a better
+           picture than none — it does not change what we price. */
+        image: card.image ?? row.imageCdnUrl400 ?? row.imageCdnUrl200 ?? row.imageCdnUrl ?? row.imageUrl ?? null,
         grades: priced.grades,
         metrics: priced.metrics,
         salesVelocityWeekly: priced.velocity,

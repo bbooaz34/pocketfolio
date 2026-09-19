@@ -49,6 +49,8 @@ CARDS.push({ id: "base1-9@jp", name: "TestMon 9", setName: "Base JP", number: "9
 /* a card whose name+number also exist in a reprint set of a different size —
    the live case was Base Set Charizard 4/102 binding to Base Set 2 4/130 */
 CARDS.push({ id: "base1-10", name: "Reprinted", setName: "Base", number: "10", setTotal: 102 });
+/* a card whose provider scan is wrong, so the watchlist pins a picture */
+CARDS.push({ id: "base1-11", name: "Pinned", setName: "Base", number: "11", image: "https://example.test/pinned.jpg" });
 
 const HISTORY_DAYS = 120;
 const makeHistory = (base) => {
@@ -103,6 +105,7 @@ const server = createServer((req, res) => {
     number: filler ? `9${filler}` : c.number,
     cardNumber: `${String(filler ? 90 + filler : c.number).padStart(3, "0")}/${total ?? 102}`,
     prices: { market: 12.34 },
+    imageCdnUrl400: `https://imagecdn.test/${c.id}_400.jpg`,
     priceHistory: { conditions: { "Near Mint": { history: histArr(10) } } },
     /* the real shapes, from the 19.09 probe: smartMarketPrice is an OBJECT,
        there is no smartMarketConfidence and no salesCount, the count field is
@@ -290,6 +293,10 @@ check("a Japanese print gets its own @jp snapshot entry", Boolean(s5.cards["base
 check("language=japanese forwarded for @jp cards", jpLangSeen);
 /* the Base Set 2 trap: a same-name, same-number row from a 130-card set must
    lose to the 102-card one, and setTotal is the only thing that says so */
+check("the provider's picture is stored when there is no override",
+  String(s5.cards["base1-1"]?.image || "").includes("imagecdn"), s5.cards["base1-1"]?.image);
+check("a watchlist image overrides the provider's",
+  s5.cards["base1-11"]?.image === "https://example.test/pinned.jpg", s5.cards["base1-11"]?.image);
 check("a row from a set of the wrong size cannot win on card number",
   s5.cards["base1-10"]?.tcgPlayerId === "900010",
   `bound to tcgPlayerId ${s5.cards["base1-10"]?.tcgPlayerId} (900010 = the /102 row, 900010R = the /130 reprint)`);
