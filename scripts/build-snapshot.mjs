@@ -494,12 +494,20 @@ async function priceWithPPT(cards, out, prev) {
       /* A card number alone is not identity: "004/130" normalises to "4" and
          matched Base Set 2 for a Base Set Charizard. When the watchlist
          declares the set size, a row from a set of another size cannot be
-         this card, whatever its number says. */
-      const wrongSet = (r) => card.setTotal != null && rowSetTotal(r) != null &&
-        rowSetTotal(r) !== Number(card.setTotal);
+         this card, whatever its number says.
+         Promos carry no "x/y" at all, so `setMatch` names a fragment the
+         row's set must contain — a CoroCoro Togepi bound to the unrelated
+         "Gold, Silver, to a New World" Togepi without it. */
+      const wantSet = String(card.setMatch || "").toLowerCase();
+      const rowSetName = (r) => String(r.setName ?? r.set?.name ?? "").toLowerCase();
+      const wrongSet = (r) =>
+        (card.setTotal != null && rowSetTotal(r) != null && rowSetTotal(r) !== Number(card.setTotal)) ||
+        (wantSet !== "" && !rowSetName(r).includes(wantSet));
       const usable = rows.filter((r) => !wrongSet(r));
       if (rows.length && !usable.length) {
-        console.log(`  PPT rows for ${card.id} are all from another set (want /${card.setTotal})`);
+        console.log(`  PPT rows for ${card.id} are all from another set` +
+          ` (want ${wantSet ? `"${wantSet}"` : `/${card.setTotal}`}; got ` +
+          `${rows.map((r) => r.setName ?? "?").slice(0, 3).join(", ")})`);
       }
       /* strongest match first: an exact-id lookup is its own answer, and PPT
          rows carry catalog-style card ids */

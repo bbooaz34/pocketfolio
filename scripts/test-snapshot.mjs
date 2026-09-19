@@ -51,6 +51,10 @@ CARDS.push({ id: "base1-9@jp", name: "TestMon 9", setName: "Base JP", number: "9
 CARDS.push({ id: "base1-10", name: "Reprinted", setName: "Base", number: "10", setTotal: 102 });
 /* a card whose provider scan is wrong, so the watchlist pins a picture */
 CARDS.push({ id: "base1-11", name: "Pinned", setName: "Base", number: "11", image: "https://example.test/pinned.jpg" });
+/* an unnumbered promo: same name exists in another set, and with no x/y to
+   compare, only the set name tells them apart (the live CoroCoro Togepi) */
+CARDS.push({ id: "psa-999@jp", name: "Promo", setName: "CoroCoro Promotional Cards",
+  setMatch: "corocoro", language: "japanese" });
 
 const HISTORY_DAYS = 120;
 const makeHistory = (base) => {
@@ -161,9 +165,19 @@ const server = createServer((req, res) => {
   const match = CARDS.find((c) => search.startsWith(c.name)) || CARDS[0];
   /* "Reprinted" also exists in a 130-card reprint set, listed first — the
      live Base Set 2 trap. Only the set size tells the two apart. */
-  const rows = match.id === "base1-10"
-    ? [rowFor(match, 0, 130), rowFor(match, 0, 102)]
-    : Array.from({ length: limit }, (_, i) => rowFor(match, i));
+  let rows;
+  if (match.id === "base1-10") {
+    rows = [rowFor(match, 0, 130), rowFor(match, 0, 102)];
+  } else if (match.id === "psa-999@jp") {
+    /* the wrong-set namesake is listed first and has no number to compare */
+    const wrong = rowFor(match, 0); wrong.setName = "Gold, Silver, to a New World...";
+    wrong.tcgPlayerId = "WRONGSET"; wrong.cardNumber = "";
+    const right = rowFor(match, 0); right.setName = "CoroCoro Promotional Cards";
+    right.tcgPlayerId = "RIGHTSET"; right.cardNumber = "";
+    rows = [wrong, right];
+  } else {
+    rows = Array.from({ length: limit }, (_, i) => rowFor(match, i));
+  }
   if (dropEbayHistory) for (const r of rows) delete r.ebay.priceHistory;
   send(rows, limit);
 });
@@ -297,6 +311,9 @@ check("the provider's picture is stored when there is no override",
   String(s5.cards["base1-1"]?.image || "").includes("imagecdn"), s5.cards["base1-1"]?.image);
 check("a watchlist image overrides the provider's",
   s5.cards["base1-11"]?.image === "https://example.test/pinned.jpg", s5.cards["base1-11"]?.image);
+check("an unnumbered promo binds by set name, not by name alone",
+  s5.cards["psa-999@jp"]?.tcgPlayerId === "RIGHTSET",
+  `bound to ${s5.cards["psa-999@jp"]?.tcgPlayerId} (RIGHTSET = CoroCoro, WRONGSET = the namesake)`);
 check("a row from a set of the wrong size cannot win on card number",
   s5.cards["base1-10"]?.tcgPlayerId === "900010",
   `bound to tcgPlayerId ${s5.cards["base1-10"]?.tcgPlayerId} (900010 = the /102 row, 900010R = the /130 reprint)`);
