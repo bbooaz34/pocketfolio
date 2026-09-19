@@ -503,11 +503,19 @@ async function priceWithPPT(cards, out, prev) {
       const wrongSet = (r) =>
         (card.setTotal != null && rowSetTotal(r) != null && rowSetTotal(r) !== Number(card.setTotal)) ||
         (wantSet !== "" && !rowSetName(r).includes(wantSet));
-      const usable = rows.filter((r) => !wrongSet(r));
+      /* Neither guard above separates two printings that share a set AND a
+         number: TCGplayer keeps the English Ancient Mew and the "Ancient Mew
+         (Japanese Exclusive Print)" both in Miscellaneous Cards & Products,
+         and the number match below fires on whichever PPT happens to return
+         first. `nameExact` says which one this card is. */
+      const wantName = String(card.nameExact || "").toLowerCase();
+      const wrongName = (r) => wantName !== "" && String(r.name ?? "").toLowerCase() !== wantName;
+      const usable = rows.filter((r) => !wrongSet(r) && !wrongName(r));
       if (rows.length && !usable.length) {
-        console.log(`  PPT rows for ${card.id} are all from another set` +
-          ` (want ${wantSet ? `"${wantSet}"` : `/${card.setTotal}`}; got ` +
-          `${rows.map((r) => r.setName ?? "?").slice(0, 3).join(", ")})`);
+        console.log(`  PPT rows for ${card.id} are all another card` +
+          ` (want ${wantName ? `"${wantName}" in ` : ""}` +
+          `${wantSet ? `"${wantSet}"` : `/${card.setTotal}`}; got ` +
+          `${rows.map((r) => `${r.name ?? "?"} · ${r.setName ?? "?"}`).slice(0, 3).join(", ")})`);
       }
       /* strongest match first: an exact-id lookup is its own answer, and PPT
          rows carry catalog-style card ids */

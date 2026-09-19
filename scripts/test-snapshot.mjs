@@ -55,6 +55,12 @@ CARDS.push({ id: "base1-11", name: "Pinned", setName: "Base", number: "11", imag
    compare, only the set name tells them apart (the live CoroCoro Togepi) */
 CARDS.push({ id: "psa-999@jp", name: "Promo", setName: "CoroCoro Promotional Cards",
   setMatch: "corocoro", language: "japanese" });
+/* two printings sharing BOTH the set and the number, so neither setMatch nor
+   setTotal separates them and the number match would pick whichever the
+   provider listed first — the live Ancient Mew / "Ancient Mew (Japanese
+   Exclusive Print)" pair. Only nameExact says which one this is. */
+CARDS.push({ id: "miscp-1", name: "Twinned", setName: "Misc Promos",
+  setMatch: "misc", nameExact: "Twinned", number: "1" });
 
 const HISTORY_DAYS = 120;
 const makeHistory = (base) => {
@@ -168,6 +174,15 @@ const server = createServer((req, res) => {
   let rows;
   if (match.id === "base1-10") {
     rows = [rowFor(match, 0, 130), rowFor(match, 0, 102)];
+  } else if (match.id === "miscp-1") {
+    /* the other printing is listed first, same set and same number, and its
+       name merely starts with the one we want */
+    const wrong = rowFor(match, 0);
+    wrong.name = "Twinned (Japanese Exclusive Print)";
+    wrong.setName = "Misc Promos"; wrong.tcgPlayerId = "WRONGPRINT";
+    const right = rowFor(match, 0);
+    right.setName = "Misc Promos"; right.tcgPlayerId = "RIGHTPRINT";
+    rows = [wrong, right];
   } else if (match.id === "psa-999@jp") {
     /* the wrong-set namesake is listed first and has no number to compare */
     const wrong = rowFor(match, 0); wrong.setName = "Gold, Silver, to a New World...";
@@ -314,6 +329,9 @@ check("a watchlist image overrides the provider's",
 check("an unnumbered promo binds by set name, not by name alone",
   s5.cards["psa-999@jp"]?.tcgPlayerId === "RIGHTSET",
   `bound to ${s5.cards["psa-999@jp"]?.tcgPlayerId} (RIGHTSET = CoroCoro, WRONGSET = the namesake)`);
+check("two printings in one set are told apart by nameExact, not by order",
+  s5.cards["miscp-1"]?.tcgPlayerId === "RIGHTPRINT",
+  `bound to ${s5.cards["miscp-1"]?.tcgPlayerId} (RIGHTPRINT = the plain name, WRONGPRINT = the other printing, listed first)`);
 check("a row from a set of the wrong size cannot win on card number",
   s5.cards["base1-10"]?.tcgPlayerId === "900010",
   `bound to tcgPlayerId ${s5.cards["base1-10"]?.tcgPlayerId} (900010 = the /102 row, 900010R = the /130 reprint)`);
