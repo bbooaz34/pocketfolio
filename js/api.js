@@ -419,6 +419,17 @@
       String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
+  function pptCreditsKey() {
+    return pptCallsKey().replace(".pptCalls.", ".pptCredits.");
+  }
+
+  function gradedCreditsToday() {
+    try {
+      const n = parseInt(localStorage.getItem(pptCreditsKey()) || "0", 10);
+      return Number.isFinite(n) ? n : 0;
+    } catch { return 0; }
+  }
+
   function gradedCallsToday() {
     try {
       const n = parseInt(localStorage.getItem(pptCallsKey()) || "0", 10);
@@ -446,7 +457,14 @@
     if (!res.ok) throw new Error("graded prices API HTTP " + res.status);
     const data = await res.json();
     const rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? data.results ?? []);
-    return Array.isArray(rows) ? rows : [];
+    const list = Array.isArray(rows) ? rows : [];
+    /* PPT bills per returned row, doubled with includeEbay — track an
+       estimate so the settings meter measures the real budget */
+    try {
+      const spent = Math.max(1, list.length * (params.includeEbay ? 2 : 1));
+      localStorage.setItem(pptCreditsKey(), String(gradedCreditsToday() + spent));
+    } catch { /* ok */ }
+    return list;
   }
 
   function pptAttempts(card) {
@@ -722,6 +740,6 @@
   window.PocketfolioAPI = {
     searchCards, getCard, getCards, lookupCert, certCardQuery,
     gradedFor, gradedTest, hasGradedKey, hasGradedProxy, gradedBackoffUntil,
-    gradedCallsToday, fetchNews,
+    gradedCallsToday, gradedCreditsToday, fetchNews,
   };
 })();

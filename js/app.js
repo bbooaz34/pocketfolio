@@ -730,9 +730,10 @@
       : "הדבקת מפתח מ-pokemonpricetracker.com";
     $("proxy-input").value = lsGet("pocketfolio.pptProxy") || "";
 
-    const n = (typeof API.gradedCallsToday === "function") ? API.gradedCallsToday() : 0;
-    $("quota-label").textContent = T.queriesOf(n, 100);
-    $("quota-bar").style.width = Math.min(100, n) + "%";
+    /* the daily budget is credits (billed per returned row), not requests */
+    const credits = (typeof API.gradedCreditsToday === "function") ? API.gradedCreditsToday() : 0;
+    $("quota-label").textContent = `~${T.queriesOf(credits, 100)}`;
+    $("quota-bar").style.width = Math.min(100, credits) + "%";
 
     $("toggle-refresh").setAttribute("aria-pressed", String(refreshOnOpen()));
     $("toggle-hide").setAttribute("aria-pressed", String(hideValues()));
