@@ -209,72 +209,93 @@ function rotate(cards, prev) {
   });
 }
 
+/* PPT's setId is its own slug format (e.g. "sv-black-bolt"), NOT the catalog
+   set id ("swsh7"): sending ours filters every row out — run #3 answered
+   total>0 with count=0 on all 12 cards. So the catalog id is only the first,
+   zero-cost attempt (0 rows bill 0 credits); the fallbacks search without it,
+   and the setId PPT itself puts on the matched row is stored in ppt-map.json
+   for precise limit=1 re-queries. */
+function pptAttempts(card) {
+  const known = pptMap[card.id];
+  if (known?.search) {
+    return [{
+      search: known.search,
+      ...(known.setId ? { setId: known.setId } : {}),
+      limit: String(known.setId ? PPT_LIMIT_RESOLVED : PPT_LIMIT_FIRST),
+    }];
+  }
+  const catalogSetId = card.id.includes("-") ? card.id.split("-")[0] : null;
+  const attempts = [];
+  if (catalogSetId) attempts.push({ search: card.name, setId: catalogSetId, limit: String(PPT_LIMIT_FIRST) });
+  if (card.setName) attempts.push({ search: `${card.name} ${card.setName}`, limit: String(PPT_LIMIT_FIRST) });
+  attempts.push({ search: card.name, limit: String(PPT_LIMIT_FIRST) });
+  return attempts;
+}
+
 async function priceWithPPT(cards, out, prev) {
   let credits = 0;
-  for (const card of rotate(cards, prev)) {
+  const norm = (n) => String(n ?? "").split("/")[0].toLowerCase().replace(/[^a-z0-9]/g, "").replace(/^0+(?=.)/, "");
+  outer: for (const card of rotate(cards, prev)) {
     if (out.has(card.id)) continue;
     if (credits >= PPT_CREDIT_BUDGET) {
       console.log(`PPT credit budget spent (${credits}) — remaining cards roll to tomorrow`);
       break;
     }
-    const known = pptMap[card.id];
-    const setId = known?.setId || (card.id.includes("-") ? card.id.split("-")[0] : null);
-    /* The real API accepts only documented params and answers 400 to unknown
-       ones — `number` is not accepted (`search` spans name/set/number/rarity
-       server-side; run #1 failed on this). The number is matched locally
-       below instead. */
-    const params = new URLSearchParams({
-      search: known?.search || card.name,
-      includeEbay: "true",
-      limit: String(known?.search ? PPT_LIMIT_RESOLVED : PPT_LIMIT_FIRST),
-      ...(setId ? { setId } : {}),
-    });
-    let rows;
-    try {
-      const res = await fetch(PPT_BASE + "/api/v2/cards?" + params, {
-        headers: { accept: "application/json", Authorization: "Bearer " + PPT_TOKEN },
-      });
-      if (!res.ok) {
-        console.log(`  PPT HTTP ${res.status} for ${card.id}`);
-        if (res.status === 429) { console.log("  quota exhausted — stopping"); break; }
+    for (const attempt of pptAttempts(card)) {
+      if (credits >= PPT_CREDIT_BUDGET) {
+        console.log(`PPT credit budget spent (${credits}) — remaining cards roll to tomorrow`);
+        break outer;
+      }
+      const params = new URLSearchParams({ includeEbay: "true", ...attempt });
+      let rows;
+      try {
+        const res = await fetch(PPT_BASE + "/api/v2/cards?" + params, {
+          headers: { accept: "application/json", Authorization: "Bearer " + PPT_TOKEN },
+        });
+        if (!res.ok) {
+          console.log(`  PPT HTTP ${res.status} for ${card.id}`);
+          if (res.status === 429) { console.log("  quota exhausted — stopping"); break outer; }
+          continue;
+        }
+        const data = await res.json();
+        rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? data.results ?? []);
+        if (!Array.isArray(rows)) rows = [];
+        if (!rows.length) {
+          const total = data?.metadata?.total;
+          console.log(`  PPT 0 rows for ${card.id} [${params}]` +
+            (total != null ? ` (total=${total})` : `: ${JSON.stringify(data).slice(0, 200)}`));
+          continue;
+        }
+      } catch (err) {
+        console.log(`  PPT error ${card.id}: ${err.message}`);
         continue;
+      } finally {
+        await sleep(1100);
       }
-      const data = await res.json();
-      rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? data.results ?? []);
-      if (!Array.isArray(rows)) rows = [];
-      /* an empty answer is a diagnosis problem, not a silent skip — show what
-         the API actually said (public card data, truncated) */
-      if (!rows.length) {
-        console.log(`  PPT 0 rows for ${card.id} [${params}]: ${JSON.stringify(data).slice(0, 300)}`);
-      }
-    } catch (err) {
-      console.log(`  PPT error ${card.id}: ${err.message}`);
-      continue;
-    } finally {
-      await sleep(1100);
+      credits += rows.length * 2; // rows x2 with includeEbay
+      /* strongest match first: PPT rows carry catalog-style card ids */
+      const row = rows.find((r) => (r.id ?? r.cardId) === card.id) ||
+        rows.find((r) => norm(r.number ?? r.cardNumber ?? r.localId) === norm(card.number)) ||
+        rows.find((r) => (r.name || "").toLowerCase() === card.name.toLowerCase());
+      if (!row) { console.log(`  PPT no matching row for ${card.id} [${params}]`); continue; }
+      const grades = pptGrades(row);
+      if (!grades) { console.log(`  PPT no grade buckets for ${card.id}`); continue; }
+      pptMap[card.id] = {
+        setId: row.setId ?? row.set?.id ?? null, // PPT's own format, learned from the row
+        search: row.name || card.name,
+        lastPriced: today,
+      };
+      out.set(card.id, {
+        pcId: null,
+        name: card.name,
+        set: card.setName || null,
+        number: card.number || null,
+        grades,
+        salesVolume: null,
+        confidence: "fallback",
+      });
+      break; // priced — next card
     }
-    credits += rows.length * 2; // rows x2 with includeEbay
-    const norm = (n) => String(n ?? "").split("/")[0].toLowerCase().replace(/[^a-z0-9]/g, "").replace(/^0+(?=.)/, "");
-    const row = rows.find((r) =>
-      norm(r.number ?? r.cardNumber ?? r.localId) === norm(card.number)) ||
-      rows.find((r) => (r.name || "").toLowerCase() === card.name.toLowerCase());
-    if (!row) continue;
-    const grades = pptGrades(row);
-    if (!grades) continue;
-    pptMap[card.id] = {
-      setId: setId || null,
-      search: row.name || card.name,
-      lastPriced: today,
-    };
-    out.set(card.id, {
-      pcId: null,
-      name: card.name,
-      set: card.setName || null,
-      number: card.number || null,
-      grades,
-      salesVolume: null,
-      confidence: "fallback",
-    });
   }
   console.log(`PPT: ~${credits} credits spent`);
 }

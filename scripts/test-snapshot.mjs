@@ -48,9 +48,20 @@ const server = createServer((req, res) => {
   const limit = Number(url.searchParams.get("limit") || 5);
   limitsSeen.push(limit);
   const search = url.searchParams.get("search") || "";
-  const match = CARDS.find((c) => c.name === search) || CARDS[0];
+  const setId = url.searchParams.get("setId");
+  // Reproduce the live failure mode (run #3): a catalog-style setId ("base1")
+  // is not PPT's slug format, so the filter drops every row — total counts the
+  // search matches but count is 0. Only PPT's own slug ("ppt-base-set") works.
+  if (setId && !setId.startsWith("ppt-")) {
+    res.writeHead(200, { "content-type": "application/json" })
+      .end(JSON.stringify({ data: [], metadata: { total: 5, count: 0, limit } }));
+    return;
+  }
+  const match = CARDS.find((c) => search.startsWith(c.name)) || CARDS[0];
   // Serve `limit` rows — the real API bills per row, doubled by includeEbay.
   const rows = Array.from({ length: limit }, (_, i) => ({
+    id: i === 0 ? match.id : `zz9-${i}`,
+    setId: "ppt-base-set",
     name: i === 0 ? match.name : `Filler ${i}`,
     number: i === 0 ? match.number : `9${i}`,
     prices: { market: 12.34 },
@@ -102,6 +113,10 @@ check("day 1 priced only what the budget allows", n1 > 0 && n1 <= 4, `${n1} card
 check("credits counted as rows x2", rowsServed * 2 <= 6 + 4, `~${rowsServed * 2} credits for a budget of 6`);
 check("first touch searches with limit=3", limitsSeen.every((l) => l === 3), `limits: ${limitsSeen.join(",")}`);
 check("only documented params are sent (no 400s)", !d1.stdout.includes("HTTP 400"));
+const map1 = JSON.parse(readFileSync(join(work, "data", "ppt-map.json"), "utf8"));
+check("a filtered-out catalog setId falls back and PPT's own setId is learned",
+  Object.values(map1).length > 0 && Object.values(map1).every((m) => m.setId === "ppt-base-set"),
+  JSON.stringify(map1));
 
 /* ---- day 2: leftovers first, day 1 carried ---- */
 const before = new Set(Object.keys(s1.cards));
