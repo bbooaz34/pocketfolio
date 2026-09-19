@@ -33,7 +33,12 @@ const PC_TOKEN = process.env.PC_TOKEN || "";
 const PPT_TOKEN = process.env.PPT_TOKEN || "";
 const PC_BASE = process.env.PC_BASE || "https://www.pricecharting.com";
 const PPT_BASE = process.env.PPT_BASE || "https://www.pokemonpricetracker.com";
-const PPT_CALL_CAP = 80;
+/* PPT bills per RESPONSE ROW, doubled by includeEbay (PRICING-ATTEMPTS.md §1).
+   So the budget must be counted in credits, not calls: 80 calls at limit=5 is
+   up to 800 credits against a 100-credit free tier. */
+const PPT_CREDIT_BUDGET = Number(process.env.PPT_CREDIT_BUDGET || 90);
+const PPT_LIMIT_TARGETED = 1;   // we know the set — ask for one row
+const PPT_LIMIT_BROAD = 3;      // no set id — allow a little room to match
 
 if (!PC_TOKEN && !PPT_TOKEN) {
   console.error("need PC_TOKEN and/or PPT_TOKEN");
@@ -62,6 +67,10 @@ const today = process.env.SNAPSHOT_DATE || new Date().toISOString().slice(0, 10)
 const watchlist = JSON.parse(readFileSync(join(DATA, "watchlist.json"), "utf8")).cards;
 const pcMapPath = join(DATA, "pc-map.json");
 const pcMap = existsSync(pcMapPath) ? JSON.parse(readFileSync(pcMapPath, "utf8")) : {};
+/* Resolved PPT identity per card, so later runs query precisely instead of
+   searching by name (lesson 3 in PRICING-ATTEMPTS.md). */
+const pptMapPath = join(DATA, "ppt-map.json");
+const pptMap = existsSync(pptMapPath) ? JSON.parse(readFileSync(pptMapPath, "utf8")) : {};
 
 /* ---------------- PriceCharting ---------------- */
 
@@ -189,23 +198,45 @@ function pptGrades(row) {
   return Object.keys(grades).length ? grades : null;
 }
 
-async function priceWithPPT(cards, out) {
-  let calls = 0;
-  for (const card of cards) {
+/* Cards the budget cannot cover today are not dropped — they go first
+   tomorrow. Order: never-priced, then oldest price, then the rest. */
+function rotate(cards, prev) {
+  const seen = prev?.cards ?? {};
+  return [...cards].sort((a, b) => {
+    const sa = seen[a.id] ? 1 : 0, sb = seen[b.id] ? 1 : 0;
+    if (sa !== sb) return sa - sb;
+    return (pptMap[a.id]?.lastPriced ?? "").localeCompare(pptMap[b.id]?.lastPriced ?? "");
+  });
+}
+
+async function priceWithPPT(cards, out, prev) {
+  let credits = 0;
+  for (const card of rotate(cards, prev)) {
     if (out.has(card.id)) continue;
-    if (calls >= PPT_CALL_CAP) { console.log("PPT call cap reached"); break; }
-    const setId = card.id.includes("-") ? card.id.split("-")[0] : null;
+    if (credits >= PPT_CREDIT_BUDGET) {
+      console.log(`PPT credit budget spent (${credits}) — remaining cards roll to tomorrow`);
+      break;
+    }
+    const known = pptMap[card.id];
+    const setId = known?.setId || (card.id.includes("-") ? card.id.split("-")[0] : null);
+    const targeted = Boolean(setId);
     const params = new URLSearchParams({
-      search: card.name, includeEbay: "true", limit: "5",
+      search: known?.search || card.name,
+      includeEbay: "true",
+      limit: String(targeted ? PPT_LIMIT_TARGETED : PPT_LIMIT_BROAD),
       ...(setId ? { setId } : {}),
+      ...(card.number ? { number: String(card.number) } : {}),
     });
-    calls++;
     let rows;
     try {
       const res = await fetch(PPT_BASE + "/api/v2/cards?" + params, {
         headers: { accept: "application/json", Authorization: "Bearer " + PPT_TOKEN },
       });
-      if (!res.ok) { console.log(`  PPT HTTP ${res.status} for ${card.id}`); if (res.status === 429) break; continue; }
+      if (!res.ok) {
+        console.log(`  PPT HTTP ${res.status} for ${card.id}`);
+        if (res.status === 429) { console.log("  quota exhausted — stopping"); break; }
+        continue;
+      }
       const data = await res.json();
       rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? []);
     } catch (err) {
@@ -214,6 +245,7 @@ async function priceWithPPT(cards, out) {
     } finally {
       await sleep(1100);
     }
+    credits += rows.length * 2; // rows x2 with includeEbay
     const norm = (n) => String(n ?? "").split("/")[0].toLowerCase().replace(/[^a-z0-9]/g, "").replace(/^0+(?=.)/, "");
     const row = rows.find((r) =>
       norm(r.number ?? r.cardNumber ?? r.localId) === norm(card.number)) ||
@@ -221,6 +253,11 @@ async function priceWithPPT(cards, out) {
     if (!row) continue;
     const grades = pptGrades(row);
     if (!grades) continue;
+    pptMap[card.id] = {
+      setId: setId || null,
+      search: row.name || card.name,
+      lastPriced: today,
+    };
     out.set(card.id, {
       pcId: null,
       name: card.name,
@@ -231,31 +268,40 @@ async function priceWithPPT(cards, out) {
       confidence: "fallback",
     });
   }
+  console.log(`PPT: ~${credits} credits spent`);
 }
 
 /* ---------------- write ---------------- */
 
-const entries = PC_TOKEN ? await priceWithPC(watchlist) : new Map();
-if (PPT_TOKEN) await priceWithPPT(watchlist, entries);
-
-const cards = Object.fromEntries(entries);
-const count = Object.keys(cards).length;
-console.log(`priced ${count}/${watchlist.length} watchlist cards`);
-
-// never write a snapshot >40% smaller than yesterday's — stale beats half-empty
 mkdirSync(SNAPS, { recursive: true });
 const prevDates = readdirSync(SNAPS).filter((f) => f.endsWith(".json")).sort();
 const prevFile = prevDates.filter((f) => f < `${today}.json`).at(-1);
-if (prevFile) {
-  const prev = JSON.parse(readFileSync(join(SNAPS, prevFile), "utf8"));
-  const prevCount = Object.keys(prev.cards || {}).length;
-  if (prevCount > 0 && count < prevCount * 0.6) {
-    console.error(`ABORT: ${count} cards vs ${prevCount} yesterday (>40% shrink)`);
-    process.exit(1);
+const prev = prevFile ? JSON.parse(readFileSync(join(SNAPS, prevFile), "utf8")) : null;
+
+const entries = PC_TOKEN ? await priceWithPC(watchlist) : new Map();
+if (PPT_TOKEN) await priceWithPPT(watchlist, entries, prev);
+
+const fresh = entries.size;
+
+/* A card the budget did not reach today keeps yesterday's price, flagged so the
+   app can show its real age. Every snapshot stays complete; only `pricedOn`
+   tells you how old a given number is. */
+let carried = 0;
+if (prev) {
+  for (const [id, entry] of Object.entries(prev.cards || {})) {
+    if (entries.has(id)) continue;
+    entries.set(id, { ...entry, carried: true, pricedOn: entry.pricedOn || prev.date });
+    carried++;
   }
 }
-if (count === 0) {
-  console.error("ABORT: empty snapshot");
+for (const [, e] of entries) if (!e.pricedOn) e.pricedOn = today;
+
+const cards = Object.fromEntries(entries);
+const count = Object.keys(cards).length;
+console.log(`priced ${fresh} fresh + ${carried} carried = ${count}/${watchlist.length} watchlist cards`);
+
+if (fresh === 0) {
+  console.error("ABORT: nothing priced today — not writing a snapshot of carried values only");
   process.exit(1);
 }
 
@@ -269,6 +315,7 @@ const snapshot = {
 writeFileSync(join(SNAPS, `${today}.json`), JSON.stringify(snapshot, null, 1));
 writeFileSync(join(DATA, "latest.json"), JSON.stringify(snapshot, null, 1));
 writeFileSync(pcMapPath, JSON.stringify(pcMap, null, 1));
+writeFileSync(pptMapPath, JSON.stringify(pptMap, null, 1));
 
 const dates = readdirSync(SNAPS).filter((f) => f.endsWith(".json"))
   .map((f) => f.replace(".json", "")).sort().reverse();
