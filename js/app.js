@@ -38,6 +38,7 @@
     srcSmartGrade: (g) => `מחיר eBay מסונן לדירוג ${g}`,
     src7dGrade: (g) => `מחיר eBay ב-7 ימים לדירוג ${g}`,
     spreadWide: "מדגם מפוזר",
+    thinSample: "מדגם דל",
     noSalesWeek: "לא נמכר השבוע",
     srcEst: "הערכה משער השוק הגולמי",
     srcManual: "שווי שהוזן ידנית",
@@ -271,7 +272,11 @@
     if (!m) return "";
     const out = [];
     const wide = m.spread && m.spread.low > 0 && m.spread.high / m.spread.low > 2;
-    if (wide || m.effective === "medium" || m.effective === "low") out.push(T.spreadWide);
+    /* "scattered" is only true of a wide spread. A shaky number from a tight
+       cluster (base1-4 PSA 9: $1400-1500, three sales, none for weeks) is a
+       thin sample, and saying the other thing is its own small overclaim. */
+    if (wide) out.push(T.spreadWide);
+    else if (m.effective === "medium" || m.effective === "low") out.push(T.thinSample);
     if (m.dailyVolume7Day === 0) out.push(T.noSalesWeek);
     return out.length ? ` · ${out.join(" · ")}` : "";
   }

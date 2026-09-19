@@ -151,8 +151,13 @@ aggregates are not bounded by the window we ask for):
 
 | Condition | Appended |
 |---|---|
-| `effective` is `medium`/`low`, or the grade's spread is wider than 2× | `· מדגם מפוזר` |
+| the grade's spread is wider than 2× | `· מדגם מפוזר` |
+| otherwise, `effective` is `medium`/`low` | `· מדגם דל` |
 | `dailyVolume7Day === 0` | `· לא נמכר השבוע` |
+
+The first two are separate because they are different facts: base1-4 at PSA 9
+is three sales between $1,400 and $1,500, none of them recent — thin, not
+scattered, and calling it scattered would be its own small overclaim.
 
 A lifetime sales count is never printed beside a date. If it is ever shown it
 reads `סה"כ מכירות מאז ומעולם`, never `מכירות אחרונות`.
