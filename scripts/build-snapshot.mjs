@@ -232,8 +232,17 @@ function pptGrades(row) {
     const smart = v.smartMarketPrice && typeof v.smartMarketPrice === "object"
       ? v.smartMarketPrice
       : (typeof v.smartMarketPrice === "number" ? { price: v.smartMarketPrice } : null);
+    const lo = pennies(v.minPrice), hi = pennies(v.maxPrice);
+    /* The smart price can land outside every sale it claims to summarise —
+       a Japanese Togepi came back at $46 against observed sales of $100-200.
+       The provider flags some of these itself; the range catches the rest.
+       Either way the median is the honest answer, since it is a sale. */
+    const smartP = pennies(smart?.price);
+    const flagged = row.ebay?.smartPriceOutlierByGrade?.[k] === true;
+    const outOfRange = smartP != null && lo != null && hi != null && (smartP < lo || smartP > hi);
+    const rejected = flagged ? "flagged-outlier" : outOfRange ? "outside-observed-range" : null;
     const hit = [
-      ["smartMarketPrice", smart?.price],
+      ["smartMarketPrice", rejected ? null : smart?.price],
       ["marketPrice7Day", v.marketPrice7Day],
       ["medianPrice", v.medianPrice],
       ["median", v.median],
@@ -241,9 +250,13 @@ function pptGrades(row) {
     if (!hit) continue;
     const [priceField, price] = hit;
     grades[g] = pennies(price);
+    if (rejected) {
+      console.log(`  ${row.name} ${k}: smart price $${(smartP / 100).toFixed(2)} ${rejected}` +
+        (lo != null ? ` (sales $${(lo / 100).toFixed(2)}-$${(hi / 100).toFixed(2)})` : "") +
+        ` — using ${priceField}`);
+    }
     const daily = [v.dailyVolume7Day, v.dailyVolume].find((x) => typeof x === "number");
     const stated = String(smart?.confidence ?? v.smartMarketConfidence ?? "").toLowerCase();
-    const lo = pennies(v.minPrice), hi = pennies(v.maxPrice);
     metrics[g] = {
       confidence: RANK[stated] !== undefined ? stated : null, // provider's, about the calculation
       effective: effectiveConfidence(v, priceField, RANK[stated] !== undefined ? stated : null),
@@ -254,6 +267,7 @@ function pptGrades(row) {
       salesCount: Number.isFinite(v.salesCount) ? v.salesCount
         : Number.isFinite(v.count) ? v.count : null,
       priceField,
+      smartRejected: rejected,
       daysUsed: Number.isFinite(smart?.daysUsed) ? smart.daysUsed : null,
       lastSaleDate: typeof v.lastSaleDate === "string" ? v.lastSaleDate.slice(0, 10) : null,
       spread: lo && hi ? { low: lo, high: hi } : null,

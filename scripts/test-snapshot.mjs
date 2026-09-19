@@ -125,7 +125,17 @@ const server = createServer((req, res) => {
         // no 7-day volume field at all → cannot tell → medium at best
         psa7: { count: 5, medianPrice: 150, marketPrice7Day: 160,
           smartMarketPrice: { price: 158, confidence: "high", method: "7day", daysUsed: 7 } },
+        // smart price below every observed sale (the live Togepi case) →
+        // must fall back to the median
+        psa6: { count: 4, medianPrice: 130, minPrice: 100, maxPrice: 200,
+          dailyVolume7Day: 0.2, marketTrend: "up",
+          smartMarketPrice: { price: 46.01, confidence: "low", method: "all_filtered_weighted", daysUsed: 90 } },
+        // the provider flags its own smart price as an outlier
+        psa5: { count: 9, medianPrice: 70, minPrice: 50, maxPrice: 90,
+          dailyVolume7Day: 0.3, marketTrend: "up",
+          smartMarketPrice: { price: 88, confidence: "high", method: "90day", daysUsed: 90 } },
       },
+      smartPriceOutlierByGrade: { psa10: false, psa9: false, psa8: false, psa7: false, psa6: false, psa5: true },
       salesVelocity: { dailyAverage: 0.8, weeklyAverage: 5.6, monthlyTotal: 24 },
       // graded history: psaN → date → {average, count} (respects `days`)
       priceHistory: {
@@ -238,6 +248,13 @@ check("no dailyVolume7Day at all caps at medium",
 check("spread carried through from minPrice/maxPrice",
   M["8"]?.spread?.low === 10000 && M["8"]?.spread?.high === 42000, JSON.stringify(M["8"]?.spread));
 check("the window the smart price used is recorded", M["9"]?.daysUsed === 353, `${M["9"]?.daysUsed}`);
+check("a smart price below every observed sale is rejected for the median",
+  anyCard.grades["6"] === 13000 && M["6"]?.priceField === "medianPrice" &&
+  M["6"]?.smartRejected === "outside-observed-range",
+  `$${(anyCard.grades["6"] ?? 0) / 100} via ${M["6"]?.priceField} (${M["6"]?.smartRejected})`);
+check("a provider-flagged outlier is rejected too",
+  anyCard.grades["5"] === 7000 && M["5"]?.smartRejected === "flagged-outlier",
+  `$${(anyCard.grades["5"] ?? 0) / 100} via ${M["5"]?.priceField} (${M["5"]?.smartRejected})`);
 check("no grade with zero 7-day volume is stored as high",
   Object.values(s2.cards).every((c) => Object.values(c.metrics || {})
     .every((m) => !(m.dailyVolume7Day === 0 && m.effective === "high"))));
