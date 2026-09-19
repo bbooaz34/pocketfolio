@@ -1,77 +1,107 @@
 {
  "date": "2026-09-19",
- "builtAt": "2026-09-19T20:01:04.168Z",
+ "builtAt": "2026-09-19T20:09:20.694Z",
  "source": "ppt",
  "cards": {
-  "base5-73": {
+  "psa-154146687@jp": {
    "pcId": null,
-   "tcgPlayerId": "89894",
-   "name": "The Boss's Way",
-   "set": "Team Rocket",
-   "number": "73",
+   "tcgPlayerId": "575874",
+   "name": "Togepi",
+   "set": "Gold Silver to a New World",
+   "number": null,
    "grades": {
-    "5": 1873,
-    "7": 1425,
-    "8": 1650,
-    "9": 5999,
-    "10": 10772,
-    "raw": 239
+    "1": 4601,
+    "5": 8132,
+    "6": 2600,
+    "7": 4300,
+    "8": 16150,
+    "9": 7650,
+    "10": 1065500,
+    "raw": 615
    },
    "metrics": {
+    "1": {
+     "confidence": "medium",
+     "effective": "low",
+     "trend": "down",
+     "dailyVolume7Day": 0,
+     "salesCount": 4,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-08",
+     "spread": {
+      "low": 10000,
+      "high": 20000
+     }
+    },
     "5": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": null,
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-14",
+     "spread": {
+      "low": 4266,
+      "high": 11999
+     }
+    },
+    "6": {
      "confidence": "low",
      "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
-     "daysUsed": 121,
-     "lastSaleDate": "2026-05-17",
+     "daysUsed": 45,
+     "lastSaleDate": "2026-08-03",
      "spread": {
-      "low": 1873,
-      "high": 1873
+      "low": 2600,
+      "high": 2600
      }
     },
     "7": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": 1,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 56,
+     "lastSaleDate": "2026-07-23",
+     "spread": {
+      "low": 4300,
+      "high": 4300
+     }
+    },
+    "8": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-15",
+     "spread": {
+      "low": 12050,
+      "high": 20250
+     }
+    },
+    "9": {
      "confidence": "medium",
      "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": 4,
+     "salesCount": 6,
      "priceField": "smartMarketPrice",
      "daysUsed": 90,
-     "lastSaleDate": "2026-08-12",
+     "lastSaleDate": "2026-08-31",
      "spread": {
-      "low": 1140,
-      "high": 1450
-     }
-    },
-    "8": {
-     "confidence": "high",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 13,
-     "priceField": "smartMarketPrice",
-     "daysUsed": 90,
-     "lastSaleDate": "2026-08-17",
-     "spread": {
-      "low": 1280,
-      "high": 2500
-     }
-    },
-    "9": {
-     "confidence": "low",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 12,
-     "priceField": "smartMarketPrice",
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-04",
-     "spread": {
-      "low": 1500,
-      "high": 6200
+      "low": 8000,
+      "high": 119900
      }
     },
     "10": {
@@ -79,13 +109,13 @@
      "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": 2,
+     "salesCount": 1,
      "priceField": "smartMarketPrice",
-     "daysUsed": 253,
-     "lastSaleDate": "2026-06-21",
+     "daysUsed": 81,
+     "lastSaleDate": "2026-06-28",
      "spread": {
-      "low": 5000,
-      "high": 17293
+      "low": 1065500,
+      "high": 1065500
      }
     }
    },
@@ -1452,6 +1482,97 @@
    "salesVelocityWeekly": 17.674418604651162,
    "salesVolume": null,
    "confidence": "medium",
+   "pricedOn": "2026-09-19"
+  },
+  "base5-73": {
+   "pcId": null,
+   "tcgPlayerId": "89894",
+   "name": "The Boss's Way",
+   "set": "Team Rocket",
+   "number": "73",
+   "grades": {
+    "5": 1873,
+    "7": 1425,
+    "8": 1650,
+    "9": 5999,
+    "10": 10772,
+    "raw": 239
+   },
+   "metrics": {
+    "5": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": 1,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 121,
+     "lastSaleDate": "2026-05-17",
+     "spread": {
+      "low": 1873,
+      "high": 1873
+     }
+    },
+    "7": {
+     "confidence": "medium",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 4,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-12",
+     "spread": {
+      "low": 1140,
+      "high": 1450
+     }
+    },
+    "8": {
+     "confidence": "high",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 13,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-17",
+     "spread": {
+      "low": 1280,
+      "high": 2500
+     }
+    },
+    "9": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 12,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-04",
+     "spread": {
+      "low": 1500,
+      "high": 6200
+     }
+    },
+    "10": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 253,
+     "lastSaleDate": "2026-06-21",
+     "spread": {
+      "low": 5000,
+      "high": 17293
+     }
+    }
+   },
+   "salesVelocityWeekly": 1.3953488372093024,
+   "salesVolume": null,
+   "confidence": "low",
    "pricedOn": "2026-09-19"
   },
   "swsh7-215": {
