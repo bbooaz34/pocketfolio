@@ -135,6 +135,9 @@ input, select {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  /* viewport-fit=cover: in a tab this is 0, installed to the home screen it is
+     the status-bar height. Without it the first header renders under the clock. */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 @media (min-width: 768px) {
@@ -161,13 +164,28 @@ input, select {
 
 .subbar {
   background: var(--surface);
-  padding: 10px var(--space-2) 12px var(--space-4);
+  padding: 14px var(--space-2) 12px var(--space-4);
   display: flex;
   align-items: center;
   gap: var(--space-1);
   border-bottom-left-radius: 32px;
 }
 .subbar .grow { flex-grow: 1; min-width: 0; }
+
+/* The first row of every screen is 44px tall and starts 14px down, so the
+   title's first line lands 25px from the top of the safe area on every page.
+   Home already did this by accident — its title lives inside the 44px
+   switcher; everywhere else the heading was a bare h1 sitting 11px higher,
+   close enough to the status bar for its blur to bleed into the header. */
+.topbar > h1.t-h3,
+.topbar-row h1.t-h3,
+.subbar > h1.t-h3 {
+  display: flex; align-items: center;
+  min-height: 44px;
+}
+/* two-line titles (card detail) cannot centre to the same first-line height,
+   so they are pushed down to it instead */
+.subbar .grow { padding-top: 9px; }
 
 .icon-btn {
   width: 44px; height: 44px;
@@ -176,6 +194,19 @@ input, select {
   flex: none;
 }
 .icon-btn.primary { color: var(--primary); }
+/* an action, not a floating glyph: the same soft disc the home-screen
+   round actions use, sized to the 44px tap target around it */
+.icon-btn.disc-soft { width: 44px; }
+.icon-btn.disc-soft::before {
+  content: "";
+  position: absolute;
+  width: 36px; height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+}
+.icon-btn.disc-soft svg { position: relative; }
+.icon-btn { position: relative; }
 
 .switcher {
   display: flex; align-items: center; gap: 6px;
@@ -791,19 +822,21 @@ a.article-card { color: var(--ink); }
   overflow: hidden;
 }
 
+/* The add screen hides the bottom nav, so the CTA owns the bottom edge
+   rather than floating 72px above it over nothing. */
 .cta-bar {
   position: fixed;
   inset-inline: 0;
-  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
   max-width: 390px;
   margin: 0 auto;
   background: var(--surface);
   border-top: 1px solid var(--surface-muted);
-  padding: 12px var(--space-4);
+  padding: 12px var(--space-4) calc(12px + env(safe-area-inset-bottom, 0px));
   z-index: 19;
 }
 @media (min-width: 768px) { .cta-bar { max-width: 480px; } }
-[data-view="add"] .screen-pad { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
+[data-view="add"] .screen-pad { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
 
 .form-field { margin-top: var(--space-5); }
 .form-row { margin-top: var(--space-5); display: flex; gap: var(--space-3); }
