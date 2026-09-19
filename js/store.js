@@ -42,6 +42,19 @@
   let holdings = loadJSON(KEY, []).filter((h) => h && h.uid && h.qty > 0);
   let snapshots = loadJSON(SNAP_KEY, []);
 
+  /* migration for the snapshot-pricing model (POCKETFOLIO-PRICING.md §4):
+     a manual value carries when it was set (so a newer snapshot supersedes
+     it) and whether the user pinned it. Legacy manual values get an ancient
+     valueSetAt so the first snapshot takes over — the common case is
+     "I typed a rough number, fix it for me later". */
+  let migrated = false;
+  for (const hh of holdings) {
+    if (hh.value != null && !hh.valueSetAt) { hh.valueSetAt = "1970-01-01T00:00:00Z"; migrated = true; }
+    if (hh.valuePinned === undefined) { hh.valuePinned = false; migrated = true; }
+    if (hh.addedAt === undefined) { hh.addedAt = 0; migrated = true; }
+  }
+  if (migrated) saveJSON(KEY, holdings);
+
   function getAll() {
     return holdings.slice();
   }
@@ -66,7 +79,10 @@
         existing.cost = pos.cost;
       }
       existing.qty = totalQty;
-      if (pos.value != null) existing.value = pos.value;
+      if (pos.value != null) {
+        existing.value = pos.value;
+        existing.valueSetAt = new Date().toISOString();
+      }
       if (pos.cert) existing.cert = pos.cert;
     } else {
       holdings.push({
@@ -81,8 +97,11 @@
         qty: pos.qty,
         cost: pos.cost ?? null,
         value: pos.value ?? null,
+        valueSetAt: pos.value != null ? new Date().toISOString() : null,
+        valuePinned: false,
         cert: pos.cert || null,
         slot: nextFreeSlot(),
+        addedAt: Date.now(),
       });
     }
     saveJSON(KEY, holdings);
@@ -97,6 +116,16 @@
     const h = holdings.find((x) => x.uid === uid);
     if (h) {
       h.value = value;
+      h.valueSetAt = value != null ? new Date().toISOString() : null;
+      if (value == null) h.valuePinned = false;
+      saveJSON(KEY, holdings);
+    }
+  }
+
+  function setValuePinned(uid, pinned) {
+    const h = holdings.find((x) => x.uid === uid);
+    if (h) {
+      h.valuePinned = !!pinned;
       saveJSON(KEY, holdings);
     }
   }
@@ -128,5 +157,5 @@
     } catch { /* storage unavailable */ }
   }
 
-  window.PocketfolioStore = { getAll, upsert, remove, setValueOverride, recordSnapshot, getSnapshots, clearAll };
+  window.PocketfolioStore = { getAll, upsert, remove, setValueOverride, setValuePinned, recordSnapshot, getSnapshots, clearAll };
 })();

@@ -304,35 +304,15 @@
     return out;
   }
 
-  /* ---------------- graded prices (PokemonPriceTracker) ----------------
-     Real eBay SOLD prices per PSA grade, from pokemonpricetracker.com —
-     free API key (100 credits/day): https://www.pokemonpricetracker.com/api
-     Stored per browser; without a key the app falls back to estimates. */
+  /* ---------------- personal worker (cert pages + news) ----------------
+     The Cloudflare Worker from proxy/prices-proxy.js. Prices no longer flow
+     through it (they come from the committed daily snapshot); it still serves
+     the PSA cert pages and the news feed, which have no CORS headers. */
 
-  const PPT_HOST = "https://www.pokemonpricetracker.com";
-  const GRADED_CACHE_KEY = "pocketfolio.gradedCache.v2"; // v2: v1 wrongly cached misses for 12h
-  const GRADED_TTL_MS = 12 * 3600 * 1000; // conserve the daily credit budget
-  /* a card with no sales data today won't grow any within the hour, and every
-     retry bills credits per returned row — retry misses twice a day at most */
-  const GRADED_MISS_TTL_MS = 12 * 3600 * 1000;
-  const GRADED_BACKOFF_KEY = "pocketfolio.gradedBackoffUntil";
-  const GRADED_BACKOFF_MS = 60 * 60 * 1000; // after a 429, pause all lookups for an hour
-
-  function pptKey() {
-    try { return localStorage.getItem("pocketfolio.pptApiKey") || null; } catch { return null; }
-  }
-
-  function hasGradedKey() {
-    return !!pptKey();
-  }
-
-  /* The price API blocks browser calls (no CORS headers), so a personal proxy
-     (see proxy/prices-proxy.js — a free Cloudflare Worker) forwards requests
-     when its URL is set. Without one, the direct call is still attempted. */
   function pptProxy() {
     try {
-      const p = (localStorage.getItem("pocketfolio.pptProxy") || "").trim().replace(/\/+$/, "");
-      return p || null;
+      const p = localStorage.getItem("pocketfolio.pptProxy");
+      return p ? p.replace(/\/+$/, "") : null;
     } catch { return null; }
   }
 
@@ -340,237 +320,52 @@
     return !!pptProxy();
   }
 
-  /* After the API answers 429 (rate/daily limit), every extra request is a
-     wasted credit — pause all lookups for an hour and serve cached values. */
-  function gradedBackoffUntil() {
+  /* ---------------- price snapshots (POCKETFOLIO-PRICING.md §6) ----------------
+     Prices are built once a day by CI and committed under data/. The app
+     fetches static JSON from Pages — no key in the client, no per-user quota.
+     Dated snapshots are immutable, so they cache forever in localStorage. */
+
+  const SNAP_BASE = "data";
+
+  function readSnapCache(date) {
     try {
-      const t = parseInt(localStorage.getItem(GRADED_BACKOFF_KEY) || "0", 10);
-      return Number.isFinite(t) && t > Date.now() ? t : null;
+      const raw = localStorage.getItem("pf:snapshot:" + date);
+      return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   }
 
-  function startGradedBackoff() {
-    try { localStorage.setItem(GRADED_BACKOFF_KEY, String(Date.now() + GRADED_BACKOFF_MS)); } catch { /* ok */ }
-  }
-
-  function loadGradedCache() {
+  function writeSnapCache(snap, isLatest) {
     try {
-      const raw = localStorage.getItem(GRADED_CACHE_KEY);
-      const obj = raw ? JSON.parse(raw) : {};
-      return obj && typeof obj === "object" ? obj : {};
-    } catch { return {}; }
+      localStorage.setItem("pf:snapshot:" + snap.date, JSON.stringify(snap));
+      if (isLatest) localStorage.setItem("pf:snapshot:latest-date", snap.date);
+    } catch { /* storage full — the app still works online */ }
   }
 
-  function saveGradedCache(obj) {
-    try { localStorage.setItem(GRADED_CACHE_KEY, JSON.stringify(obj)); } catch { /* ok */ }
-  }
-
-  /* The response shape is probed defensively: somewhere in the row there is an
-     object keyed psa10/psa9/… (docs say ebay.salesByGrade) whose values carry a
-     median/average price and a sale count under a few possible names. Rather
-     than assume the nesting, scan the row for the first psaN-keyed object. */
-  function findGradeBuckets(obj, depth) {
-    if (!obj || typeof obj !== "object" || (depth || 0) > 5) return null;
-    const keys = Object.keys(obj);
-    if (keys.some((k) => /^psa[\s_-]?(10|[1-9])$/i.test(k))) return obj;
-    for (const k of keys) {
-      const found = findGradeBuckets(obj[k], (depth || 0) + 1);
-      if (found) return found;
+  async function loadSnapshot(date /* optional */) {
+    if (date) {
+      const hit = readSnapCache(date);
+      if (hit) return hit;
     }
-    return null;
+    const file = date ? `${SNAP_BASE}/snapshots/${date}.json` : `${SNAP_BASE}/latest.json`;
+    const res = await fetch(file, { cache: "no-cache" });
+    if (!res.ok) throw new Error("snapshot unavailable");
+    const snap = await res.json();
+    writeSnapCache(snap, !date);
+    return snap;
   }
 
-  function extractGrades(row) {
-    const buckets = findGradeBuckets(row, 0);
-    if (!buckets) return null;
-    const out = {};
-    for (const [k, v] of Object.entries(buckets)) {
-      const m = k.toLowerCase().match(/^psa[\s_-]?(10|[1-9])$/);
-      if (!m) continue;
-      let price = null, count = null;
-      if (typeof v === "number") price = v > 0 ? v : null;
-      else if (v && typeof v === "object") {
-        price = firstPositive(v.medianPrice, v.median, v.median_price, v.averagePrice,
-                              v.avgPrice, v.average, v.avgSoldPrice, v.marketPrice,
-                              v.market, v.price, v.lastSoldPrice, v.latestPrice, v.value);
-        count = typeof v.count === "number" ? v.count :
-                typeof v.sales === "number" ? v.sales :
-                typeof v.salesCount === "number" ? v.salesCount : null;
-      }
-      if (price) out[m[1]] = { price, count };
-    }
-    return Object.keys(out).length ? out : null;
+  async function loadIndex() {
+    const res = await fetch(`${SNAP_BASE}/index.json`, { cache: "no-cache" });
+    if (!res.ok) throw new Error("index unavailable");
+    return res.json();
   }
 
-  function pptRowMatches(row, card) {
-    const num = row.number ?? row.cardNumber ?? row.localId ?? row.card?.number;
-    if (num != null && card.number != null) {
-      return normNumber(num) === normNumber(card.number);
-    }
-    const rn = (row.name ?? row.card?.name ?? "").toLowerCase();
-    return rn === card.name.toLowerCase();
-  }
-
-  /* daily call counter, surfaced in Settings ("שאילתות היום") — §4.5 of the
-     redesign brief sanctions counting calls per day in localStorage */
-  function pptCallsKey() {
-    const d = new Date();
-    return "pocketfolio.pptCalls." + d.getFullYear() + "-" +
-      String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-  }
-
-  function pptCreditsKey() {
-    return pptCallsKey().replace(".pptCalls.", ".pptCredits.");
-  }
-
-  function gradedCreditsToday() {
+  /** The last snapshot this browser saw — a cold offline start still renders. */
+  function cachedLatestSnapshot() {
     try {
-      const n = parseInt(localStorage.getItem(pptCreditsKey()) || "0", 10);
-      return Number.isFinite(n) ? n : 0;
-    } catch { return 0; }
-  }
-
-  function gradedCallsToday() {
-    try {
-      const n = parseInt(localStorage.getItem(pptCallsKey()) || "0", 10);
-      return Number.isFinite(n) ? n : 0;
-    } catch { return 0; }
-  }
-
-  async function pptFetch(params, key) {
-    try { localStorage.setItem(pptCallsKey(), String(gradedCallsToday() + 1)); } catch { /* ok */ }
-    const base = pptProxy() || PPT_HOST;
-    const res = await fetch(base + "/api/v2/cards?" + new URLSearchParams(params), {
-      headers: { accept: "application/json", Authorization: "Bearer " + key },
-    });
-    if (res.status === 401 || res.status === 403) {
-      const err = new Error("graded prices API key rejected (" + res.status + ")");
-      err.unauthorized = true;
-      throw err;
-    }
-    if (res.status === 429) {
-      startGradedBackoff();
-      const err = new Error("graded prices API rate/daily limit reached (429)");
-      err.rateLimited = true;
-      throw err;
-    }
-    if (!res.ok) throw new Error("graded prices API HTTP " + res.status);
-    const data = await res.json();
-    const rows = Array.isArray(data) ? data : (data.data ?? data.cards ?? data.results ?? []);
-    const list = Array.isArray(rows) ? rows : [];
-    /* PPT bills per returned row, doubled with includeEbay — track an
-       estimate so the settings meter measures the real budget */
-    try {
-      const spent = Math.max(1, list.length * (params.includeEbay ? 2 : 1));
-      localStorage.setItem(pptCreditsKey(), String(gradedCreditsToday() + spent));
-    } catch { /* ok */ }
-    return list;
-  }
-
-  function pptAttempts(card) {
-    const first = card.name.split(/\s+/)[0];
-    /* a cert-only slab's id ("psa-<cert>") is not a catalog set id */
-    const setId = card.provider !== "manual" && card.id.includes("-")
-      ? card.id.split("-")[0] : null;
-    const attempts = [];
-    /* Japanese prints live behind language=japanese — try that catalog first
-       so an English print's sales are never attributed to a JP slab.
-       Row caps trade credits (each returned row bills, double with
-       includeEbay) against match coverage: a set-scoped search holds few
-       printings so 5 rows suffice; a name-wide search needs a wider net. */
-    if (card.jp) attempts.push({ search: card.name, language: "japanese", limit: "10" });
-    if (setId) attempts.push({ search: first, setId, limit: "5" });
-    if (!card.jp) attempts.push({ search: card.name, limit: "10" });
-    return attempts.map((p) => ({ includeEbay: "true", ...p }));
-  }
-
-  /* Core lookup shared by gradedFor and the ⚙ self-test. `diag`, when given,
-     collects what happened for a human-readable report. Never returns another
-     card's prices: only rows matching this card's number (or name) are used. */
-  async function gradedLookup(card, key, diag) {
-    for (const params of pptAttempts(card)) {
-      let rows;
-      try {
-        rows = await pptFetch(params, key);
-      } catch (err) {
-        if (err.unauthorized || err.rateLimited) throw err;
-        if (diag) diag.errors.push(String(err.message || err));
-        continue;
-      }
-      if (diag) diag.attempts.push({ params, rows: rows.length });
-      if (!rows.length) continue;
-      const candidates = [
-        ...rows.filter((r) => pptRowMatches(r, card)),
-        ...rows.filter((r) =>
-          (r.name ?? r.card?.name ?? "").toLowerCase().includes(card.name.toLowerCase())),
-      ];
-      for (const row of candidates) {
-        const grades = extractGrades(row);
-        if (grades) {
-          if (diag) {
-            diag.matched = {
-              name: row.name ?? row.card?.name ?? null,
-              number: row.number ?? row.cardNumber ?? row.localId ?? row.card?.number ?? null,
-              setId: row.setId ?? row.set?.id ?? row.set?.name ?? null,
-              byNumber: rows.filter((r) => pptRowMatches(r, card)).includes(row),
-            };
-          }
-          return grades;
-        }
-      }
-      if (diag && candidates.length) diag.errors.push("matching rows had no PSA sale buckets");
-      if (diag && !candidates.length) diag.errors.push("no row matched " + card.name + " #" + (card.number || "?"));
-    }
-    return null;
-  }
-
-  /** eBay sold prices per PSA grade for one card, or null (no key / no data).
-      Hits cache 12h; misses retry after 10 min (so a fixed key recovers fast). */
-  async function gradedFor(card) {
-    const key = pptKey();
-    if (!key || !card) return null;
-
-    const cacheId = "g:" + card.id;
-    const cache = loadGradedCache();
-    const hit = cache[cacheId];
-    if (hit && Date.now() - hit.at < (hit.grades ? GRADED_TTL_MS : GRADED_MISS_TTL_MS)) {
-      return hit.grades;
-    }
-    // During a rate-limit backoff, serve even a stale hit — never spend credits.
-    if (gradedBackoffUntil()) return hit ? hit.grades : null;
-
-    try {
-      let grades = await gradedLookup(card, key, null);
-      /* an empty lookup never erases known medians — sales rows drift in and
-         out of the top results, and yesterday's eBay median beats a silent
-         fallback to the raw-market estimate */
-      if (!grades && hit && hit.grades) grades = hit.grades;
-      cache[cacheId] = { at: Date.now(), grades };
-      saveGradedCache(cache);
-      return grades;
-    } catch (err) {
-      if (hit && hit.grades) return hit.grades; // stale beats nothing
-      throw err;
-    }
-  }
-
-  /** One uncached live check with a structured verdict, for the ⚙ self-test. */
-  async function gradedTest(card) {
-    const key = pptKey();
-    if (!key) return { ok: false, reason: "no-key" };
-    const diag = { attempts: [], errors: [] };
-    try {
-      const grades = await gradedLookup(card, key, diag);
-      if (grades) return { ok: true, grades, diag };
-      if (!diag.attempts.length && diag.errors.length) {
-        return { ok: false, reason: "network", message: diag.errors[0], diag };
-      }
-      return { ok: false, reason: "no-data", diag };
-    } catch (err) {
-      if (err.unauthorized) return { ok: false, reason: "unauthorized", message: String(err.message) };
-      if (err.rateLimited) return { ok: false, reason: "rate-limited", message: String(err.message) };
-      return { ok: false, reason: "network", message: String(err.message || err), diag };
-    }
+      const d = localStorage.getItem("pf:snapshot:latest-date");
+      return d ? readSnapCache(d) : null;
+    } catch { return null; }
   }
 
   /* ---------------- TCG news ---------------- */
@@ -739,7 +534,7 @@
 
   window.PocketfolioAPI = {
     searchCards, getCard, getCards, lookupCert, certCardQuery,
-    gradedFor, gradedTest, hasGradedKey, hasGradedProxy, gradedBackoffUntil,
-    gradedCallsToday, gradedCreditsToday, fetchNews,
+    hasGradedProxy, fetchNews,
+    loadSnapshot, loadIndex, cachedLatestSnapshot,
   };
 })();

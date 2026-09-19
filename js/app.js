@@ -43,13 +43,11 @@
     sortAsc: "שווי ↑",
     active: "פעיל",
     backup: "גיבוי",
-    needsKey: "נדרש מפתח",
     estimated: "שווי משוער",
     rising: "עלייה",
     falling: "ירידה",
     notEnoughData: "אין מספיק נתונים עדיין",
     usedOf: (x, y) => `נוצלו ${x} מתוך ${y}`,
-    queriesOf: (n, m) => `${n} מתוך ${m}`,
     trendNote: "הגרף נבנה משמירה יומית של השווי — חיזרו מחר לנקודה נוספת.",
     removeHolding: "הסרה מהתיק",
     save: "שמירה",
@@ -75,6 +73,15 @@
     noCards: "לא נמצאו קלפים",
     newsEmpty: "אין חדשות חדשות",
     rawMarketShort: "שוק גולמי",
+    manualPinnedLine: "שווי שהזנת ידנית · נעוץ",
+    manualPendingLine: "שווי שהזנת ידנית · יוחלף בעדכון הבא",
+    autoUpdated: "עודכן אוטומטית",
+    noPrice: "אין נתוני מחיר לקלף הזה",
+    backToToday: "חזרה להיום",
+    pastViewing: (d) => `צפייה בנתונים מ-${d}`,
+    lastBuilt: (d, t) => `עודכן לאחרונה: ${d} בשעה ${t}`,
+    snapshotHow: "המחירים נבנים פעם ביום ונשמרים באפליקציה. אין צורך בחשבון או במפתח.",
+    noSnapshotYet: "אין עדכון עדיין",
   };
 
   const $ = (id) => document.getElementById(id);
@@ -82,7 +89,6 @@
   /* ---------- state ---------- */
 
   let cards = new Map();   // cardId -> latest normalized card
-  let graded = new Map();  // cardId -> { "10": {price, count}, … }
   let selectedCard = null;
   let gradeValue = "10";
   let qtyVal = 1;
@@ -93,6 +99,33 @@
   let cdRange = "3ח";
   let lastUpdatedAt = null;
   let refreshTimer = null;
+
+  /* snapshot pricing (POCKETFOLIO-PRICING.md): the app resolves values from
+     the committed daily snapshot; picking a past date turns the home screen
+     into a read-only view of that day. */
+  let snapIndex = null;    // data/index.json
+  let snapLatest = null;   // the newest snapshot
+  let snapActive = null;   // the snapshot values resolve from
+  let snapPrev = null;     // the one before snapActive (change blocks)
+  let activeDate = null;   // null = latest; else "YYYY-MM-DD" (past, read-only)
+  const snapMem = new Map();
+
+  const todayISO = () => new Date().toISOString().slice(0, 10);
+  const fmtDMY = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(2, 4)}`;
+  const fmtDM = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
+
+  async function getSnap(date) {
+    if (snapMem.has(date)) return snapMem.get(date);
+    const s = await API.loadSnapshot(date);
+    snapMem.set(date, s);
+    return s;
+  }
+  async function prevSnapOf(date) {
+    const i = snapIndex ? snapIndex.dates.indexOf(date) : -1;
+    const pd = i >= 0 ? snapIndex.dates[i + 1] : null;
+    if (!pd) return null;
+    try { return await getSnap(pd); } catch { return null; }
+  }
 
   /* ---------- settings (localStorage) ---------- */
 
@@ -161,11 +194,30 @@
 
   /* ---------- value hierarchy (unchanged) ---------- */
 
-  function valueEach(hh) {
-    if (hh.value != null) return { each: hh.value, src: "manual" };
-    if (hh.grade !== "raw") {
-      const g = graded.get(hh.cardId)?.[hh.grade];
-      if (g) return { each: g.price, src: "ebay", count: g.count };
+  /* Resolution order (POCKETFOLIO-PRICING.md §4):
+     pinned manual → snapshot built after the manual value was set → manual →
+     raw × grade multiplier (snapshot raw, else catalog raw) → no data.
+     Against a historic snapshot, a manual value counts only if it was already
+     in force when that snapshot was built. */
+  function valueEach(hh, snap = snapActive) {
+    const entry = snap?.cards?.[hh.cardId] || null;
+    const g = entry?.grades?.[hh.grade];
+    const manualAt = hh.valueSetAt ? Date.parse(hh.valueSetAt) : 0;
+    const builtAt = snap ? Date.parse(snap.builtAt) || 0 : 0;
+    const historic = !!snap && !!snapLatest && snap.date !== snapLatest.date;
+    const manual = hh.value != null && (!historic || manualAt <= builtAt);
+    if (manual && hh.valuePinned) return { each: hh.value, src: "manual-pinned" };
+    if (g != null && (!manual || builtAt > manualAt)) {
+      return {
+        each: g / 100, src: "snapshot", date: snap.date, builtAt: snap.builtAt,
+        superseded: manual && builtAt > manualAt, confidence: entry.confidence,
+      };
+    }
+    if (manual) return { each: hh.value, src: "manual-pending" };
+    const rawP = entry?.grades?.raw;
+    if (rawP != null) {
+      if (hh.grade === "raw") return { each: rawP / 100, src: "raw" };
+      return { each: (rawP / 100) * (GRADE_MULT[hh.grade] ?? 1), src: "est" };
     }
     const price = cards.get(hh.cardId)?.price;
     if (price) {
@@ -175,20 +227,44 @@
     return null;
   }
 
-  function positions() {
+  function positions(snap = snapActive) {
+    /* in a past view, holdings bought after the selected date are hidden */
+    const cutoff = activeDate ? Date.parse(activeDate + "T23:59:59") : null;
     return Store.getAll()
+      .filter((hh) => !cutoff || (hh.addedAt || 0) <= cutoff)
       .map((hh) => {
-        const v = valueEach(hh);
+        const v = valueEach(hh, snap);
         return { h: hh, val: v, total: v ? v.each * hh.qty : 0 };
       })
       .sort((a, b) => (sortDesc ? b.total - a.total : a.total - b.total));
   }
 
-  function sourceLabel(src, grade) {
-    if (src === "manual") return T.srcManual;
-    if (src === "ebay") return grade ? T.srcEbayGrade(grade) : T.srcEbay;
-    if (src === "raw") return T.srcRaw;
+  /* one line under a value — a number whose origin is invisible is a number
+     the user cannot trust (POCKETFOLIO-PRICING.md §4) */
+  function sourceLine(val, grade) {
+    if (!val) return T.noPrice;
+    if (val.src === "manual-pinned") return T.manualPinnedLine;
+    if (val.src === "manual-pending") return T.manualPendingLine;
+    if (val.src === "snapshot") {
+      const d = fmtDM(val.date);
+      return grade && grade !== "raw"
+        ? `${T.asOf} ${d} · ${T.srcEbayGrade(grade)}`
+        : `${T.asOf} ${d} · ${T.rawMarket}`;
+    }
+    if (val.src === "raw") return T.rawMarket;
     return T.srcEst;
+  }
+
+  /* portfolio change between the active snapshot and the one before it */
+  function snapDelta(posList, snap, prev) {
+    if (!snap || !prev) return null;
+    let cur = 0, was = 0, any = false;
+    for (const p of posList) {
+      const b = valueEach(p.h, prev);
+      if (p.val && b) { cur += p.val.each * p.h.qty; was += b.each * p.h.qty; any = true; }
+    }
+    if (!any || was <= 0) return null;
+    return { amt: cur - was, pct: ((cur - was) / was) * 100 };
   }
 
   /* daily change: live value vs the last snapshot from an earlier day */
@@ -308,7 +384,7 @@
        end at the value row) */
     if (hh.grade !== "raw") {
       const r3 = h("span", "r3");
-      const raw = cards.get(hh.cardId)?.price;
+      const raw = rawPriceOf(hh.cardId);
       r3.appendChild(h("span", "num", `${T.lastPrice} ${raw ? show(fmtMoney(raw.value, raw.currency)) : "— —"}`));
       r3.appendChild(h("span", null, T.changeBuy));
       a.appendChild(r3);
@@ -316,10 +392,67 @@
     return a;
   }
 
+  /* ---------- date carousel (POCKETFOLIO-PRICING.md §7) ---------- */
+
+  let dateStripOpen = false;
+
+  function renderDateStrip() {
+    const host = $("date-strip");
+    host.hidden = !dateStripOpen || !snapIndex || !snapIndex.dates.length;
+    if (host.hidden) return;
+    host.replaceChildren();
+    const selected = activeDate || snapIndex.dates[0];
+    for (const d of snapIndex.dates) {
+      const b = h("button", "date-chip");
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(d === selected));
+      b.appendChild(h("span", "dw",
+        new Intl.DateTimeFormat("he-IL", { weekday: "short" }).format(new Date(d + "T12:00:00")))); 
+      b.appendChild(h("span", "dd num", String(parseInt(d.slice(8, 10), 10))));
+      if (d === todayISO() && d !== selected) b.appendChild(h("span", "dot"));
+      b.addEventListener("click", () => selectDate(d));
+      host.appendChild(b);
+    }
+  }
+
+  async function selectDate(date) {
+    try {
+      const latest = snapIndex?.dates?.[0];
+      if (!date || date === latest) {
+        activeDate = null;
+        snapActive = snapLatest;
+        snapPrev = latest ? await prevSnapOf(latest) : null;
+      } else {
+        snapActive = await getSnap(date);
+        snapPrev = await prevSnapOf(date);
+        activeDate = date;
+      }
+    } catch { return; }
+    renderAll();
+  }
+
   /* ---------- HOME ---------- */
 
   function renderHome(pos) {
-    $("date-chip").textContent = fmtDateChip(new Date());
+    /* the date label is the snapshot indicator (§7); a historical date is
+       blue, per the Leumi rule */
+    const dc = $("date-chip");
+    const shownDate = activeDate || snapLatest?.date || null;
+    if (shownDate && shownDate !== todayISO()) {
+      dc.textContent = fmtDMY(shownDate);
+      dc.classList.add("chip--past");
+    } else {
+      dc.textContent = fmtDateChip(new Date());
+      dc.classList.remove("chip--past");
+    }
+    renderDateStrip();
+
+    /* past view: read-only — actions inert, a return strip under the header */
+    $("past-strip").hidden = !activeDate;
+    if (activeDate) $("past-strip-label").textContent = T.pastViewing(fmtDMY(activeDate));
+    document.querySelectorAll("#round-actions .round-action")
+      .forEach((el) => el.classList.toggle("inert", !!activeDate));
+
     const empty = !Store.getAll().length;
     $("dashboard").hidden = empty;
     $("empty-state").hidden = !empty;
@@ -331,16 +464,19 @@
 
     const valued = pos.filter((p) => p.val);
     const total = valued.reduce((s, p) => s + p.total, 0);
-    const ebayCount = valued.filter((p) => p.val.src === "ebay").length;
-    const manualOnly = valued.length && valued.every((p) => p.val.src === "manual");
+    const snapCount = valued.filter((p) => p.val.src === "snapshot").length;
+    const manualOnly = valued.length && valued.every((p) => p.val.src.startsWith("manual"));
 
     $("kpi-total").textContent = valued.length ? show(fmtUSD(total, false)) : "— —";
-    const time = fmtTime(lastUpdatedAt ? new Date(lastUpdatedAt) : new Date());
-    const src = manualOnly ? T.srcManual : ebayCount > 0 ? T.srcEbay : T.srcEst;
-    $("kpi-total-note").textContent = `${T.asOf} ${time} · ${src}`;
+    const when = snapActive ? fmtDM(snapActive.date)
+      : fmtTime(lastUpdatedAt ? new Date(lastUpdatedAt) : new Date());
+    const src = manualOnly ? T.srcManual : snapCount > 0 ? T.srcEbay : T.srcEst;
+    $("kpi-total-note").textContent = `${T.asOf} ${when} · ${src}`;
 
     setPillPair($("kpi-day-pill"), $("kpi-day-amount"),
-      valued.length ? dailyDelta(total, (s) => s.total) : null);
+      valued.length
+        ? (snapDelta(valued, snapActive, snapPrev) ?? dailyDelta(total, (s) => s.total))
+        : null);
 
     const plPos = pos.filter((p) => p.h.cost != null && p.val);
     if (plPos.length) {
@@ -593,13 +729,25 @@
     vl.appendChild(h("span", "t-value-lg num", p.val ? show(fmtUSD(p.total, false)) : "— —"));
     vl.appendChild(h("span", "t-text2 muted", `· ${hh.qty} ${T.units}`));
     txt.appendChild(vl);
-    const time = fmtTime(lastUpdatedAt ? new Date(lastUpdatedAt) : new Date());
-    txt.appendChild(h("div", "t-text4 faint", p.val
-      ? `${T.asOf} ${time} · ${sourceLabel(p.val.src, hh.grade !== "raw" ? hh.grade : null)}`
-      : T.unavailable));
-    const chip = h("span", "chip sm num", fmtDateChip(new Date()));
+    const srcRow = h("div", "t-text4 faint");
+    srcRow.appendChild(document.createTextNode(sourceLine(p.val, hh.grade)));
+    /* a snapshot that just superseded a manual value says so for 24h */
+    if (p.val && p.val.src === "snapshot" && p.val.superseded &&
+        Date.now() - Date.parse(p.val.builtAt) < 24 * 3600 * 1000) {
+      const auto = h("span", "tag tag--psa", T.autoUpdated);
+      auto.style.marginInlineStart = "6px";
+      srcRow.appendChild(auto);
+    }
+    txt.appendChild(srcRow);
+    const chipDate = snapActive?.date || todayISO();
+    const chip = h("span", "chip sm num",
+      chipDate === todayISO() ? fmtDateChip(new Date()) : fmtDMY(chipDate));
     chip.style.marginTop = "10px";
     txt.appendChild(chip);
+    /* pin: the user insists on their own number (visible once one exists) */
+    const pin = $("cd-pin");
+    pin.hidden = hh.value == null;
+    pin.setAttribute("aria-pressed", String(!!hh.valuePinned));
     head.appendChild(txt);
     head.appendChild(thumbEl(hh.cardId, null, "detail-figure"));
     vc.appendChild(head);
@@ -663,14 +811,38 @@
     tc.appendChild(chartHost);
     const days = (RANGES.find((r) => r[0] === cdRange) || [null, null])[1];
     const cutoff = days ? Date.now() - days * 864e5 : 0;
-    const points = Store.getSnapshots()
+    /* the trend is our own snapshot series (§6) — snapshots are immutable,
+       so they cache hard; local value-history remains the fallback */
+    const localPts = Store.getSnapshots()
       .filter((s) => s.t >= cutoff && s.byUid && s.byUid[hh.uid] != null)
       .map((s) => ({ t: s.t, v: s.byUid[hh.uid] }));
-    if (points.length >= 2 && !hideValues()) {
-      Charts.renderLineChart(chartHost, points, (v, compact) => fmtUSD(v, compact),
-        { compact: true, label: `${T.trend} · ${hh.name}` });
-    } else {
-      chartHost.appendChild(h("div", "t-text4 faint", T.trendNote));
+    const draw = (points) => {
+      chartHost.replaceChildren();
+      if (points.length >= 2 && !hideValues()) {
+        Charts.renderLineChart(chartHost, points, (v, compact) => fmtUSD(v, compact),
+          { compact: true, label: `${T.trend} · ${hh.name}` });
+      } else {
+        chartHost.appendChild(h("div", "t-text4 faint", T.trendNote));
+      }
+    };
+    draw(localPts);
+    if (snapIndex && snapIndex.dates.length >= 2) {
+      const uid = hh.uid;
+      (async () => {
+        const pts = [];
+        for (const d of snapIndex.dates.slice(0, 30)) {
+          const t = Date.parse(d + "T12:00:00");
+          if (cutoff && t < cutoff) break;
+          try {
+            const v = valueEach(hh, await getSnap(d));
+            if (v && (v.src === "snapshot" || v.src === "raw" || v.src === "est")) {
+              pts.push({ t, v: v.each * hh.qty });
+            }
+          } catch { /* missing date file — skip */ }
+        }
+        pts.reverse();
+        if (currentUid === uid && pts.length >= 2) draw(pts);
+      })();
     }
     body.appendChild(tc);
 
@@ -683,7 +855,7 @@
       dc.appendChild(row);
     };
     kv(T.costPerUnit, h("span", "v", hh.cost != null ? show(fmtUSD(hh.cost, false)) : "— —"));
-    const raw = cards.get(hh.cardId)?.price;
+    const raw = rawPriceOf(hh.cardId);
     kv(T.rawMarket, h("span", "v", raw ? show(fmtMoney(raw.value, raw.currency)) : "— —"));
     if (hh.cert) {
       const a = h("a", "v num", hh.cert);
@@ -709,31 +881,30 @@
   /* ---------- SETTINGS ---------- */
 
   function renderSettings() {
-    const keySet = API.hasGradedKey();
+    /* no client key and no per-user quota — prices come from the daily
+       snapshot (§8) */
     const ebayState = $("source-ebay-state");
     const estState = $("source-est-state");
     ebayState.replaceChildren();
-    if (keySet) {
+    if (snapLatest) {
       ebayState.appendChild(h("span", "status-pill", T.active));
       estState.className = "t-text4 faint";
       estState.textContent = T.backup;
     } else {
-      ebayState.appendChild(h("span", "t-text4 faint", T.needsKey));
+      ebayState.appendChild(h("span", "t-text4 faint", T.noSnapshotYet));
       estState.replaceChildren(h("span", "status-pill", T.active));
       estState.className = "";
     }
 
-    const keyInput = $("api-key-input");
-    const storedKey = lsGet("pocketfolio.pptApiKey") || "";
-    keyInput.placeholder = storedKey
-      ? "מוגדר · ••••" + storedKey.slice(-4)
-      : "הדבקת מפתח מ-pokemonpricetracker.com";
-    $("proxy-input").value = lsGet("pocketfolio.pptProxy") || "";
+    const upd = $("snapshot-updated");
+    if (snapLatest) {
+      const b = new Date(snapLatest.builtAt);
+      upd.textContent = T.lastBuilt(fmtDM(snapLatest.date), fmtTime(b));
+    } else {
+      upd.textContent = T.noSnapshotYet;
+    }
 
-    /* the daily budget is credits (billed per returned row), not requests */
-    const credits = (typeof API.gradedCreditsToday === "function") ? API.gradedCreditsToday() : 0;
-    $("quota-label").textContent = `~${T.queriesOf(credits, 100)}`;
-    $("quota-bar").style.width = Math.min(100, credits) + "%";
+    $("proxy-input").value = lsGet("pocketfolio.pptProxy") || "";
 
     $("toggle-refresh").setAttribute("aria-pressed", String(refreshOnOpen()));
     $("toggle-hide").setAttribute("aria-pressed", String(hideValues()));
@@ -832,20 +1003,40 @@
     $("add-btn").disabled = !selectedCard;
   }
 
+  /* raw (single) price: the snapshot's figure when it has one, else catalog */
+  function rawPriceOf(cardId) {
+    const p = snapActive?.cards?.[cardId]?.grades?.raw;
+    if (p != null) return { value: p / 100, currency: "USD" };
+    return cards.get(cardId)?.price || null;
+  }
+
   function updateEstimate() {
     const card = $("est-card");
-    if (!selectedCard || !selectedCard.price) { card.hidden = true; return; }
-    const raw = selectedCard.price;
-    let each, note;
-    if (gradeValue === "raw") {
-      each = raw.value;
-      note = `מחושב לפי ${T.srcRaw}`;
+    if (!selectedCard) { card.hidden = true; return; }
+    /* the snapshot's grade median beats any multiplier estimate */
+    const snapG = snapLatest?.cards?.[selectedCard.id]?.grades?.[gradeValue];
+    let each, note, currency = "USD";
+    if (snapG != null) {
+      each = snapG / 100;
+      note = gradeValue === "raw"
+        ? `מחושב לפי ${T.rawMarket}`
+        : `מחושב לפי ${T.srcEbayGrade(gradeValue)}`;
+    } else if (selectedCard.price) {
+      const raw = selectedCard.price;
+      currency = raw.currency;
+      if (gradeValue === "raw") {
+        each = raw.value;
+        note = `מחושב לפי ${T.srcRaw}`;
+      } else {
+        const mult = GRADE_MULT[gradeValue] ?? 1;
+        each = raw.value * mult;
+        note = `מחושב לפי ${T.srcEst} · ×${mult} לדירוג ${gradeValue}`;
+      }
     } else {
-      const mult = GRADE_MULT[gradeValue] ?? 1;
-      each = raw.value * mult;
-      note = `מחושב לפי ${T.srcEst} · ×${mult} לדירוג ${gradeValue}`;
+      card.hidden = true;
+      return;
     }
-    $("est-value").textContent = fmtMoney(each * qtyVal, raw.currency);
+    $("est-value").textContent = fmtMoney(each * qtyVal, currency);
     $("est-note").textContent = note;
     card.hidden = false;
   }
@@ -1053,10 +1244,43 @@
     await refresh();
   });
 
-  /* ---------- refresh (data pipeline unchanged) ---------- */
+  /* ---------- refresh: catalog + the daily snapshot ---------- */
+
+  async function loadSnapshots() {
+    try {
+      snapLatest = await API.loadSnapshot();
+      snapMem.set(snapLatest.date, snapLatest);
+      try { snapIndex = await API.loadIndex(); } catch { /* index optional */ }
+      if (!activeDate) {
+        snapActive = snapLatest;
+        snapPrev = await prevSnapOf(snapLatest.date);
+      }
+      lastUpdatedAt = Date.parse(snapLatest.builtAt) || Date.now();
+      /* stale = built more than 48h ago (§6) */
+      if (Date.now() - Date.parse(snapLatest.builtAt) > 48 * 3600 * 1000) {
+        showBanner("מוצגים הערכים האחרונים שנשמרו.");
+      } else {
+        hideBanner();
+      }
+      return true;
+    } catch {
+      if (!snapLatest) {
+        const cached = API.cachedLatestSnapshot();
+        if (cached) {
+          snapLatest = cached;
+          snapMem.set(cached.date, cached);
+          if (!activeDate) snapActive = cached;
+          lastUpdatedAt = Date.parse(cached.builtAt) || null;
+        }
+      }
+      if (snapLatest) showBanner("מוצגים הערכים האחרונים שנשמרו.");
+      return false;
+    }
+  }
 
   async function refresh() {
     const holdings = Store.getAll();
+    await loadSnapshots();
     if (!holdings.length) { renderAll(); return; }
 
     try {
@@ -1069,40 +1293,7 @@
       }
       const fresh = refs.length ? await API.getCards(refs) : [];
       for (const c of fresh) cards.set(c.id, c);
-
-      if (fresh.length || !refs.length) {
-        hideBanner();
-        lastUpdatedAt = Date.now();
-      } else {
-        showBanner("מוצגים הערכים האחרונים שנשמרו.");
-      }
-
-      if (API.hasGradedKey()) {
-        let keyRejected = false;
-        /* eBay medians are looked up for every held card — including
-           cert-only ("manual") slabs, whose name/number come from the PSA
-           cert and can still match a sales row. */
-        const gradedIds = [...new Set(holdings.map((hh) => hh.cardId))];
-        await Promise.all(gradedIds.map(async (id) => {
-          const card = cards.get(id);
-          if (!card) return;
-          try {
-            const g = await API.gradedFor(card);
-            if (g) graded.set(id, g);
-          } catch (err) {
-            if (err.unauthorized) keyRejected = true;
-          }
-        }));
-        const backoff = API.gradedBackoffUntil();
-        if (keyRejected) {
-          showBanner("מפתח ה-API נדחה.");
-        } else if (backoff && graded.size === 0) {
-          showBanner(`חריגה ממכסת ה-API — ניסיון נוסף ב-${fmtTime(new Date(backoff))}.`);
-        }
-      }
-    } catch {
-      showBanner("מוצגים הערכים האחרונים שנשמרו.");
-    }
+    } catch { /* catalog unreachable — persisted metadata still renders */ }
 
     /* record today's snapshot for the value-over-time data */
     const pos = positions();
@@ -1119,63 +1310,10 @@
   /* ---------- settings events ---------- */
 
   $("api-save-btn").addEventListener("click", () => {
-    const key = $("api-key-input").value.trim();
     const proxy = $("proxy-input").value.trim();
-    if (key) lsSet("pocketfolio.pptApiKey", key);
     if (proxy) lsSet("pocketfolio.pptProxy", proxy.replace(/\/+$/, ""));
-    else if ($("proxy-input").value === "" && lsGet("pocketfolio.pptProxy")) lsDel("pocketfolio.pptProxy");
-    $("api-key-input").value = "";
-    lsDel("pocketfolio.gradedCache.v2");
-    graded.clear();
+    else if (lsGet("pocketfolio.pptProxy")) lsDel("pocketfolio.pptProxy");
     renderSettings();
-    refresh();
-  });
-
-  $("test-api-btn").addEventListener("click", async () => {
-    if (!API.hasGradedKey()) {
-      window.alert("אין עדיין מפתח API.\n\nמפתח חינמי (100 שאילתות ביום) ב-pokemonpricetracker.com → API.");
-      return;
-    }
-    const hh = Store.getAll().find((x) => (x.provider || "ptcgio") !== "manual" && cards.get(x.cardId));
-    if (!hh) {
-      window.alert("הוסיפו קלף לתיק ואז הריצו את הבדיקה — היא נעשית עם קלף אמיתי מהתיק.");
-      return;
-    }
-    const card = cards.get(hh.cardId);
-    const r = await API.gradedTest(card);
-
-    /* the state summary answers "what am I actually seeing right now?" */
-    const gradedPos = positions().filter((p) => p.h.grade !== "raw");
-    const byEbay = gradedPos.filter((p) => p.val && p.val.src === "ebay").length;
-    const backoffAt = API.gradedBackoffUntil();
-    let state = `\n\nמצב התיק: ${byEbay} מתוך ${gradedPos.length} הקלפים המדורגים מוצגים לפי חציון eBay; השאר לפי הערכה מהשער הגולמי או שווי ידני.`;
-    if (backoffAt) state += `\nהמערכת בהשהיה אחרי 429 — קריאות חדשות יתחדשו ב-${fmtTime(new Date(backoffAt))}.`;
-
-    if (r.ok) {
-      const lines = Object.entries(r.grades)
-        .map(([g, v]) => `PSA ${g}: $${v.price}${v.count ? ` (${v.count} מכירות)` : ""}`).join("\n");
-      const m = r.diag && r.diag.matched;
-      const src = m
-        ? `\n\nהנתונים נלקחו מהשורה: ${m.name || "?"} #${m.number || "?"}${m.setId ? ` (${m.setId})` : ""} — התאמה ${m.byNumber ? "לפי מספר הקלף" : "לפי שם בלבד (פחות מדויק!)"}`
-        : "";
-      window.alert(`✓ ה-API עובד! חציוני מכירות eBay עבור ${card.name} #${card.number || "?"}:\n\n${lines}${src}${state}`);
-    } else if (r.reason === "unauthorized") {
-      window.alert("✗ המפתח נדחה (401/403). בדקו אותו ב-pokemonpricetracker.com והזינו מחדש." + state);
-    } else if (r.reason === "rate-limited") {
-      window.alert("⚠ חריגה ממכסה (429) — אבל זה סימן טוב: ה-Proxy והמפתח עובדים. המכסה מתאפסת יומית ב-03:00 שעון ישראל." + state);
-    } else if (r.reason === "network") {
-      window.alert(API.hasGradedProxy()
-        ? `✗ לא ניתן להגיע ל-API דרך ה-Proxy.\n\nשגיאה: ${r.message}\n\nבדקו שה-Worker פעיל ושהכתובת נכונה.`
-        : "✗ ה-API חוסם קריאות מדפדפן (CORS) ולכן דרוש Proxy אישי חינמי (~5 דקות הקמה).\n\nההוראות המלאות בסעיף Graded prices proxy ב-README של המאגר.");
-    } else {
-      const detail = (r.diag && r.diag.attempts.length
-        ? "\n\nמה נוסה:\n" + r.diag.attempts.map((a) =>
-            `· ${new URLSearchParams(a.params).toString()} → ${a.rows} שורות`).join("\n")
-        : "") +
-        (r.diag && r.diag.errors.length ? "\n" + r.diag.errors.map((e) => "· " + e).join("\n") : "");
-      window.alert(`✗ ה-API זמין והמפתח תקין, אבל לא נמצאו נתוני מכירות עבור ${card.name} #${card.number || "?"}.${detail}${state}`);
-    }
-    refresh();
   });
 
   $("toggle-refresh").addEventListener("click", () => {
@@ -1265,10 +1403,25 @@
 
   $("refresh-btn").addEventListener("click", () => refresh());
 
-  /* TODO: portfolio switcher and date travel are rendered but inert —
-     see POCKETFOLIO-REDESIGN.md §10 */
+  /* TODO: portfolio switcher is rendered but inert — POCKETFOLIO-REDESIGN.md §10 */
   $("portfolio-switcher").addEventListener("click", () => {});
-  $("date-change-btn").addEventListener("click", () => {});
+
+  /* date travel (POCKETFOLIO-PRICING.md §7) */
+  $("date-change-btn").addEventListener("click", () => {
+    dateStripOpen = !dateStripOpen;
+    renderDateStrip();
+  });
+  $("past-strip-back").addEventListener("click", () => {
+    if (snapIndex?.dates?.length) selectDate(snapIndex.dates[0]);
+  });
+
+  /* pin / unpin the manual value (POCKETFOLIO-PRICING.md §4) */
+  $("cd-pin").addEventListener("click", () => {
+    const hh = Store.getAll().find((x) => x.uid === currentUid);
+    if (!hh || hh.value == null) return;
+    Store.setValuePinned(hh.uid, !hh.valuePinned);
+    renderAll();
+  });
 
   /* ---------- init ---------- */
 
@@ -1310,10 +1463,21 @@
     }, { passive: true });
   }
 
+  /* a cold offline start renders from the last snapshot this browser saw */
+  {
+    const cached = API.cachedLatestSnapshot();
+    if (cached) {
+      snapLatest = cached;
+      snapActive = cached;
+      snapMem.set(cached.date, cached);
+      lastUpdatedAt = Date.parse(cached.builtAt) || null;
+    }
+  }
+
   buildGradePills();
   route();
   if (refreshOnOpen()) refresh();
-  else renderAll();
+  else { loadSnapshots().then(renderAll); renderAll(); }
 
   clearInterval(refreshTimer);
   refreshTimer = setInterval(() => {

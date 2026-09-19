@@ -45,11 +45,18 @@
         <button type="button" class="text-btn" id="date-change-btn">שינוי תאריך</button>
       </div>
 
+      <div id="date-strip" class="date-strip" hidden></div>
+
+      <div id="past-strip" class="past-strip" hidden>
+        <span id="past-strip-label" class="num"></span>
+        <button type="button" class="text-btn" id="past-strip-back">חזרה להיום</button>
+      </div>
+
       <div id="banner" class="banner-stale" hidden role="status">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
         <div>
           <div class="b-title">הנתונים אינם מתעדכנים כרגע</div>
-          <div class="b-body"><span id="banner-msg">מוצגים הערכים האחרונים שנשמרו.</span> <a href="#settings">בדיקת מפתח ה-API</a></div>
+          <div class="b-body"><span id="banner-msg">מוצגים הערכים האחרונים שנשמרו.</span> <a href="https://github.com/bbooaz34/pocketfolio/actions/workflows/snapshot.yml" target="_blank" rel="noopener">סטטוס העדכון היומי</a></div>
         </div>
       </div>
 
@@ -85,7 +92,7 @@
           </div>
         </section>
 
-        <div class="round-actions">
+        <div class="round-actions" id="round-actions">
           <a href="#add" class="round-action">
             <span class="disc">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--surface)" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -240,26 +247,19 @@
         </div>
       </section>
 
-      <h2 class="t-text1-m" style="margin:18px 0 8px">מפתח API</h2>
+      <section class="card mt14">
+        <div class="t-text2-m num" id="snapshot-updated"></div>
+        <p class="t-text4 faint" style="margin:6px 0 0">המחירים נבנים פעם ביום ונשמרים באפליקציה. אין צורך בחשבון או במפתח.</p>
+      </section>
+
+      <h2 class="t-text1-m" style="margin:18px 0 8px">Worker אישי <span class="faint t-text4">· תעודות PSA וחדשות</span></h2>
       <section class="card">
-        <label for="api-key-input" class="field-label">Pokémon Price Tracker</label>
-        <div class="input-wrap fill">
-          <input id="api-key-input" type="text" autocomplete="off" spellcheck="false" />
-        </div>
-        <label for="proxy-input" class="field-label" style="margin-top:14px">כתובת Proxy למחירים <span class="faint">· ראו README</span></label>
+        <label for="proxy-input" class="field-label">כתובת ה-Worker <span class="faint">· ראו README</span></label>
         <div class="input-wrap fill">
           <input id="proxy-input" type="text" dir="ltr" placeholder="https://…workers.dev" autocomplete="off" spellcheck="false" />
         </div>
         <div class="settings-actions">
           <button type="button" class="btn-outline" id="api-save-btn">שמירה</button>
-          <button type="button" class="btn-outline" id="test-api-btn">בדיקת חיבור</button>
-        </div>
-        <div class="mt14" style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
-          <span class="muted">קרדיטים היום (מוערך)</span>
-          <span class="num" style="font-weight:500" id="quota-label">0 מתוך 100</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="quota-bar" style="width:0%"></div>
         </div>
       </section>
 
@@ -362,6 +362,9 @@
         <div class="t-subtitle" id="cd-name"></div>
         <div class="t-text4 faint" id="cd-sub"></div>
       </div>
+      <button type="button" class="icon-btn" id="cd-pin" aria-label="נעיצת השווי הידני" aria-pressed="false" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 15v5"/></svg>
+      </button>
       <button type="button" class="icon-btn primary" id="cd-edit" aria-label="עדכון שווי ידני">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 6.5l3 3"/></svg>
       </button>

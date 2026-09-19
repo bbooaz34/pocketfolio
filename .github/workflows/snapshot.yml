@@ -1,0 +1,31 @@
+# Daily price snapshot (POCKETFOLIO-PRICING.md §5).
+# Prices data/watchlist.json via PriceCharting (+ PPT fallback) and commits
+# the result under data/ — the push to main triggers the Pages mirror, so
+# the app picks the new snapshot up automatically.
+#
+# Secrets: PRICECHARTING_TOKEN (optional but primary), PPT_TOKEN (fallback).
+name: price snapshot
+on:
+  schedule: [{ cron: '0 4 * * *' }]   # 04:00 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/build-snapshot.mjs
+        env:
+          PC_TOKEN:  ${{ secrets.PRICECHARTING_TOKEN }}
+          PPT_TOKEN: ${{ secrets.PPT_TOKEN }}
+      - run: node scripts/prune-snapshots.mjs
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'prices: snapshot ${{ github.run_id }}'
+          file_pattern: 'data/**'
