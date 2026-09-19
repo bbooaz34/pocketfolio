@@ -1,94 +1,8 @@
 {
  "date": "2026-09-19",
- "builtAt": "2026-09-19T14:02:29.201Z",
+ "builtAt": "2026-09-19T19:38:03.808Z",
  "source": "ppt",
  "cards": {
-  "gym2-118@jp": {
-   "pcId": null,
-   "tcgPlayerId": "614817",
-   "name": "Misty's Tears",
-   "set": "Hanada City Gym",
-   "number": null,
-   "grades": {
-    "1": 9733,
-    "2": 5100,
-    "3": 4300,
-    "4": 5900,
-    "5": 5650,
-    "6": 10106,
-    "7": 10450,
-    "8": 14000,
-    "9": 26100,
-    "10": 157550,
-    "raw": 14954
-   },
-   "metrics": {
-    "1": {
-     "confidence": null,
-     "trend": "down",
-     "dailyVolume7Day": 0.7142857142857143,
-     "salesCount": null
-    },
-    "2": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "3": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
-    },
-    "4": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "5": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
-    },
-    "6": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0.2857142857142857,
-     "salesCount": null
-    },
-    "7": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "8": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": null
-    },
-    "9": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0.5714285714285714,
-     "salesCount": null
-    },
-    "10": {
-     "confidence": null,
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
-    }
-   },
-   "salesVelocityWeekly": null,
-   "salesVolume": null,
-   "confidence": "low",
-   "pricedOn": "2026-09-19"
-  },
   "base1-4": {
    "pcId": null,
    "tcgPlayerId": "42479",
@@ -96,76 +10,148 @@
    "set": "Base",
    "number": "4",
    "grades": {
-    "1": 29548,
-    "2": 25000,
-    "3": 28000,
-    "4": 29000,
+    "1": 33779,
+    "2": 22750,
+    "3": 29984,
+    "4": 23812,
     "5": 32500,
-    "6": 35000,
-    "7": 45500,
-    "8": 70500,
-    "9": 145000,
+    "6": 29750,
+    "7": 50000,
+    "8": 85000,
+    "9": 134500,
     "raw": 51290
    },
    "metrics": {
     "1": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-07-23",
+     "spread": {
+      "low": 16062,
+      "high": 42500
+     }
     },
     "2": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 6,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 275,
+     "lastSaleDate": "2026-06-19",
+     "spread": {
+      "low": 22750,
+      "high": 27000
+     }
     },
     "3": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 11,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 21250,
+      "high": 38000
+     }
     },
     "4": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "low",
      "trend": "stable",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 27,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-25",
+     "spread": {
+      "low": 19050,
+      "high": 37500
+     }
     },
     "5": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 32,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-03",
+     "spread": {
+      "low": 22750,
+      "high": 54999
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 39,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 27000,
+      "high": 40500
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "stable",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 40,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-04",
+     "spread": {
+      "low": 34000,
+      "high": 50399
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 27,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-12",
+     "spread": {
+      "low": 32600,
+      "high": 85000
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "down",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 3,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 353,
+     "lastSaleDate": "2026-07-30",
+     "spread": {
+      "low": 140000,
+      "high": 150000
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 5.5813953488372094,
    "salesVolume": null,
-   "confidence": "low",
+   "confidence": "medium",
    "pricedOn": "2026-09-19"
   },
   "base1-2": {
@@ -175,76 +161,148 @@
    "set": "Base",
    "number": "2",
    "grades": {
-    "2": 9100,
-    "3": 8000,
-    "4": 9999,
-    "5": 11125,
-    "6": 14475,
-    "7": 19000,
-    "8": 31791,
-    "9": 80000,
-    "10": 795000,
+    "2": 12800,
+    "3": 10175,
+    "4": 9350,
+    "5": 7250,
+    "6": 6050,
+    "7": 20590,
+    "8": 37375,
+    "9": 87500,
+    "10": 735749,
     "raw": 22970
    },
    "metrics": {
     "2": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "stable",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 7,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-10",
+     "spread": {
+      "low": 4800,
+      "high": 16500
+     }
     },
     "3": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 7,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 197,
+     "lastSaleDate": "2026-09-16",
+     "spread": {
+      "low": 6000,
+      "high": 12999
+     }
     },
     "4": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "stable",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 16,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-05",
+     "spread": {
+      "low": 6000,
+      "high": 13425
+     }
     },
     "5": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 40,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 5300,
+      "high": 15999
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 46,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-08-24",
+     "spread": {
+      "low": 6050,
+      "high": 20250
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.2857142857142857,
-     "salesCount": null
+     "salesCount": 42,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 12250,
+      "high": 33413
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.2857142857142857,
-     "salesCount": null
+     "salesCount": 48,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-16",
+     "spread": {
+      "low": 15250,
+      "high": 49999
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 13,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-28",
+     "spread": {
+      "low": 9213,
+      "high": 124000
+     }
     },
     "10": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-16",
+     "spread": {
+      "low": 790000,
+      "high": 799999
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 7.906976744186047,
    "salesVolume": null,
-   "confidence": "low",
+   "confidence": "medium",
    "pricedOn": "2026-09-19"
   },
   "base1-15": {
@@ -256,72 +314,144 @@
    "grades": {
     "1": 12540,
     "2": 5999,
-    "3": 7350,
-    "4": 7500,
-    "5": 9495,
-    "6": 11000,
-    "7": 18125,
-    "8": 25250,
-    "9": 52500,
+    "3": 6499,
+    "4": 7224,
+    "5": 11000,
+    "6": 9270,
+    "7": 19000,
+    "8": 29250,
+    "9": 63500,
     "raw": 17774
    },
    "metrics": {
     "1": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 1,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 135,
+     "lastSaleDate": "2026-05-07",
+     "spread": {
+      "low": 12540,
+      "high": 12540
+     }
     },
     "2": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 1,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 171,
+     "lastSaleDate": "2026-04-01",
+     "spread": {
+      "low": 5999,
+      "high": 5999
+     }
     },
     "3": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "stable",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 4,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 252,
+     "lastSaleDate": "2026-08-08",
+     "spread": {
+      "low": 6499,
+      "high": 8500
+     }
     },
     "4": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 10,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-20",
+     "spread": {
+      "low": 6500,
+      "high": 9000
+     }
     },
     "5": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 23,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-11",
+     "spread": {
+      "low": 5670,
+      "high": 11999
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 26,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-08",
+     "spread": {
+      "low": 5900,
+      "high": 15500
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 19,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-06",
+     "spread": {
+      "low": 12900,
+      "high": 21250
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 54,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-25",
+     "spread": {
+      "low": 15000,
+      "high": 39999
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-11",
+     "spread": {
+      "low": 24727,
+      "high": 64999
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 4.4186046511627906,
    "salesVolume": null,
    "confidence": "low",
    "pricedOn": "2026-09-19"
@@ -333,48 +463,88 @@
    "set": "Base",
    "number": "46",
    "grades": {
-    "6": 2750,
-    "7": 2525,
-    "8": 2822,
-    "9": 3800,
-    "10": 21999,
+    "6": 2500,
+    "7": 2706,
+    "8": 3438,
+    "9": 4994,
+    "10": 33500,
     "raw": 265
    },
    "metrics": {
     "6": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 190,
+     "lastSaleDate": "2026-04-02",
+     "spread": {
+      "low": 2500,
+      "high": 3000
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 4,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-14",
+     "spread": {
+      "low": 1300,
+      "high": 3500
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 18,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-12",
+     "spread": {
+      "low": 1050,
+      "high": 5429
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "high",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 32,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 1450,
+      "high": 6500
+     }
     },
     "10": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 17,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-09",
+     "spread": {
+      "low": 9900,
+      "high": 40000
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 4.4186046511627906,
    "salesVolume": null,
-   "confidence": "low",
+   "confidence": "high",
    "pricedOn": "2026-09-19"
   },
   "base1-58": {
@@ -384,83 +554,163 @@
    "set": "Base",
    "number": "58",
    "grades": {
-    "1": 12000,
-    "2": 2299,
-    "3": 3150,
-    "4": 3948,
-    "5": 3150,
-    "6": 3000,
-    "7": 3500,
-    "8": 5900,
-    "9": 12376,
-    "10": 56391,
+    "1": 9750,
+    "2": 7595,
+    "3": 3500,
+    "4": 3962,
+    "5": 5050,
+    "6": 2823,
+    "7": 4012,
+    "8": 3888,
+    "9": 9050,
+    "10": 61000,
     "raw": 4950
    },
    "metrics": {
     "1": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "high",
      "trend": "down",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 28,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-12",
+     "spread": {
+      "low": 3600,
+      "high": 16999
+     }
     },
     "2": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 9,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-17",
+     "spread": {
+      "low": 750,
+      "high": 4990
+     }
     },
     "3": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 7,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-05",
+     "spread": {
+      "low": 2700,
+      "high": 5600
+     }
     },
     "4": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "stable",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 9,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-03",
+     "spread": {
+      "low": 1550,
+      "high": 4599
+     }
     },
     "5": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 33,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-05",
+     "spread": {
+      "low": 1400,
+      "high": 10000
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "down",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 46,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-12",
+     "spread": {
+      "low": 1345,
+      "high": 7500
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "down",
      "dailyVolume7Day": 0.7142857142857143,
-     "salesCount": null
+     "salesCount": 104,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 1150,
+      "high": 14000
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "stable",
      "dailyVolume7Day": 1.1428571428571428,
-     "salesCount": null
+     "salesCount": 241,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 1999,
+      "high": 30000
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "down",
      "dailyVolume7Day": 1.2857142857142858,
-     "salesCount": null
+     "salesCount": 269,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 3999,
+      "high": 86556
+     }
     },
     "10": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "high",
      "trend": "down",
      "dailyVolume7Day": 0.8571428571428571,
-     "salesCount": null
+     "salesCount": 114,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-16",
+     "spread": {
+      "low": 8700,
+      "high": 107600
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 16.74418604651163,
    "salesVolume": null,
-   "confidence": "low",
+   "confidence": "high",
    "pricedOn": "2026-09-19"
   },
   "base1-63": {
@@ -470,62 +720,118 @@
    "set": "Base",
    "number": "63",
    "grades": {
-    "4": 1499,
+    "4": 1274,
     "5": 1999,
-    "6": 3500,
-    "7": 2700,
-    "8": 3499,
-    "9": 4999,
-    "10": 25500,
+    "6": 2738,
+    "7": 2838,
+    "8": 3517,
+    "9": 6900,
+    "10": 34434,
     "raw": 486
    },
    "metrics": {
     "4": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 1,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 116,
+     "lastSaleDate": "2026-05-25",
+     "spread": {
+      "low": 1499,
+      "high": 1499
+     }
     },
     "5": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 1,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 229,
+     "lastSaleDate": "2026-02-01",
+     "spread": {
+      "low": 1999,
+      "high": 1999
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 5,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 2500,
+      "high": 4302
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 5,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-08-26",
+     "spread": {
+      "low": 1250,
+      "high": 3999
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "down",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-07-21",
+     "spread": {
+      "low": 2495,
+      "high": 37395
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 12,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-22",
+     "spread": {
+      "low": 3000,
+      "high": 7699
+     }
     },
     "10": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 6,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 331,
+     "lastSaleDate": "2026-04-23",
+     "spread": {
+      "low": 20750,
+      "high": 36000
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 1.8604651162790697,
    "salesVolume": null,
-   "confidence": "low",
+   "confidence": "medium",
    "pricedOn": "2026-09-19"
   },
   "base1-44": {
@@ -535,53 +841,101 @@
    "set": "Base",
    "number": "44",
    "grades": {
-    "5": 1999,
-    "6": 2300,
-    "7": 2999,
-    "8": 3175,
-    "9": 4400,
-    "10": 30000,
+    "5": 1600,
+    "6": 1050,
+    "7": 2749,
+    "8": 3300,
+    "9": 4100,
+    "10": 36000,
     "raw": 369
    },
    "metrics": {
     "5": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 3,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 146,
+     "lastSaleDate": "2026-08-17",
+     "spread": {
+      "low": 1500,
+      "high": 2999
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "down",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 3,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 177,
+     "lastSaleDate": "2026-06-21",
+     "spread": {
+      "low": 1050,
+      "high": 2699
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 5,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 255,
+     "lastSaleDate": "2026-07-17",
+     "spread": {
+      "low": 2500,
+      "high": 3587
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 16,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-07",
+     "spread": {
+      "low": 2000,
+      "high": 4999
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 31,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-11",
+     "spread": {
+      "low": 2600,
+      "high": 6000
+     }
     },
     "10": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 14,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-08-27",
+     "spread": {
+      "low": 15299,
+      "high": 44343
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 1.627906976744186,
    "salesVolume": null,
    "confidence": "low",
    "pricedOn": "2026-09-19"
@@ -593,55 +947,269 @@
    "set": "Gym Challenge",
    "number": "118",
    "grades": {
-    "5": 4475,
-    "6": 2672,
+    "5": 2741,
+    "6": 2425,
     "7": 4750,
-    "8": 8495,
-    "9": 12000,
+    "8": 10438,
+    "9": 7000,
     "10": 104789,
     "raw": 5476
    },
    "metrics": {
     "5": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 4,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 130,
+     "lastSaleDate": "2026-06-23",
+     "spread": {
+      "low": 2500,
+      "high": 5500
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 179,
+     "lastSaleDate": "2026-05-31",
+     "spread": {
+      "low": 2050,
+      "high": 3294
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 168,
+     "lastSaleDate": "2026-06-09",
+     "spread": {
+      "low": 3500,
+      "high": 6000
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 13,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-11",
+     "spread": {
+      "low": 5499,
+      "high": 13482
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-15",
+     "spread": {
+      "low": 3100,
+      "high": 20350
+     }
     },
     "10": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 3,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 301,
+     "lastSaleDate": "2026-06-15",
+     "spread": {
+      "low": 86078,
+      "high": 123500
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 1.627906976744186,
    "salesVolume": null,
    "confidence": "low",
+   "pricedOn": "2026-09-19"
+  },
+  "gym2-118@jp": {
+   "pcId": null,
+   "tcgPlayerId": "614817",
+   "name": "Misty's Tears",
+   "set": "Hanada City Gym",
+   "number": null,
+   "grades": {
+    "1": 6300,
+    "2": 5600,
+    "3": 5150,
+    "4": 5700,
+    "5": 10925,
+    "6": 10812,
+    "7": 12705,
+    "8": 15400,
+    "9": 28750,
+    "10": 200000,
+    "raw": 14954
+   },
+   "metrics": {
+    "1": {
+     "confidence": "high",
+     "effective": "high",
+     "trend": "down",
+     "dailyVolume7Day": 0.7142857142857143,
+     "salesCount": 94,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 4577,
+      "high": 17000
+     }
+    },
+    "2": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 261,
+     "lastSaleDate": "2026-09-04",
+     "spread": {
+      "low": 2800,
+      "high": 6200
+     }
+    },
+    "3": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 22,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 3164,
+      "high": 7700
+     }
+    },
+    "4": {
+     "confidence": "medium",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 15,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-10",
+     "spread": {
+      "low": 3600,
+      "high": 8200
+     }
+    },
+    "5": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 19,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-13",
+     "spread": {
+      "low": 3500,
+      "high": 9999
+     }
+    },
+    "6": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.2857142857142857,
+     "salesCount": 11,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-14",
+     "spread": {
+      "low": 4500,
+      "high": 15000
+     }
+    },
+    "7": {
+     "confidence": "high",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 30,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-19",
+     "spread": {
+      "low": 4500,
+      "high": 17500
+     }
+    },
+    "8": {
+     "confidence": "high",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 68,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-10",
+     "spread": {
+      "low": 5100,
+      "high": 25000
+     }
+    },
+    "9": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.5714285714285714,
+     "salesCount": 82,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 15969,
+      "high": 43028
+     }
+    },
+    "10": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 34,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-15",
+     "spread": {
+      "low": 90000,
+      "high": 269900
+     }
+    }
+   },
+   "salesVelocityWeekly": 11.627906976744187,
+   "salesVolume": null,
+   "confidence": "high",
    "pricedOn": "2026-09-19"
   },
   "neo1-9": {
@@ -651,76 +1219,148 @@
    "set": "Neo Genesis",
    "number": "9",
    "grades": {
-    "1": 37100,
+    "1": 88705,
     "2": 38500,
-    "3": 35500,
-    "4": 42500,
-    "5": 44226,
-    "6": 59784,
-    "7": 87500,
-    "8": 148950,
-    "9": 672500,
+    "3": 33750,
+    "4": 92113,
+    "5": 47125,
+    "6": 46362,
+    "7": 76625,
+    "8": 547418,
+    "9": 1853412,
     "raw": 107979
    },
    "metrics": {
     "1": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 14,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-15",
+     "spread": {
+      "low": 20000,
+      "high": 49995
+     }
     },
     "2": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 10,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-07",
+     "spread": {
+      "low": 18250,
+      "high": 117500
+     }
     },
     "3": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.2857142857142857,
-     "salesCount": null
+     "salesCount": 17,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-15",
+     "spread": {
+      "low": 17000,
+      "high": 131119
+     }
     },
     "4": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 19,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-11",
+     "spread": {
+      "low": 16750,
+      "high": 199500
+     }
     },
     "5": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.2857142857142857,
-     "salesCount": null
+     "salesCount": 24,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-14",
+     "spread": {
+      "low": 25000,
+      "high": 249267
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 32,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-14",
+     "spread": {
+      "low": 20000,
+      "high": 300000
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0.42857142857142855,
-     "salesCount": null
+     "salesCount": 37,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 38000,
+      "high": 400000
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.8571428571428571,
-     "salesCount": null
+     "salesCount": 44,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-18",
+     "spread": {
+      "low": 52000,
+      "high": 999900
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.42857142857142855,
-     "salesCount": null
+     "salesCount": 16,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-18",
+     "spread": {
+      "low": 7500,
+      "high": 2479999
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 17.674418604651162,
    "salesVolume": null,
-   "confidence": "low",
+   "confidence": "medium",
    "pricedOn": "2026-09-19"
   },
   "swsh7-215": {
@@ -730,81 +1370,161 @@
    "set": "Evolving Skies",
    "number": "215",
    "grades": {
-    "1": 147500,
-    "2": 135938,
-    "3": 110000,
-    "4": 126750,
-    "5": 139500,
+    "1": 134500,
+    "2": 121875,
+    "3": 102500,
+    "4": 110500,
+    "5": 118575,
     "6": 148850,
     "7": 192500,
-    "8": 181730,
-    "9": 202000,
-    "10": 420000,
+    "8": 167851,
+    "9": 200750,
+    "10": 415000,
     "raw": 228314
    },
    "metrics": {
     "1": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 5,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-10",
+     "spread": {
+      "low": 134500,
+      "high": 169900
+     }
     },
     "2": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 175,
+     "lastSaleDate": "2026-03-27",
+     "spread": {
+      "low": 121875,
+      "high": 150000
+     }
     },
     "3": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-03",
+     "spread": {
+      "low": 102500,
+      "high": 117500
+     }
     },
     "4": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-07-27",
+     "spread": {
+      "low": 123500,
+      "high": 130000
+     }
     },
     "5": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-22",
+     "spread": {
+      "low": 139500,
+      "high": 139500
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-07-02",
+     "spread": {
+      "low": 145200,
+      "high": 152500
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-02",
+     "spread": {
+      "low": 185000,
+      "high": 200000
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 22,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-12",
+     "spread": {
+      "low": 112500,
+      "high": 220000
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
      "dailyVolume7Day": 0.5714285714285714,
-     "salesCount": null
+     "salesCount": 171,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-15",
+     "spread": {
+      "low": 139999,
+      "high": 269999
+     }
     },
     "10": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "high",
      "trend": "up",
      "dailyVolume7Day": 2.7142857142857144,
-     "salesCount": null
+     "salesCount": 501,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 247030,
+      "high": 564900
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 36.51162790697675,
    "salesVolume": null,
    "confidence": "high",
    "pricedOn": "2026-09-19"
@@ -818,53 +1538,101 @@
    "grades": {
     "3": 5999,
     "6": 12999,
-    "7": 13000,
-    "8": 12500,
-    "9": 15475,
-    "10": 35000,
+    "7": 11812,
+    "8": 13500,
+    "9": 16000,
+    "10": 30500,
     "raw": 17499
    },
    "metrics": {
     "3": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 1,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 19,
+     "lastSaleDate": "2026-08-31",
+     "spread": {
+      "low": 5999,
+      "high": 5999
+     }
     },
     "6": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 5,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-17",
+     "spread": {
+      "low": 11000,
+      "high": 13500
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 3,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 203,
+     "lastSaleDate": "2026-06-30",
+     "spread": {
+      "low": 12500,
+      "high": 15999
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 19,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-12",
+     "spread": {
+      "low": 8100,
+      "high": 17499
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "low",
      "trend": "down",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 159,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-06",
+     "spread": {
+      "low": 9100,
+      "high": 22000
+     }
     },
     "10": {
-     "confidence": null,
+     "confidence": "high",
+     "effective": "high",
      "trend": "stable",
      "dailyVolume7Day": 1.1428571428571428,
-     "salesCount": null
+     "salesCount": 404,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-18",
+     "spread": {
+      "low": 22250,
+      "high": 50000
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 15.58139534883721,
    "salesVolume": null,
-   "confidence": "low",
+   "confidence": "high",
    "pricedOn": "2026-09-19"
   },
   "sv3pt5-6": {
@@ -875,47 +1643,87 @@
    "number": "6",
    "grades": {
     "4": 1999,
-    "7": 1774,
-    "8": 1899,
+    "7": 1750,
+    "8": 1615,
     "9": 2400,
-    "10": 9599,
+    "10": 14312,
     "raw": 808
    },
    "metrics": {
     "4": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 1,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 256,
+     "lastSaleDate": "2026-01-05",
+     "spread": {
+      "low": 1999,
+      "high": 1999
+     }
     },
     "7": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": null,
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 237,
+     "lastSaleDate": "2026-04-18",
+     "spread": {
+      "low": 1750,
+      "high": 1799
+     }
     },
     "8": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "down",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 11,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-07-25",
+     "spread": {
+      "low": 850,
+      "high": 2025
+     }
     },
     "9": {
-     "confidence": null,
+     "confidence": "low",
+     "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
-     "salesCount": null
+     "salesCount": 56,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 90,
+     "lastSaleDate": "2026-08-18",
+     "spread": {
+      "low": 1250,
+      "high": 3000
+     }
     },
     "10": {
-     "confidence": null,
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "down",
      "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": null
+     "salesCount": 61,
+     "priceField": "smartMarketPrice",
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-17",
+     "spread": {
+      "low": 3200,
+      "high": 15900
+     }
     }
    },
-   "salesVelocityWeekly": null,
+   "salesVelocityWeekly": 2.3255813953488373,
    "salesVolume": null,
-   "confidence": "low",
+   "confidence": "medium",
    "pricedOn": "2026-09-19"
   }
  }
