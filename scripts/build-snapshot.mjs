@@ -323,7 +323,7 @@ function siblingSetId(catalogSetId) {
 }
 
 async function priceWithPPT(cards, out, prev) {
-  let credits = 0, remaining = null, resolvedToday = 0;
+  let credits = 0, remaining = null, resolvedToday = 0, histNoseen = 0;
   const histories = new Map();
   const norm = (n) => String(n ?? "").split("/")[0].toLowerCase().replace(/[^a-z0-9]/g, "").replace(/^0+(?=.)/, "");
   outer: for (const card of rotate(cards, prev)) {
@@ -393,6 +393,15 @@ async function priceWithPPT(cards, out, prev) {
       };
       const hist = pptHistory(row);
       if (hist) histories.set(card.id, hist);
+      else if (histNoseen < 2) {
+        /* the history shape is undocumented — say what the row actually holds
+           so the parser can be adapted without guessing */
+        histNoseen++;
+        const keys = (o) => (o && typeof o === "object" ? Object.keys(o).join(",") : String(o));
+        console.log(`  PPT no history for ${card.id} · row keys: ${keys(row)}` +
+          (row.ebay ? ` · ebay keys: ${keys(row.ebay)}` : "") +
+          (row.priceHistory ? ` · priceHistory: ${JSON.stringify(row.priceHistory).slice(0, 200)}` : ""));
+      }
       out.set(card.id, {
         pcId: null,
         tcgPlayerId: resolvedId ? String(resolvedId) : null,
