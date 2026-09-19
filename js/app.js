@@ -27,7 +27,7 @@
     today: "היום",
     units: "יח׳",
     worth: "שווי:",
-    lastPrice: "שער אחרון",
+    lastPrice: "מחיר סינגל",
     changeDay: "תשואה יומית",
     changeBuy: "תשואה מקנייה",
     graded: (n) => `קלפים מדורגים (${n})`,
