@@ -1095,9 +1095,7 @@
 
   function selectCertCard(card, info) {
     selectCard(card);
-    if (info.grade && GRADE_MULT[info.grade] !== undefined) {
-      setGrade(GRADE_MULT[info.grade] !== undefined && ["10", "9", "8", "7"].includes(info.grade) ? info.grade : gradeValue);
-    }
+    if (info.grade && GRADE_MULT[info.grade] !== undefined) setGrade(info.grade);
     $("cert-input").value = info.cert;
   }
 
@@ -1221,7 +1219,11 @@
 
   /* ---------- add form ---------- */
 
-  const GRADES = [["10", "PSA 10"], ["9", "PSA 9"], ["8", "PSA 8"], ["7", "PSA 7"], ["raw", "גולמי"]];
+  const GRADES = [
+    ["10", "PSA 10"], ["9", "PSA 9"], ["8", "PSA 8"], ["7", "PSA 7"], ["6", "PSA 6"],
+    ["5", "PSA 5"], ["4", "PSA 4"], ["3", "PSA 3"], ["2", "PSA 2"], ["1", "PSA 1"],
+    ["raw", "גולמי"],
+  ];
 
   function buildGradePills() {
     const host = $("grade-pills");
