@@ -86,6 +86,9 @@ const server = createServer((req, res) => {
   // is not PPT's slug format, so the filter drops every row — total counts the
   // search matches but count is 0. Only PPT's own id ("ppt-base-set") works.
   if (setId && !setId.startsWith("ppt-")) return send([], 5);
+  // the real raw-history shape (run #7): conditions-keyed arrays of {date, market}
+  const histArr = (base) => Object.entries(makeHistory(base))
+    .map(([date, market]) => ({ date: date + "T00:00:00.000Z", market, volume: 1 }));
   const rowFor = (c, filler) => ({
     id: filler ? `zz9-${filler}` : c.id,
     setId: "ppt-base-set",
@@ -93,24 +96,22 @@ const server = createServer((req, res) => {
     name: filler ? `Filler ${filler}` : c.name,
     number: filler ? `9${filler}` : c.number,
     prices: { market: 12.34 },
-    priceHistory: { market: makeHistory(10) },
-    salesVelocityWeekly: 4,
+    priceHistory: { conditions: { "Near Mint": { history: histArr(10) } } },
     ebay: {
       salesByGrade: {
         psa10: { smartMarketPrice: 500 + Number(c.number), medianPrice: 480, smartMarketConfidence: "high", marketTrend: "up", dailyVolume7Day: 2, salesCount: 140 },
         psa9: { medianPrice: 200, smartMarketConfidence: "low", dailyVolume7Day: 0 },
       },
-      history: { psa10: makeHistory(500) },
+      salesVelocity: 4,
+      priceHistory: { psa10: makeHistory(500) },
     },
   });
-  const byId = url.searchParams.get("tcgPlayerId");
-  if (byId) {
-    // run #6 live: an exact lookup without `limit` answers total=1, count=0
-    // and still bills — reproduce it so a regression fails here first
-    if (!url.searchParams.get("limit")) return send([], 1);
+  // runs #6-#7 live: tcgPlayerId lookups answer total=1 with count=0 (with or
+  // without limit) and still bill — reproduce it so the builder never relies
+  // on them again
+  if (url.searchParams.get("tcgPlayerId")) {
     byIdRequests++;
-    const match = CARDS.find((c) => `9000${c.number}` === byId) || CARDS[0];
-    return send([rowFor(match, 0)], 1); // exact key: one row
+    return send([], 1);
   }
   const limit = Number(url.searchParams.get("limit") || 5);
   limitsSeen.push(limit);
@@ -201,14 +202,16 @@ const raw2 = readFileSync(join(work, "data", "snapshots", "2026-09-21.json"), "u
 await run("2026-09-23", { PPT_CREDIT_BUDGET: "9" });
 check("older snapshots are immutable", readFileSync(join(work, "data", "snapshots", "2026-09-21.json"), "utf8") === raw2);
 
-/* ---- resolved cards re-query by exact tcgPlayerId ---- */
-byIdRequests = 0; rowsServed = 0; requests = 0;
+/* ---- resolved cards re-query via the stored search at limit=1 ---- */
+byIdRequests = 0; rowsServed = 0; requests = 0; limitsSeen = [];
 const d5 = await run("2026-09-24", { PPT_CREDIT_BUDGET: "2000" });
 if (d5.status !== 0) { console.log(d5.stdout, d5.stderr); throw new Error("day 5 failed"); }
 const s5 = snap("2026-09-24");
 const fresh5 = Object.values(s5.cards).filter((c) => !c.carried).length;
 check("full budget prices the whole watchlist", fresh5 === CARDS.length, `${fresh5}/${CARDS.length} fresh`);
-check("resolved identities re-query by tcgPlayerId (1 row each)", byIdRequests >= 4, `${byIdRequests} exact lookups over ${requests} requests`);
+check("resolved identities re-query via stored search at limit=1",
+  limitsSeen.includes(1) && limitsSeen.includes(3), `limits: ${limitsSeen.join(",")}`);
+check("no tcgPlayerId lookups (they answer count=0 and still bill)", byIdRequests === 0, `${byIdRequests} exact lookups`);
 
 server.close();
 console.log(`\nworkspace: ${work}`);

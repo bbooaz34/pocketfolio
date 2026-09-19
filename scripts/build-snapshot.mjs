@@ -219,7 +219,7 @@ function pptGrades(row) {
     .find((x) => typeof x === "number" && x > 0);
   if (raw) grades.raw = pennies(raw);
   if (!Object.keys(grades).length) return null;
-  const velocity = [row.salesVelocityWeekly, row.ebay?.salesVelocityWeekly]
+  const velocity = [row.salesVelocityWeekly, row.ebay?.salesVelocityWeekly, row.ebay?.salesVelocity]
     .find((x) => typeof x === "number");
   return { grades, metrics, velocity: Number.isFinite(velocity) ? velocity : null };
 }
@@ -245,26 +245,71 @@ function pptSeries(node) {
   const out = [];
   const push = (d, v) => {
     const date = String(d || "").slice(0, 10);
-    const p = pennies(typeof v === "number" ? v : v?.market ?? v?.price ?? v?.medianPrice);
+    const p = pennies(typeof v === "number" ? v
+      : v?.market ?? v?.price ?? v?.medianPrice ?? v?.median ?? v?.smartMarketPrice ?? v?.value);
     if (/^\d{4}-\d{2}-\d{2}$/.test(date) && p) out.push({ d: date, v: p });
   };
-  if (Array.isArray(node)) for (const e of node) push(e?.date ?? e?.d ?? e?.t, e?.value ?? e?.v ?? e?.market ?? e?.price ?? e);
+  if (Array.isArray(node)) for (const e of node) push(e?.date ?? e?.d ?? e?.t, e?.value ?? e?.v ?? e?.market ?? e?.price ?? e?.median ?? e?.medianPrice ?? e);
   else if (node && typeof node === "object") for (const [d, v] of Object.entries(node)) push(d, v);
   out.sort((a, b) => a.d.localeCompare(b.d));
   return out.length ? out : null;
 }
 
+const PSA_KEY = /^psa[\s_-]?((10|[1-9])(\.5)?)$/;
+
+/* Real shapes, from run #7's diagnostics:
+   raw    — row.priceHistory.conditions["Near Mint"|...].history[{date, market}]
+   graded — row.ebay.priceHistory (exact inner shape tolerated broadly below) */
 function pptHistory(row) {
   const series = {};
-  const rawNode = row.priceHistory?.market ?? row.priceHistory ?? row.history;
-  const raw = pptSeries(rawNode);
-  if (raw) series.raw = raw;
-  const graded = row.ebay?.history ?? row.ebayHistory ?? row.priceHistory?.ebay;
-  for (const [k, v] of Object.entries(graded || {})) {
-    const m = k.toLowerCase().match(/^psa[\s_-]?((10|[1-9])(\.5)?)$/);
-    if (!m) continue;
-    const s = pptSeries(v);
-    if (s) series[m[1]] = s;
+  const conditions = row.priceHistory?.conditions;
+  if (conditions && typeof conditions === "object") {
+    const prefer = ["Near Mint", "Lightly Played", "Moderately Played", "Heavily Played", "Damaged"];
+    const key = prefer.find((k) => conditions[k]?.history?.length) ||
+      Object.keys(conditions).find((k) => conditions[k]?.history?.length);
+    const s = key ? pptSeries(conditions[key].history) : null;
+    if (s) series.raw = s;
+  } else {
+    const raw = pptSeries(row.priceHistory?.market ?? row.priceHistory ?? row.history);
+    if (raw) series.raw = raw;
+  }
+  const graded = row.ebay?.priceHistory ?? row.ebay?.history ?? row.ebayHistory ?? row.priceHistory?.ebay;
+  if (Array.isArray(graded)) {
+    // array of {date, psa10: …} or {date, grade, price}
+    const byGrade = {};
+    for (const e of graded) {
+      const d = String(e?.date ?? e?.d ?? "").slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+      if (e.grade != null) {
+        const m = String(e.grade).toLowerCase().match(/(10|[1-9])(\.5)?/);
+        const p = pennies(e.price ?? e.median ?? e.medianPrice ?? e.market ?? e.value);
+        if (m && p) (byGrade[m[0]] ||= []).push({ d, v: p });
+      } else {
+        for (const [k, v] of Object.entries(e)) {
+          const m = k.toLowerCase().match(PSA_KEY);
+          const p = pennies(typeof v === "number" ? v : v?.medianPrice ?? v?.median ?? v?.price);
+          if (m && p) (byGrade[m[1]] ||= []).push({ d, v: p });
+        }
+      }
+    }
+    for (const [g, pts] of Object.entries(byGrade)) {
+      pts.sort((a, b) => a.d.localeCompare(b.d));
+      series[g] = pts;
+    }
+  } else if (graded && typeof graded === "object") {
+    // psaN keys at the top level, or nested one level down (byGrade/…)
+    const scan = (node) => {
+      for (const [k, v] of Object.entries(node || {})) {
+        const m = k.toLowerCase().match(PSA_KEY);
+        if (!m) continue;
+        const s = pptSeries(v?.history ?? v);
+        if (s) series[m[1]] = s;
+      }
+    };
+    scan(graded);
+    if (!Object.keys(series).some((k) => k !== "raw")) {
+      for (const nest of [graded.byGrade, graded.salesByGrade, graded.grades, graded.conditions]) scan(nest);
+    }
   }
   return Object.keys(series).length ? series : null;
 }
@@ -291,11 +336,10 @@ function rotate(cards, prev) {
 function pptAttempts(card) {
   const known = pptMap[card.id];
   const attempts = [];
-  const tcgPlayerId = card.tcgPlayerId || known?.tcgPlayerId || null;
-  /* run #6: an exact lookup WITHOUT limit answers total=1, count=0 (and still
-     bills) — always send limit. And the ladder never shrinks to one attempt:
-     a disappointing exact lookup falls through to the search attempts below. */
-  if (tcgPlayerId) attempts.push({ tcgPlayerId: String(tcgPlayerId), limit: String(PPT_LIMIT_RESOLVED) });
+  /* No tcgPlayerId attempt: runs #6-#7 showed exact lookups answer total=1
+     with count=0 EVERY time (with or without limit) and still bill 3 credits.
+     The stored search + learned setId below costs the same and works; the id
+     stays in ppt-map as metadata. The ladder never shrinks to one attempt. */
   if (known?.search) {
     attempts.push({
       search: known.search,
@@ -396,14 +440,16 @@ async function priceWithPPT(cards, out, prev) {
       };
       const hist = pptHistory(row);
       if (hist) histories.set(card.id, hist);
-      else if (histNoseen < 2) {
+      const gradedParsed = hist && Object.keys(hist).some((k) => k !== "raw");
+      if (histNoseen < 2 && (!hist || (!gradedParsed && row.ebay?.priceHistory))) {
         /* the history shape is undocumented — say what the row actually holds
            so the parser can be adapted without guessing */
         histNoseen++;
         const keys = (o) => (o && typeof o === "object" ? Object.keys(o).join(",") : String(o));
         console.log(`  PPT no history for ${card.id} · row keys: ${keys(row)}` +
           (row.ebay ? ` · ebay keys: ${keys(row.ebay)}` : "") +
-          (row.priceHistory ? ` · priceHistory: ${JSON.stringify(row.priceHistory).slice(0, 200)}` : ""));
+          (row.priceHistory ? ` · priceHistory: ${JSON.stringify(row.priceHistory).slice(0, 200)}` : "") +
+          (row.ebay?.priceHistory ? ` · ebay.priceHistory: ${JSON.stringify(row.ebay.priceHistory).slice(0, 250)}` : ""));
       }
       out.set(card.id, {
         pcId: null,
