@@ -133,12 +133,29 @@ is a number the user cannot trust. One line under the value, `.t-text4`,
 
 | Case | Line |
 |---|---|
-| 2 | `נכון ל: 19.09 · חציון מכירות eBay לדירוג 10` |
+| 2 | `נכון ל: 19.09 · ` + the method, named after the field the number actually came from |
 | 2, just superseded a manual value | same line + a `--primary-soft` chip `עודכן אוטומטית` for 24h |
 | 1 | `שווי שהזנת ידנית · נעוץ` + an unpin affordance |
 | 3 | `שווי שהזנת ידנית · יוחלף בעדכון הבא` |
 | 4 | `הערכה משער השוק הגולמי` |
 | 5 | `אין נתוני מחיר לקלף הזה` |
+
+The method is named per `metrics[grade].priceField`, because calling a
+filtered weighted price a median is exactly the overclaim this line exists to
+prevent: `smartMarketPrice` → `מחיר eBay מסונן לדירוג N`, `marketPrice7Day` →
+`מחיר eBay ב-7 ימים לדירוג N`, `medianPrice` → `חציון מכירות eBay לדירוג N`.
+
+Two caveats append to case 2, because the number cannot carry them itself
+(see the 19.09 investigation in PRICING-ATTEMPTS.md — the provider's
+aggregates are not bounded by the window we ask for):
+
+| Condition | Appended |
+|---|---|
+| `effective` is `medium`/`low`, or the grade's spread is wider than 2× | `· מדגם מפוזר` |
+| `dailyVolume7Day === 0` | `· לא נמכר השבוע` |
+
+A lifetime sales count is never printed beside a date. If it is ever shown it
+reads `סה"כ מכירות מאז ומעולם`, never `מכירות אחרונות`.
 
 Pinning belongs on the card detail screen, next to the pencil the user already has
 there — not in Settings. Default is unpinned: the common case is "I know roughly
