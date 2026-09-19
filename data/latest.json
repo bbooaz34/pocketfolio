@@ -1,6 +1,6 @@
 {
  "date": "2026-09-19",
- "builtAt": "2026-09-19T20:16:11.528Z",
+ "builtAt": "2026-09-19T20:29:43.029Z",
  "source": "ppt",
  "cards": {
   "base1-4": {
@@ -11,15 +11,15 @@
    "number": "4",
    "grades": {
     "1": 33779,
-    "2": 22425,
+    "2": 27200,
     "3": 29000,
-    "4": 24250,
+    "4": 32156,
     "5": 32500,
     "6": 45000,
     "7": 42500,
     "8": 142600,
     "9": 150000,
-    "10": 1487500,
+    "10": 1750000,
     "raw": 91998
    },
    "metrics": {
@@ -30,6 +30,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 6,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-07-23",
      "spread": {
@@ -43,7 +44,8 @@
      "trend": "down",
      "dailyVolume7Day": 0,
      "salesCount": 6,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "outside-observed-range",
      "daysUsed": 239,
      "lastSaleDate": "2026-06-19",
      "spread": {
@@ -58,6 +60,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 8,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-17",
      "spread": {
@@ -71,7 +74,8 @@
      "trend": "down",
      "dailyVolume7Day": 0,
      "salesCount": 22,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "outside-observed-range",
      "daysUsed": 90,
      "lastSaleDate": "2026-08-25",
      "spread": {
@@ -86,6 +90,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 33,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-03",
      "spread": {
@@ -100,6 +105,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 38,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-13",
      "spread": {
@@ -114,6 +120,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 38,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-04",
      "spread": {
@@ -128,6 +135,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 39,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-01",
      "spread": {
@@ -142,6 +150,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 19,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-07-30",
      "spread": {
@@ -155,7 +164,8 @@
      "trend": null,
      "dailyVolume7Day": 0,
      "salesCount": 1,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "outside-observed-range",
      "daysUsed": 323,
      "lastSaleDate": "2025-10-30",
      "spread": {
@@ -180,11 +190,11 @@
     "3": 10175,
     "4": 9350,
     "5": 7250,
-    "6": 6050,
+    "6": 14475,
     "7": 20590,
     "8": 37375,
     "9": 87500,
-    "10": 735749,
+    "10": 799999,
     "raw": 22970
    },
    "metrics": {
@@ -195,6 +205,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 7,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-09-10",
      "spread": {
@@ -209,6 +220,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 7,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 197,
      "lastSaleDate": "2026-09-16",
      "spread": {
@@ -223,6 +235,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 16,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-09-05",
      "spread": {
@@ -237,6 +250,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 40,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-13",
      "spread": {
@@ -250,7 +264,8 @@
      "trend": "up",
      "dailyVolume7Day": 0,
      "salesCount": 46,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "flagged-outlier",
      "daysUsed": 30,
      "lastSaleDate": "2026-08-24",
      "spread": {
@@ -265,6 +280,7 @@
      "dailyVolume7Day": 0.2857142857142857,
      "salesCount": 42,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-17",
      "spread": {
@@ -279,6 +295,7 @@
      "dailyVolume7Day": 0.2857142857142857,
      "salesCount": 48,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-16",
      "spread": {
@@ -293,6 +310,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 13,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-28",
      "spread": {
@@ -306,7 +324,8 @@
      "trend": null,
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 2,
-     "priceField": "smartMarketPrice",
+     "priceField": "marketPrice7Day",
+     "smartRejected": "outside-observed-range",
      "daysUsed": 30,
      "lastSaleDate": "2026-09-16",
      "spread": {
@@ -346,6 +365,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 135,
      "lastSaleDate": "2026-05-07",
      "spread": {
@@ -360,6 +380,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 171,
      "lastSaleDate": "2026-04-01",
      "spread": {
@@ -374,6 +395,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 4,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 252,
      "lastSaleDate": "2026-08-08",
      "spread": {
@@ -388,6 +410,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 10,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-20",
      "spread": {
@@ -402,6 +425,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 23,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-11",
      "spread": {
@@ -416,6 +440,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 26,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-08",
      "spread": {
@@ -430,6 +455,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 19,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-06",
      "spread": {
@@ -444,6 +470,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 54,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-25",
      "spread": {
@@ -458,6 +485,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 15,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-11",
      "spread": {
@@ -493,6 +521,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 190,
      "lastSaleDate": "2026-04-02",
      "spread": {
@@ -507,6 +536,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 4,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-09-14",
      "spread": {
@@ -521,6 +551,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 18,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-12",
      "spread": {
@@ -535,6 +566,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 32,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-09-13",
      "spread": {
@@ -549,6 +581,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 17,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-09",
      "spread": {
@@ -587,6 +620,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 190,
      "lastSaleDate": "2026-03-12",
      "spread": {
@@ -601,6 +635,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 48,
      "lastSaleDate": "2026-08-01",
      "spread": {
@@ -615,6 +650,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 108,
      "lastSaleDate": "2026-06-02",
      "spread": {
@@ -629,6 +665,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 5,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-07-29",
      "spread": {
@@ -643,6 +680,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 9,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-10",
      "spread": {
@@ -657,6 +695,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 21,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-11",
      "spread": {
@@ -671,6 +710,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 31,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-14",
      "spread": {
@@ -685,6 +725,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 13,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-13",
      "spread": {
@@ -705,7 +746,7 @@
    "set": "Base",
    "number": "63",
    "grades": {
-    "4": 1274,
+    "4": 1499,
     "5": 1999,
     "6": 2738,
     "7": 2838,
@@ -721,7 +762,8 @@
      "trend": null,
      "dailyVolume7Day": 0,
      "salesCount": 1,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "outside-observed-range",
      "daysUsed": 116,
      "lastSaleDate": "2026-05-25",
      "spread": {
@@ -736,6 +778,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 229,
      "lastSaleDate": "2026-02-01",
      "spread": {
@@ -750,6 +793,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 5,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-09-13",
      "spread": {
@@ -764,6 +808,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 5,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-08-26",
      "spread": {
@@ -778,6 +823,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 15,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-07-21",
      "spread": {
@@ -792,6 +838,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 12,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-22",
      "spread": {
@@ -806,6 +853,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 6,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 331,
      "lastSaleDate": "2026-04-23",
      "spread": {
@@ -827,7 +875,7 @@
    "number": "44",
    "grades": {
     "5": 1600,
-    "6": 1050,
+    "6": 2300,
     "7": 2749,
     "8": 3300,
     "9": 4100,
@@ -842,6 +890,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 3,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 146,
      "lastSaleDate": "2026-08-17",
      "spread": {
@@ -855,7 +904,8 @@
      "trend": "down",
      "dailyVolume7Day": 0,
      "salesCount": 3,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "flagged-outlier",
      "daysUsed": 177,
      "lastSaleDate": "2026-06-21",
      "spread": {
@@ -870,6 +920,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 5,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 255,
      "lastSaleDate": "2026-07-17",
      "spread": {
@@ -884,6 +935,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 16,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-07",
      "spread": {
@@ -898,6 +950,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 31,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-11",
      "spread": {
@@ -912,6 +965,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 14,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-08-27",
      "spread": {
@@ -948,6 +1002,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 4,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 130,
      "lastSaleDate": "2026-06-23",
      "spread": {
@@ -962,6 +1017,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 179,
      "lastSaleDate": "2026-05-31",
      "spread": {
@@ -976,6 +1032,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 168,
      "lastSaleDate": "2026-06-09",
      "spread": {
@@ -990,6 +1047,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 13,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-11",
      "spread": {
@@ -1004,6 +1062,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 15,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-15",
      "spread": {
@@ -1018,6 +1077,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 3,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 301,
      "lastSaleDate": "2026-06-15",
      "spread": {
@@ -1042,7 +1102,7 @@
     "2": 5600,
     "3": 5150,
     "4": 5700,
-    "5": 10925,
+    "5": 13550,
     "6": 10812,
     "7": 12705,
     "8": 15400,
@@ -1058,6 +1118,7 @@
      "dailyVolume7Day": 0.7142857142857143,
      "salesCount": 94,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 7,
      "lastSaleDate": "2026-09-17",
      "spread": {
@@ -1072,6 +1133,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 15,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 261,
      "lastSaleDate": "2026-09-04",
      "spread": {
@@ -1086,6 +1148,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 22,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-13",
      "spread": {
@@ -1100,6 +1163,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 15,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-10",
      "spread": {
@@ -1113,7 +1177,8 @@
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 19,
-     "priceField": "smartMarketPrice",
+     "priceField": "marketPrice7Day",
+     "smartRejected": "outside-observed-range",
      "daysUsed": 30,
      "lastSaleDate": "2026-09-13",
      "spread": {
@@ -1128,6 +1193,7 @@
      "dailyVolume7Day": 0.2857142857142857,
      "salesCount": 11,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-14",
      "spread": {
@@ -1142,6 +1208,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 30,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-19",
      "spread": {
@@ -1156,6 +1223,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 68,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-10",
      "spread": {
@@ -1170,6 +1238,7 @@
      "dailyVolume7Day": 0.5714285714285714,
      "salesCount": 82,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 7,
      "lastSaleDate": "2026-09-17",
      "spread": {
@@ -1184,6 +1253,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 34,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-15",
      "spread": {
@@ -1204,12 +1274,12 @@
    "set": "Gold Silver to a New World",
    "number": null,
    "grades": {
-    "1": 4601,
+    "1": 20000,
     "5": 8132,
     "6": 2600,
     "7": 4300,
     "8": 16150,
-    "9": 7650,
+    "9": 28520,
     "10": 1065500,
     "raw": 615
    },
@@ -1220,7 +1290,8 @@
      "trend": "down",
      "dailyVolume7Day": 0,
      "salesCount": 4,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "flagged-outlier",
      "daysUsed": 90,
      "lastSaleDate": "2026-09-08",
      "spread": {
@@ -1235,6 +1306,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-14",
      "spread": {
@@ -1249,6 +1321,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 45,
      "lastSaleDate": "2026-08-03",
      "spread": {
@@ -1263,6 +1336,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 56,
      "lastSaleDate": "2026-07-23",
      "spread": {
@@ -1277,6 +1351,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-15",
      "spread": {
@@ -1290,7 +1365,8 @@
      "trend": "up",
      "dailyVolume7Day": 0,
      "salesCount": 6,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "flagged-outlier",
      "daysUsed": 90,
      "lastSaleDate": "2026-08-31",
      "spread": {
@@ -1305,6 +1381,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 81,
      "lastSaleDate": "2026-06-28",
      "spread": {
@@ -1325,15 +1402,15 @@
    "set": "Neo Genesis",
    "number": "9",
    "grades": {
-    "1": 88705,
+    "1": 149900,
     "2": 38500,
     "3": 33750,
-    "4": 92113,
+    "4": 42500,
     "5": 47125,
     "6": 46362,
     "7": 76625,
-    "8": 547418,
-    "9": 1853412,
+    "8": 568908,
+    "9": 1976613,
     "raw": 107979
    },
    "metrics": {
@@ -1343,7 +1420,8 @@
      "trend": "up",
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 14,
-     "priceField": "smartMarketPrice",
+     "priceField": "marketPrice7Day",
+     "smartRejected": "flagged-outlier",
      "daysUsed": 14,
      "lastSaleDate": "2026-09-15",
      "spread": {
@@ -1358,6 +1436,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 10,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-07",
      "spread": {
@@ -1372,6 +1451,7 @@
      "dailyVolume7Day": 0.2857142857142857,
      "salesCount": 17,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-15",
      "spread": {
@@ -1385,7 +1465,8 @@
      "trend": "up",
      "dailyVolume7Day": 0,
      "salesCount": 19,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "flagged-outlier",
      "daysUsed": 30,
      "lastSaleDate": "2026-09-11",
      "spread": {
@@ -1400,6 +1481,7 @@
      "dailyVolume7Day": 0.2857142857142857,
      "salesCount": 24,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-14",
      "spread": {
@@ -1414,6 +1496,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 32,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-14",
      "spread": {
@@ -1428,6 +1511,7 @@
      "dailyVolume7Day": 0.42857142857142855,
      "salesCount": 37,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 7,
      "lastSaleDate": "2026-09-17",
      "spread": {
@@ -1441,7 +1525,8 @@
      "trend": "up",
      "dailyVolume7Day": 0.8571428571428571,
      "salesCount": 44,
-     "priceField": "smartMarketPrice",
+     "priceField": "marketPrice7Day",
+     "smartRejected": "flagged-outlier",
      "daysUsed": 7,
      "lastSaleDate": "2026-09-18",
      "spread": {
@@ -1455,7 +1540,8 @@
      "trend": "up",
      "dailyVolume7Day": 0.42857142857142855,
      "salesCount": 16,
-     "priceField": "smartMarketPrice",
+     "priceField": "marketPrice7Day",
+     "smartRejected": "flagged-outlier",
      "daysUsed": 7,
      "lastSaleDate": "2026-09-18",
      "spread": {
@@ -1491,6 +1577,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 121,
      "lastSaleDate": "2026-05-17",
      "spread": {
@@ -1505,6 +1592,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 4,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-12",
      "spread": {
@@ -1519,6 +1607,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 13,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-17",
      "spread": {
@@ -1533,6 +1622,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 12,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-04",
      "spread": {
@@ -1547,6 +1637,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 253,
      "lastSaleDate": "2026-06-21",
      "spread": {
@@ -1570,8 +1661,8 @@
     "1": 134500,
     "2": 121875,
     "3": 102500,
-    "4": 110500,
-    "5": 118575,
+    "4": 126750,
+    "5": 139500,
     "6": 148850,
     "7": 192500,
     "8": 167851,
@@ -1587,6 +1678,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 5,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-09-10",
      "spread": {
@@ -1601,6 +1693,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 175,
      "lastSaleDate": "2026-03-27",
      "spread": {
@@ -1615,6 +1708,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-09-03",
      "spread": {
@@ -1628,7 +1722,8 @@
      "trend": null,
      "dailyVolume7Day": 0,
      "salesCount": 2,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "outside-observed-range",
      "daysUsed": 90,
      "lastSaleDate": "2026-07-27",
      "spread": {
@@ -1642,7 +1737,8 @@
      "trend": null,
      "dailyVolume7Day": 0,
      "salesCount": 2,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "outside-observed-range",
      "daysUsed": 90,
      "lastSaleDate": "2026-08-22",
      "spread": {
@@ -1657,6 +1753,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-07-02",
      "spread": {
@@ -1671,6 +1768,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-09-02",
      "spread": {
@@ -1685,6 +1783,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 22,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-12",
      "spread": {
@@ -1699,6 +1798,7 @@
      "dailyVolume7Day": 0.5714285714285714,
      "salesCount": 171,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 7,
      "lastSaleDate": "2026-09-15",
      "spread": {
@@ -1713,6 +1813,7 @@
      "dailyVolume7Day": 2.7142857142857144,
      "salesCount": 501,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 7,
      "lastSaleDate": "2026-09-17",
      "spread": {
@@ -1735,7 +1836,7 @@
    "grades": {
     "3": 5999,
     "6": 12999,
-    "7": 11812,
+    "7": 13000,
     "8": 13500,
     "9": 16000,
     "10": 30500,
@@ -1749,6 +1850,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 19,
      "lastSaleDate": "2026-08-31",
      "spread": {
@@ -1763,6 +1865,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 5,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-17",
      "spread": {
@@ -1776,7 +1879,8 @@
      "trend": "up",
      "dailyVolume7Day": 0,
      "salesCount": 3,
-     "priceField": "smartMarketPrice",
+     "priceField": "medianPrice",
+     "smartRejected": "outside-observed-range",
      "daysUsed": 203,
      "lastSaleDate": "2026-06-30",
      "spread": {
@@ -1791,6 +1895,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 19,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-12",
      "spread": {
@@ -1805,6 +1910,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 159,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-06",
      "spread": {
@@ -1819,6 +1925,7 @@
      "dailyVolume7Day": 1.1428571428571428,
      "salesCount": 404,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 7,
      "lastSaleDate": "2026-09-18",
      "spread": {
@@ -1854,6 +1961,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 1,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 256,
      "lastSaleDate": "2026-01-05",
      "spread": {
@@ -1868,6 +1976,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 2,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 237,
      "lastSaleDate": "2026-04-18",
      "spread": {
@@ -1882,6 +1991,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 11,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-07-25",
      "spread": {
@@ -1896,6 +2006,7 @@
      "dailyVolume7Day": 0,
      "salesCount": 56,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-08-18",
      "spread": {
@@ -1910,6 +2021,7 @@
      "dailyVolume7Day": 0.14285714285714285,
      "salesCount": 61,
      "priceField": "smartMarketPrice",
+     "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-17",
      "spread": {
