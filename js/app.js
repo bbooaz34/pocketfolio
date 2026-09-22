@@ -84,6 +84,9 @@
     searchFail: "שירותי הקלפים אינם זמינים כרגע — נסו שוב בעוד דקה",
     searchLimited: "חריגה ממכסת החיפושים — המתינו רגע ונסו שוב",
     noCards: "לא נמצאו קלפים",
+    /* the query named a set the catalogue does not know, so the list is
+       wider than what was asked for — say so instead of pretending */
+    ignoredTerms: (w) => `אין סט בשם "${w}" בקטלוג — מוצגות כל התוצאות`,
     newsEmpty: "אין חדשות חדשות",
     rawMarketShort: "שוק גולמי",
     manualLine: "מחיר שוק שהזנת · יוחלף בעדכון הבא",
@@ -1095,7 +1098,13 @@
     }
     const col = h("span", "grow");
     col.appendChild(h("span", "rc-name", c.name));
-    const bits = [c.setName, c.number, c.rarity].filter(Boolean);
+    /* "151" on its own is not a set anyone recognises; prefixed with its
+       series it reads as the set people actually mean. Longer set names
+       already stand on their own and are left alone. */
+    const setLabel = c.series && c.setName && c.setName.length <= 4 &&
+      !c.setName.toLowerCase().includes(c.series.toLowerCase())
+      ? `${c.series} ${c.setName}` : c.setName;
+    const bits = [setLabel, c.number, c.rarity].filter(Boolean);
     if (c.price) {
       /* a Japanese cert's match shows the Japanese single price when the
          daily update covers it — otherwise the English price, labeled */
@@ -1307,6 +1316,9 @@
         const r = $("search-results");
         r.replaceChildren();
         if (!list.length) r.appendChild(h("div", "result-note", T.noCards));
+        if (list.ignored && list.ignored.length) {
+          r.appendChild(h("div", "result-note", T.ignoredTerms(list.ignored.join(" "))));
+        }
         for (const c of list) r.appendChild(resultCard(c, () => selectCard(c)));
         r.hidden = false;
       } catch (err) {

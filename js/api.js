@@ -94,13 +94,17 @@
       name: c.name,
       number: c.number || null,
       setName: c.set?.name || null,
+      /* "151" is a set name nobody recognises; its series, "Scarlet & Violet",
+         is what people actually type. Kept so both the search and the result
+         row can use it. */
+      series: c.set?.series || null,
       rarity: c.rarity || null,
       image: c.images?.small || null,
       price,
     };
   }
 
-  async function ptcgioSearch(namePart, number) {
+  async function ptcgioSearch(namePart, number, setTerms = []) {
     let q = namePart
       .replace(/["\\]/g, "")
       .split(/\s+/)
@@ -108,9 +112,16 @@
       .map((t) => `name:${t}*`)
       .join(" ");
     if (!q) return [];
+    /* The set words are part of the question, not a garnish: sent to the API
+       they decide WHICH cards come back, instead of filtering the arbitrary
+       page of 60 that a name-only query happens to return. */
+    for (const t of setTerms) {
+      const w = String(t).replace(/["\\()]/g, "").trim();
+      if (w) q += ` (set.name:*${w}* OR set.series:*${w}*)`;
+    }
     if (number) q += ` number:"${String(number).split("/")[0].replace(/[^\w]/g, "")}"`;
     const url = PTCGIO + "/cards?" + new URLSearchParams({
-      q, pageSize: "20", orderBy: "-set.releaseDate", select: PTCGIO_SELECT,
+      q, pageSize: "60", orderBy: "-set.releaseDate", select: PTCGIO_SELECT,
     });
     const data = await getJSON(url, ptcgioHeaders(), 30 * 60 * 1000);
     return (data.data || []).map(ptcgioNormalize);
@@ -164,6 +175,7 @@
       name: c.name,
       number: c.localId != null ? String(c.localId) : null,
       setName: c.set?.name || null,
+      series: c.set?.serie?.name || c.set?.series || null,
       rarity: c.rarity || null,
       image: c.image ? c.image + "/low.webp" : null,
       price: tcgdexPrice(c.pricing),
@@ -181,13 +193,40 @@
       .replace(/[^a-z0-9]/g, "").replace(/^0+(?=.)/, "");
   }
 
-  async function tcgdexSearch(namePart, number) {
+  /* Brief rows carry only id/name/image, so a set word cannot be matched
+     against them directly — but the id is "<setId>-<number>", and the set
+     list maps a set's name and series onto that id. One cached call. */
+  async function tcgdexSetIds(terms) {
+    if (!terms.length) return null;
+    let sets;
+    try {
+      sets = await getJSON(TCGDEX + "/sets", { accept: "application/json" }, 24 * 3600 * 1000);
+    } catch { return null; }
+    if (!Array.isArray(sets)) return null;
+    const ids = sets
+      .filter((st) => {
+        const hay = `${st.name || ""} ${st.serie?.name || ""}`.toLowerCase();
+        return terms.every((t) => hay.includes(String(t).toLowerCase()));
+      })
+      .map((st) => st.id)
+      .filter(Boolean);
+    return ids.length ? new Set(ids) : null;
+  }
+
+  async function tcgdexSearch(namePart, number, setTerms = []) {
     const url = TCGDEX + "/cards?" + new URLSearchParams({ name: namePart });
     let briefs = await getJSON(url, { accept: "application/json" }, 30 * 60 * 1000);
     if (!Array.isArray(briefs)) return [];
     if (number != null && briefs.some((b) => b.localId != null)) {
       const want = normNumber(number);
       briefs = briefs.filter((b) => b.localId != null && normNumber(b.localId) === want);
+    }
+    if (setTerms.length) {
+      const ids = await tcgdexSetIds(setTerms);
+      if (!ids) return [];
+      const inSet = briefs.filter((b) => ids.has(String(b.id || "").replace(/-[^-]*$/, "")));
+      if (!inSet.length) return [];
+      briefs = inSet;
     }
     // Briefs carry only id/name/image — fetch details so the dropdown can show
     // set, number, and price. Rank exact name matches first, then take 20.
@@ -218,28 +257,65 @@
      as a best-effort filter over name + set + number + rarity (a leftover word
      that matches nothing at all, like the "set" in "Base", is ignored rather
      than wiping the results). */
+  const hayOf = (c) =>
+    `${c.name} ${c.setName || ""} ${c.series || ""} #${c.number || ""} ` +
+    `#${normNumber(c.number ?? "")} ${c.rarity || ""}`.toLowerCase();
+
+  /* Which of the leftover words this page of cards can actually satisfy. A
+     word that matches nothing — "set" in "charmander base set" — is dropped
+     rather than wiping the results, and reported so the caller can say so. */
+  function usefulTerms(cards, terms) {
+    return terms.map((t) => t.toLowerCase())
+      .filter((t) => t && cards.some((c) => hayOf(c).includes(t)));
+  }
+
   function filterByTerms(cards, terms) {
-    const hay = (c) =>
-      `${c.name} ${c.setName || ""} #${c.number || ""} ${c.rarity || ""}`.toLowerCase();
-    const kept = terms
-      .map((t) => t.toLowerCase())
-      .filter((t) => t && cards.some((c) => hay(c).includes(t)));
+    const kept = usefulTerms(cards, terms);
     if (!kept.length) return cards;
-    const out = cards.filter((c) => kept.every((t) => hay(c).includes(t)));
+    const out = cards.filter((c) => kept.every((t) => hayOf(c).includes(t)));
     return out.length ? out : cards;
+  }
+
+  /* Best match first: an exact name beats a prefix, and a card whose set the
+     query named beats one it did not. Providers order by release date, which
+     answers a question nobody asked. */
+  function rankFor(query) {
+    const q = query.trim().toLowerCase();
+    const words = q.split(/\s+/).filter(Boolean);
+    return (c) => {
+      const n = (c.name || "").toLowerCase();
+      const set = `${c.setName || ""} ${c.series || ""}`.toLowerCase();
+      const setHits = words.filter((w) => set.includes(w)).length;
+      return (n === q ? 0 : q.startsWith(n) || n.startsWith(words[0] || "") ? 1 : 2) * 10 - setHits;
+    };
   }
 
   async function providerSearch(name, query, number) {
     const tokens = query.trim().split(/\s+/).filter(Boolean).slice(0, 5);
     for (let k = tokens.length; k >= 1; k--) {
-      const cards = await providers[name].search(tokens.slice(0, k).join(" "), number);
-      if (cards.length) return filterByTerms(cards, tokens.slice(k));
+      const nameTokens = tokens.slice(0, k);
+      const setTokens = tokens.slice(k);
+      /* Ask precisely first. Only if the provider knows no such set do we fall
+         back to a name-only query and filter what comes back — the old path,
+         now the last resort rather than the only one. */
+      if (setTokens.length) {
+        const narrowed = await providers[name].search(nameTokens.join(" "), number, setTokens);
+        if (narrowed.length) return narrowed;
+      }
+      const cards = await providers[name].search(nameTokens.join(" "), number);
+      if (cards.length) {
+        const out = filterByTerms(cards, setTokens);
+        out.ignored = setTokens.filter((t) => !usefulTerms(cards, [t]).length);
+        return out;
+      }
     }
     return [];
   }
 
   /** Search cards, failing over between providers (also when one has no match).
       opts.number restricts results to that card number (for slab matching). */
+  const SEARCH_MAX = 20;
+
   async function searchCards(query, opts) {
     const number = opts && opts.number != null ? opts.number : undefined;
     let lastErr = null;
@@ -248,7 +324,13 @@
         const cards = await providerSearch(name, query, number);
         if (cards.length) {
           preferred = name;
-          return cards;
+          const rank = rankFor(query);
+          const out = cards.slice().sort((a, b) => rank(a) - rank(b)).slice(0, SEARCH_MAX);
+          /* words the provider could not honour, so the caller can say why the
+             list is wider than what was asked for */
+          out.ignored = cards.ignored || [];
+          out.truncated = cards.length > SEARCH_MAX;
+          return out;
         }
       } catch (err) {
         lastErr = err;
