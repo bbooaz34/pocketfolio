@@ -459,8 +459,13 @@
       const series = doc && doc.series
         ? doc.series[String(hh.grade ?? "raw")] || doc.series.raw
         : null;
+      /* Compare like with like. A provider point is what one card sold for
+         that day; our own point (`o`) is the aggregate the app showed. Read
+         against each other they invent movement — a $63.41 sale against a
+         $49.94 average reported a 21% weekly fall that never happened. */
       if (series && series.length) {
         for (let i = series.length - 1; i >= 0; i--) {
+          if (!series[i].o) continue;
           if (Date.parse(series[i].d + "T12:00:00") <= cutoff) { then = series[i].v / 100; break; }
         }
       }

@@ -231,7 +231,8 @@ function pptGrades(row) {
       if (!p) continue;
       grades[g] = p;
       metrics[g] = { confidence: null, effective: "low", trend: null, dailyVolume7Day: null,
-        salesCount: null, priceField: "value", daysUsed: null, lastSaleDate: null, spread: null };
+        salesCount: null, priceField: "value", daysUsed: null, lastSaleDate: null,
+        marketUpdatedAt: null, spread: null };
       continue;
     }
     if (!v || typeof v !== "object") continue;
@@ -280,6 +281,12 @@ function pptGrades(row) {
       smartRejected: rejected,
       daysUsed: Number.isFinite(smart?.daysUsed) ? smart.daysUsed : null,
       lastSaleDate: typeof v.lastSaleDate === "string" ? v.lastSaleDate.slice(0, 10) : null,
+      /* when the provider last LOOKED, which is a different fact from when the
+         card last sold. A $74.26 sale at 15:47 on 22.09 was absent from a
+         response fetched at 16:56 the same day, because this card's market
+         data had not been refreshed since 17.09. Without this field the two
+         are indistinguishable: no recent sales, or nobody checked. */
+      marketUpdatedAt: typeof v.lastMarketUpdate === "string" ? v.lastMarketUpdate.slice(0, 10) : null,
       spread: lo && hi ? { low: lo, high: hi } : null,
     };
   }
@@ -636,10 +643,10 @@ function writeHistories(fresh) {
     const file = join(HIST, `${cardId}.json`);
     const prev = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : { cardId, series: {} };
     for (const [grade, points] of Object.entries(series)) {
-      const byDate = new Map((points || []).map((p) => [p.d, p.v]));
-      for (const p of prev.series?.[grade] || []) byDate.set(p.d, p.v); // ours wins
-      prev.series[grade] = [...byDate.entries()]
-        .map(([d, v]) => ({ d, v }))
+      const byDate = new Map((points || []).map((p) => [p.d, p]));
+      for (const p of prev.series?.[grade] || []) byDate.set(p.d, p); // ours wins
+      prev.series[grade] = [...byDate.values()]
+        .map((p) => (p.o ? { d: p.d, v: p.v, o: 1 } : { d: p.d, v: p.v }))
         .sort((a, b) => a.d.localeCompare(b.d));
     }
     prev.cardId = cardId;
@@ -696,7 +703,12 @@ writeFileSync(pcMapPath, JSON.stringify(pcMap, null, 1));
 writeFileSync(pptMapPath, JSON.stringify(pptMap, null, 1));
 
 /* Today's own numbers join each card's series, so the chart keeps growing even
-   if a future provider serves no history at all. */
+   if a future provider serves no history at all. They are marked `o: 1`,
+   because they are NOT the same quantity as the provider's points: a provider
+   point is what a card sold for that day, ours is a 90-day weighted average.
+   Reading one against the other invents movement — base1-46 PSA 9 compared a
+   $63.41 sale on 13.09 against a $49.94 average and reported a 21% fall that
+   never happened. */
 mkdirSync(HIST, { recursive: true });
 for (const [cardId, entry] of entries) {
   if (entry.carried) continue;
@@ -705,8 +717,8 @@ for (const [cardId, entry] of entries) {
   for (const [grade, value] of Object.entries(entry.grades || {})) {
     const arr = (doc.series[grade] ||= []);
     const i = arr.findIndex((p) => p.d === today);
-    if (i >= 0) arr[i] = { d: today, v: value };
-    else arr.push({ d: today, v: value });
+    if (i >= 0) arr[i] = { d: today, v: value, o: 1 };
+    else arr.push({ d: today, v: value, o: 1 });
     arr.sort((a, b) => a.d.localeCompare(b.d));
   }
   doc.updatedAt = today;
