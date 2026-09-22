@@ -196,6 +196,10 @@ const server = createServer((req, res) => {
     const right = rowFor(match, 0);
     right.name = "Varianted - 045";
     right.setName = "Promo Cards"; right.tcgPlayerId = "PINPLAIN";
+    /* the provider names promos "<name> - <number>", so neither row's name
+       equals the watchlist's — only the card number can pick one, which is
+       exactly what Charmander SVP 044 needed */
+    for (const r of [wrong, right]) r.id = "ppt-other-id";
     rows = [wrong, right].slice(0, limit);
   } else if (match.id === "svp-44") {
     /* Two things at once, both live. The variant is listed first and its name

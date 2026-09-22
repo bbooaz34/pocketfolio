@@ -557,7 +557,20 @@ async function priceWithPPT(cards, out, prev) {
         (card.number != null &&
           usable.find((r) => norm(r.number ?? r.cardNumber ?? r.localId) === norm(card.number))) ||
         usable.find((r) => (r.name || "").toLowerCase() === card.name.toLowerCase());
-      if (!row) { console.log(`  PPT no matching row for ${card.id} [${params}]`); continue; }
+      if (!row) {
+        /* Which rows were on the table matters more than that none was taken:
+           Charmander SVP 044 sat in the usable list as "Charmander - 044" and
+           was passed over, because the watchlist row carried no number to
+           match on and the name is not equal to "Charmander". The old line
+           printed the query and left that invisible. */
+        console.log(`  PPT no matching row for ${card.id} [${params}]` +
+          (usable.length
+            ? ` — had ${usable.map((r) => `"${r.name}" #${r.cardNumber ?? r.number ?? "?"}`).slice(0, 5).join(", ")}` +
+              `, wanted id=${card.id}${card.number != null ? ` or #${card.number}` : " (no number in the watchlist)"}` +
+              ` or name="${card.name}"`
+            : ""));
+        continue;
+      }
       const priced = pptGrades(row);
       if (!priced) { console.log(`  PPT no grade buckets for ${card.id}`); continue; }
       const known = pptMap[card.id];
