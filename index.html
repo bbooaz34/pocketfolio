@@ -75,7 +75,7 @@
           </div>
           <div class="change-split mt14 divider" style="padding-top:14px">
             <div class="change-block">
-              <div class="label">תשואה יומית</div>
+              <div class="label" id="kpi-day-label">תשואה יומית</div>
               <div class="row">
                 <span class="pill is-flat" id="kpi-day-pill">0.0%</span>
                 <span class="amount" id="kpi-day-amount">‎$0</span>
@@ -114,15 +114,24 @@
         </div>
 
         <div class="section-head">
-          <h2 id="home-graded-title">קלפים מדורגים (0)</h2>
+          <h2 id="home-movers-title">זזו השבוע</h2>
           <a href="#holdings">לכל האחזקות</a>
         </div>
+        <p id="home-movers-sub" class="t-text4 faint" style="margin:0"></p>
         <div id="home-holdings"></div>
+
+        <div id="home-singles-sec" hidden>
+          <div class="section-head">
+            <h2 id="home-singles-title">סינגלים (0)</h2>
+            <a href="#holdings?tab=raw">לכל הסינגלים</a>
+          </div>
+          <div id="home-singles"></div>
+        </div>
 
         <a href="#add" class="world-banner">
           <span class="bar"></span>
           <span class="grow">
-            <span class="wb-title" style="display:block">רוצה להוסיף סינגלים או סילד לתיק?</span>
+            <span class="wb-title" id="wb-title" style="display:block">רוצה להוסיף סינגלים או סילד לתיק?</span>
           </span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 6l-6 6 6 6"/></svg>
         </a>
@@ -135,7 +144,7 @@
           <div class="t-text4 faint mt4" id="empty-asof">נכון ל: —</div>
           <div class="change-split mt14 divider" style="padding-top:14px">
             <div class="change-block">
-              <div class="label">תשואה יומית</div>
+              <div class="label" id="kpi-day-label">תשואה יומית</div>
               <div class="row">
                 <span class="pill is-flat">0.0%</span>
                 <span class="amount muted">‎$0</span>

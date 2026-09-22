@@ -331,9 +331,19 @@ input, select {
 .holding-card .worth b { color: var(--ink); font-weight: 500; font-size: 15px; font-variant-numeric: tabular-nums; }
 .holding-card .r3 {
   display: flex; align-items: center; justify-content: space-between;
-  margin-top: 6px;
-  font-size: 13px; color: var(--ink-muted);
+  gap: var(--space-2);
+  margin-top: 8px;
+  font-size: 14px; color: var(--ink-muted);
 }
+/* the two period figures: label muted, only the number carries colour */
+.holding-card .periods { min-width: 0; }
+.holding-card .periods .num { font-variant-numeric: tabular-nums; }
+.holding-card .periods .is-up { color: var(--positive-ink); }
+.holding-card .periods .is-down { color: var(--negative-ink); }
+.holding-card .periods .is-flat { color: var(--ink-muted); }
+.holding-card .periods .sep { color: var(--ink-faint); }
+/* the pill names itself, so it must never wrap away from its number */
+.pill--buy { white-space: nowrap; flex: none; }
 
 /* ---------- buttons ---------- */
 

@@ -27,9 +27,20 @@
     today: "היום",
     units: "יח׳",
     worth: "שווי:",
-    lastPrice: "מחיר סינגל",
     changeDay: "תשואה יומית",
     changeBuy: "תשואה מקנייה",
+    /* a change that spans more than a day must not be called daily */
+    changeSince: (d) => `שינוי מאז ${d}`,
+    periodDay: "יומי",
+    periodSince: (d) => `מאז ${d}`,
+    periodWeek: "שבוע",
+    buyPill: (pct) => `מקנייה ${pct}`,
+    movers: "זזו השבוע",
+    moversSub: (n, total) => `${n} מתוך ${total} קלפים מדורגים שינו שווי בשבעת הימים האחרונים`,
+    moversQuiet: "אף קלף לא שינה שווי השבוע",
+    allSingles: "לכל הסינגלים",
+    slabBanner: "רוצה להוסיף סילד לתיק?",
+    worldBanner: "רוצה להוסיף סינגלים או סילד לתיק?",
     graded: (n) => `קלפים מדורגים (${n})`,
     fanLabel: (n) => `הקלפים המובילים בתיק, ${n} קלפים`,
     singles: (n) => `סינגלים (${n})`,
@@ -51,7 +62,8 @@
     srcRaw: "שער השוק הגולמי",
     unavailable: "הנתונים אינם זמינים",
     sortDesc: "שווי ↓",
-    sortAsc: "שווי ↑",
+    sortWeek: "תשואה שבועית ↓",
+    sortName: "שם",
     active: "פעיל",
     backup: "גיבוי",
     estimated: "שווי משוער",
@@ -124,7 +136,11 @@
   let currentUid = null;
   let holdingsTab = "all";
   let holdingsQuery = "";
-  let sortDesc = true;
+  /* The list is ordered by what changed, not by what a card is worth — value
+     is a fact about the card, movement is a fact about this week. The choice
+     is remembered because a sort the user picked is a preference, not a mood. */
+  const SORT_KEYS = ["week", "value", "name"];
+  let sortKey = SORT_KEYS.includes(lsGet("pocketfolio.sortKey")) ? lsGet("pocketfolio.sortKey") : "week";
   let cdRange = "3ח";
   let lastUpdatedAt = null;
   let refreshTimer = null;
@@ -289,7 +305,21 @@
         const v = valueEach(hh, snap);
         return { h: hh, val: v, total: v ? v.each * hh.qty : 0 };
       })
-      .sort((a, b) => (sortDesc ? b.total - a.total : a.total - b.total));
+      .sort(sortCmp);
+  }
+
+  /* Zero movement sorts below anything that moved, and an unknown below that:
+     "did not move" and "we do not know" are different answers and must not be
+     interleaved. */
+  function sortCmp(a, b) {
+    if (sortKey === "value") return b.total - a.total;
+    if (sortKey === "name") return String(a.h.name || "").localeCompare(String(b.h.name || ""), "he");
+    const wa = weeklyOf(a.h), wb = weeklyOf(b.h);
+    const rank = (w) => (w == null ? 2 : Math.abs(w.pct) >= 0.05 ? 0 : 1);
+    const ra = rank(wa), rb = rank(wb);
+    if (ra !== rb) return ra - rb;
+    if (ra === 0) return wb.pct - wa.pct;
+    return b.total - a.total;
   }
 
   /* one line under a value — a number whose origin is invisible is a number
@@ -348,6 +378,23 @@
   }
 
   /* portfolio change between the active snapshot and the one before it */
+  /* Every change on the screen is the same shape, built in one place, so the
+     day gap travels with the number instead of being assumed to be 1. */
+  function mkDelta(now, was, sinceISO) {
+    if (!(was > 0)) return null;
+    const days = sinceISO
+      ? Math.max(1, Math.round((Date.parse(todayISO()) - Date.parse(sinceISO)) / 864e5))
+      : 1;
+    return { amt: now - was, pct: ((now - was) / was) * 100, days, since: sinceISO || null };
+  }
+
+  /* A gap of six days is not a daily change. The label says what the figure
+     actually measures; the figure itself never changes to suit the label. */
+  function deltaLabel(delta, short) {
+    if (!delta || delta.days <= 1 || !delta.since) return short ? T.periodDay : T.changeDay;
+    return short ? T.periodSince(fmtDM(delta.since)) : T.changeSince(fmtDM(delta.since));
+  }
+
   function snapDelta(posList, snap, prev) {
     if (!snap || !prev) return null;
     let cur = 0, was = 0, any = false;
@@ -355,8 +402,8 @@
       const b = valueEach(p.h, prev);
       if (p.val && b) { cur += p.val.each * p.h.qty; was += b.each * p.h.qty; any = true; }
     }
-    if (!any || was <= 0) return null;
-    return { amt: cur - was, pct: ((cur - was) / was) * 100 };
+    if (!any) return null;
+    return mkDelta(cur, was, prev.date);
   }
 
   /* daily change: live value vs the last snapshot from an earlier day */
@@ -367,12 +414,64 @@
     for (let i = snaps.length - 1; i >= 0; i--) {
       if (new Date(snaps[i].t).toDateString() === todayKey) continue;
       const prev = getter(snaps[i]);
-      if (prev != null && prev > 0) {
-        return { amt: liveVal - prev, pct: ((liveVal - prev) / prev) * 100 };
-      }
+      if (prev != null && prev > 0) return mkDelta(liveVal, prev, snaps[i].day);
     }
     return null;
   }
+
+  /* ---------- weekly return (TASK-movers-and-singles §5) ----------
+     The daily job writes a dated per-grade series per card, which is the only
+     source that reaches back a week on a card this browser met yesterday.
+     Read at the holding's own grade — averaging grades would invent a card
+     nobody owns — and fall back to this browser's own snapshots. No point
+     older than the window means unknown, not zero. */
+  const WEEK_MS = 7 * 864e5;
+  let weekly = new Map();   // uid -> {amt, pct} | null (known to be unknown)
+  let weeklyKey = "";
+
+  async function weeklyFor(p) {
+    const hh = p.h;
+    if (!p.val) return null;
+    const now = p.val.each;
+    const cutoff = Date.now() - WEEK_MS;
+    let then = null;
+    try {
+      const doc = (hh.jp && await API.loadHistory(hh.cardId + "@jp")) ||
+        await API.loadHistory(hh.cardId);
+      const series = doc && doc.series
+        ? doc.series[String(hh.grade ?? "raw")] || doc.series.raw
+        : null;
+      if (series && series.length) {
+        for (let i = series.length - 1; i >= 0; i--) {
+          if (Date.parse(series[i].d + "T12:00:00") <= cutoff) { then = series[i].v / 100; break; }
+        }
+      }
+    } catch { /* no history file — the local store is the fallback */ }
+    if (then == null) {
+      const snaps = Store.getSnapshots();
+      for (let i = snaps.length - 1; i >= 0; i--) {
+        if (snaps[i].t > cutoff) continue;
+        const total = snaps[i].byUid?.[hh.uid];
+        if (total != null && total > 0) { then = total / hh.qty; break; }
+      }
+    }
+    if (!(then > 0)) return null;
+    return { amt: (now - then) * hh.qty, pct: ((now - then) / then) * 100 };
+  }
+
+  /* one pass for the whole portfolio, not one per tile */
+  async function loadWeekly(posList) {
+    const key = posList.map((p) => `${p.h.uid}:${p.val ? p.val.each : ""}`).join("|") +
+      "@" + (snapActive?.date || "");
+    if (key === weeklyKey) return false;
+    weeklyKey = key;
+    const next = new Map();
+    for (const p of posList) next.set(p.h.uid, await weeklyFor(p));
+    weekly = next;
+    return true;
+  }
+
+  const weeklyOf = (hh) => (weekly.has(hh.uid) ? weekly.get(hh.uid) : null);
 
   /* ---------- banner ---------- */
 
@@ -468,6 +567,7 @@
     r1.appendChild(thumbEl(hh.cardId, null, "thumb", hh.jp));
     a.appendChild(r1);
 
+    /* the value stands alone so the amount stays the tile's anchor */
     const r2 = h("span", "r2");
     const worth = h("span", "worth");
     worth.appendChild(document.createTextNode(T.worth + " "));
@@ -479,24 +579,36 @@
       worth.appendChild(h("span", "tag tag--est", T.estTag));
     }
     r2.appendChild(worth);
-    const pill = h("span");
-    const buyDelta = (hh.cost != null && p.val)
-      ? { amt: (p.val.each - hh.cost) * hh.qty, pct: hh.cost ? ((p.val.each - hh.cost) / hh.cost) * 100 : 0 }
-      : null;
-    pill.className = "pill " + (buyDelta ? deltaClass(buyDelta.amt) : "is-flat");
-    pill.textContent = buyDelta ? pctAbs(buyDelta.pct) : "0.0%";
-    r2.appendChild(pill);
     a.appendChild(r2);
 
-    /* the last-price row belongs to graded cards only (mockup: raw singles
-       end at the value row) */
-    if (hh.grade !== "raw") {
-      const r3 = h("span", "r3");
-      const raw = rawPriceOf(hh.cardId);
-      r3.appendChild(h("span", "num", `${T.lastPrice} ${raw ? show(fmtMoney(raw.value, raw.currency)) : "— —"}`));
-      r3.appendChild(h("span", null, T.changeBuy));
-      a.appendChild(r3);
-    }
+    /* Row 3: the two periods as plain text, and the one emphasised figure on
+       the tile — the buy return, carrying its own label inside the pill.
+       The split is deliberate: the pill is what the user cares about per
+       card, the weekly figure beside it is what orders the list. */
+    const r3 = h("span", "r3");
+    const periods = h("span", "periods");
+    const day = p.val ? dailyDelta(p.val.each * hh.qty, (sn) => sn.byUid?.[hh.uid]) : null;
+    const wk = p.val ? weeklyOf(hh) : null;
+    const period = (label, d) => {
+      const wrap = h("span", "period");
+      wrap.appendChild(document.createTextNode(label + " "));
+      /* unknown is not zero: a period we cannot compute says so */
+      if (!d) wrap.appendChild(h("span", "faint", "— —"));
+      else wrap.appendChild(h("span", "num " + deltaClass(d.amt), fmtPct(d.pct)));
+      return wrap;
+    };
+    periods.appendChild(period(deltaLabel(day, true), day));
+    periods.appendChild(h("span", "sep", " · "));
+    periods.appendChild(period(T.periodWeek, wk));
+    r3.appendChild(periods);
+
+    const buyDelta = (hh.cost != null && p.val && hh.cost > 0)
+      ? { amt: (p.val.each - hh.cost) * hh.qty, pct: ((p.val.each - hh.cost) / hh.cost) * 100 }
+      : null;
+    const pill = h("span", "pill pill--buy " + (buyDelta ? deltaClass(buyDelta.amt) : "is-flat"));
+    pill.textContent = T.buyPill(buyDelta ? fmtPct(buyDelta.pct) : "0.0%");
+    r3.appendChild(pill);
+    a.appendChild(r3);
     return a;
   }
 
@@ -585,10 +697,13 @@
     $("kpi-total-note").textContent = `${T.asOf} ${when} · ${src}` +
       (unpriced ? ` · ${T.noPriceCount(unpriced)}` : "");
 
-    setPillPair($("kpi-day-pill"), $("kpi-day-amount"),
-      valued.length
-        ? (snapDelta(valued, snapActive, snapPrev) ?? dailyDelta(total, (s) => s.total))
-        : null);
+    /* home and card detail read the same helper and the same label rule, so
+       the two screens cannot call the same gap by two different names */
+    const dayDelta = valued.length
+      ? (snapDelta(valued, snapActive, snapPrev) ?? dailyDelta(total, (s) => s.total))
+      : null;
+    $("kpi-day-label").textContent = deltaLabel(dayDelta);
+    setPillPair($("kpi-day-pill"), $("kpi-day-amount"), dayDelta);
 
     const plPos = pos.filter((p) => p.h.cost != null && p.val);
     if (plPos.length) {
@@ -615,11 +730,49 @@
       fan.setAttribute("aria-label", T.fanLabel(totalQty));
     }
 
+    /* Movers: what actually changed the total, which is the one thing the
+       value alone cannot say. Sorted by SIGNED weekly return — good news
+       first, bad news last. Sorting by absolute movement would put a 9%
+       drop at the top of a list nobody asked to be alarmed by. */
     const gradedPos = pos.filter((p) => p.h.grade !== "raw");
-    $("home-graded-title").textContent = T.graded(gradedPos.length);
+    const moved = gradedPos.filter((p) => {
+      const w = weeklyOf(p.h);
+      return w && Math.abs(w.pct) >= 0.05;
+    }).sort((a, b) => weeklyOf(b.h).pct - weeklyOf(a.h).pct);
+
+    /* A section that disappears on a quiet week makes the screen feel broken,
+       so it stays and says plainly that nothing moved. */
+    const quiet = !moved.length;
+    $("home-movers-sub").textContent = quiet
+      ? T.moversQuiet
+      : T.moversSub(moved.length, gradedPos.length);
     const host = $("home-holdings");
     host.replaceChildren();
-    for (const p of gradedPos.slice(0, 2)) host.appendChild(holdingCard(p));
+    const shown = quiet
+      ? [...gradedPos].sort((a, b) => b.total - a.total).slice(0, 3)
+      : moved.slice(0, 3);
+    for (const p of shown) host.appendChild(holdingCard(p));
+
+    /* Singles, unlike movers, say nothing when empty — so they go away. */
+    const rawPos = pos.filter((p) => p.h.grade === "raw");
+    const sec = $("home-singles-sec");
+    sec.hidden = !rawPos.length;
+    if (rawPos.length) {
+      $("home-singles-title").textContent = T.singles(rawPos.length);
+      const sh = $("home-singles");
+      sh.replaceChildren();
+      const ranked = [...rawPos].sort((a, b) => {
+        const wa = weeklyOf(a.h), wb = weeklyOf(b.h);
+        if (wa && wb) return wb.pct - wa.pct;
+        if (wa) return -1;
+        if (wb) return 1;
+        return b.total - a.total;
+      });
+      for (const p of ranked.slice(0, 3)) sh.appendChild(holdingCard(p));
+    }
+    /* with singles already on the screen, the banner stops inviting the user
+       to something they are looking at */
+    $("wb-title").textContent = rawPos.length ? T.slabBanner : T.worldBanner;
   }
 
   /* ---------- HOLDINGS ---------- */
@@ -634,6 +787,9 @@
   function renderHoldings(pos) {
     const host = $("holdings-body");
     host.replaceChildren();
+    /* the tab chips also answer to a deep link, not only to a click */
+    document.querySelectorAll(".tabs .tab").forEach((t) =>
+      t.setAttribute("aria-selected", String(t.dataset.tab === holdingsTab)));
 
     const all = pos.filter((p) => matchesQuery(p.h));
     const gradedPos = all.filter((p) => p.h.grade !== "raw");
@@ -655,10 +811,15 @@
       const head = h("div", "section-head");
       head.style.marginTop = "0";
       head.appendChild(h("h2", null, T.graded(gradedPos.length)));
-      const sort = h("button", "sort-chip num", sortDesc ? T.sortDesc : T.sortAsc);
+      const sortLabel = { week: T.sortWeek, value: T.sortDesc, name: T.sortName };
+      const sort = h("button", "sort-chip num", sortLabel[sortKey]);
       sort.type = "button";
-      sort.setAttribute("aria-label", "מיון לפי שווי");
-      sort.addEventListener("click", () => { sortDesc = !sortDesc; renderAll(); });
+      sort.setAttribute("aria-label", "שינוי מיון");
+      sort.addEventListener("click", () => {
+        sortKey = SORT_KEYS[(SORT_KEYS.indexOf(sortKey) + 1) % SORT_KEYS.length];
+        lsSet("pocketfolio.sortKey", sortKey);
+        renderAll();
+      });
       head.appendChild(sort);
       host.appendChild(head);
       for (const p of gradedPos) host.appendChild(holdingCard(p));
@@ -856,7 +1017,8 @@
     const split = h("div", "change-split divider mt14");
     split.style.paddingTop = "14px";
     const daily = p.val ? dailyDelta(p.total, (s) => s.byUid?.[hh.uid]) : undefined;
-    split.appendChild(changeBlock(T.changeDay, daily ?? null));
+    /* the same day-gap rule as the tile: a six-day change is not "daily" */
+    split.appendChild(changeBlock(deltaLabel(daily), daily ?? null));
     split.appendChild(h("div", "vsep"));
     const buyDelta = (hh.cost != null && p.val)
       ? { amt: (p.val.each - hh.cost) * hh.qty, pct: hh.cost ? ((p.val.each - hh.cost) / hh.cost) * 100 : 0 }
@@ -1070,13 +1232,25 @@
   /* ---------- router ---------- */
 
   function activeView() {
-    const raw = (location.hash || "#home").slice(1);
+    const raw = (location.hash || "#home").slice(1).split("?")[0];
     if (raw.startsWith("card/")) return "card";
     return ["home", "holdings", "market", "settings", "add", "card"].includes(raw) ? raw : "home";
   }
 
   function route() {
     const raw = (location.hash || "#home").slice(1);
+    /* "#holdings?tab=raw" is how the home singles section hands the user over
+       with the right tab already chosen */
+    const q = raw.indexOf("?");
+    if (q >= 0) {
+      const tab = new URLSearchParams(raw.slice(q + 1)).get("tab");
+      /* the tab arrives with the navigation, so the list has to be rebuilt
+         for it — routing alone renders nothing */
+      if (tab === "raw" || tab === "graded" || tab === "all") {
+        holdingsTab = tab;
+        renderHoldings(positions());
+      }
+    }
     let view = activeView();
     if (view === "card") {
       currentUid = decodeURIComponent(raw.slice(5));
@@ -1500,6 +1674,9 @@
       for (const p of valued) byUid[p.h.uid] = p.total;
       Store.recordSnapshot(Math.round(total * 100) / 100, byUid);
     }
+    /* one pass for the whole portfolio before the lists are ordered by it —
+       the sort key cannot be read tile by tile */
+    await loadWeekly(pos);
     renderAll();
   }
 
@@ -1778,12 +1955,15 @@
   $("date-input").value = todayISO();
   route();
   if (refreshOnOpen()) refresh();
-  else { loadSnapshots().then(renderAll); renderAll(); }
+  else {
+    loadSnapshots().then(() => loadWeekly(positions())).then(renderAll);
+    renderAll();
+  }
 
   clearInterval(refreshTimer);
   refreshTimer = setInterval(() => {
     if (!document.hidden && refreshOnOpen()) refresh();
   }, REFRESH_MS);
 
-  void fmtSigned; void fmtPct; void prettyVariant; // formatters kept per redesign brief
+  void fmtSigned; void prettyVariant; // formatters kept per redesign brief
 })();
