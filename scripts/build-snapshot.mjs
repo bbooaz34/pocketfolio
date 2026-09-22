@@ -40,6 +40,14 @@ const PPT_BASE = process.env.PPT_BASE || "https://www.pokemonpricetracker.com";
 const PPT_CREDIT_BUDGET = Number(process.env.PPT_CREDIT_BUDGET || 18000);
 const PPT_LIMIT_RESOLVED = 1;   // identity known from ppt-map — one row is the card
 const PPT_LIMIT_FIRST = 3;      // first touch — room to match by number/name locally
+/* A guarded card is one the watchlist had to describe (setMatch / nameExact /
+   nameExclude) because its name alone is ambiguous. Those guards can only
+   choose among the rows they are given, and 3 rows of "Charmander" are three
+   of about a hundred — Charmander SVP 044 came back as two SWSH promos and a
+   Shiny Vault. Guards need candidates, so an unresolved guarded card gets a
+   wide page. It costs rows × includes once: the setId is learned from the
+   match and every later day drops back to one row. */
+const PPT_LIMIT_GUARDED = 20;
 /* The API tier serves 6 months of history; Free serves 3 days. Backfilling
    the chart from the provider beats waiting for our snapshots to accumulate. */
 const PPT_HISTORY_DAYS = Number(process.env.PPT_HISTORY_DAYS || 180);
@@ -411,8 +419,14 @@ function pptAttempts(card) {
   const catalogSetId = card.id.includes("-") ? card.id.split("-")[0] : null;
   const sibling = pinned ? null : siblingSetId(catalogSetId);
   if (sibling != null) attempts.push({ search: card.name, setId: String(sibling), limit: String(PPT_LIMIT_FIRST) });
+  /* `pptSearch` is the words that actually find this card. The set's catalogue
+     name is a guess at them and sometimes a bad one: "Charmander SV Scarlet &
+     Violet Promo Cards" matched nothing at all, while the card number does. */
+  const guarded = !!(card.setMatch || card.nameExact || card.nameExclude);
+  const wide = String(guarded && !known?.setId ? PPT_LIMIT_GUARDED : PPT_LIMIT_FIRST);
+  if (card.pptSearch) attempts.push({ search: card.pptSearch, limit: wide });
   if (card.setName) attempts.push({ search: `${card.name} ${card.setName}`, limit: String(PPT_LIMIT_FIRST) });
-  attempts.push({ search: card.name, limit: String(PPT_LIMIT_FIRST) });
+  attempts.push({ search: card.name, limit: wide });
   return attempts;
 }
 

@@ -181,16 +181,24 @@ const server = createServer((req, res) => {
   if (match.id === "base1-10") {
     rows = [rowFor(match, 0, 130), rowFor(match, 0, 102)];
   } else if (match.id === "svp-44") {
-    /* the variant is listed first and its name merely EXTENDS the one we
-       want, so an exact-name guard could not be written without knowing the
-       provider's string */
+    /* Two things at once, both live. The variant is listed first and its name
+       merely EXTENDS the one we want, so an exact-name guard could not be
+       written without knowing the provider's string. And the card we want is
+       the 7th row of a common name — at limit=3 the guards never see it, which
+       is exactly how Charmander SVP 044 came back as two SWSH promos and a
+       Shiny Vault. */
     const wrong = rowFor(match, 0);
     wrong.name = "Stamped - 044 (Pokemon Center Exclusive)";
     wrong.setName = "Promo Cards"; wrong.tcgPlayerId = "STAMPED";
     const right = rowFor(match, 0);
     right.name = "Stamped - 044";
     right.setName = "Promo Cards"; right.tcgPlayerId = "PLAIN";
-    rows = [wrong, right];
+    const noise = Array.from({ length: 5 }, (_, i) => {
+      const r = rowFor(match, 0);
+      r.name = `Stamped - 0${40 + i}`; r.setName = `Other Set ${i}`;
+      r.tcgPlayerId = `NOISE${i}`; return r;
+    });
+    rows = [wrong, ...noise, right].slice(0, limit);
   } else if (match.id === "miscp-1") {
     /* the other printing is listed first, same set and same number, and its
        name merely starts with the one we want */
@@ -346,6 +354,9 @@ check("a watchlist image overrides the provider's",
 check("an unnumbered promo binds by set name, not by name alone",
   s5.cards["psa-999@jp"]?.tcgPlayerId === "RIGHTSET",
   `bound to ${s5.cards["psa-999@jp"]?.tcgPlayerId} (RIGHTSET = CoroCoro, WRONGSET = the namesake)`);
+check("a guarded card gets a page wide enough for its guards to work",
+  s5.cards["svp-44"]?.tcgPlayerId === "PLAIN",
+  `bound to ${s5.cards["svp-44"]?.tcgPlayerId} — the wanted row is 7th, unreachable at limit=3`);
 check("a special-edition variant is ruled out by nameExclude",
   s5.cards["svp-44"]?.tcgPlayerId === "PLAIN",
   `bound to ${s5.cards["svp-44"]?.tcgPlayerId} (PLAIN = the ordinary print, STAMPED = the Pokemon Center variant, listed first)`);

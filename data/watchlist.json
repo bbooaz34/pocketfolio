@@ -144,6 +144,7 @@
       "id": "svp-044",
       "name": "Charmander",
       "setName": "SV Scarlet & Violet Promo Cards",
+      "pptSearch": "Charmander 044",
       "setMatch": "violet promo",
       "nameExclude": [
         "pokemon center"
