@@ -283,8 +283,14 @@ input, select {
 
 /* ---------- holding card ---------- */
 
+/* Two columns: the text sets the height, the thumbnail spans rows 1-2 and
+   ends level with the value row. Grid rather than absolute positioning, so
+   the image tracks the text instead of assuming how tall it will be — the
+   live tile grew a fourth line the mock never had. */
 .holding-card {
-  display: block;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: var(--space-3);
   margin-top: 10px;
   background: var(--surface);
   border-radius: var(--radius-card);
@@ -292,20 +298,21 @@ input, select {
   box-shadow: var(--shadow-active);
   color: var(--ink);
 }
-/* row 1: text block at the start, card thumbnail at the end */
-.holding-card .r1 {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: var(--space-3);
-}
-.holding-card .r1 .txt { min-width: 0; }
+.holding-card .r1 { grid-column: 1; grid-row: 1; min-width: 0; }
+.holding-card .r1 .txt { display: block; min-width: 0; }
 .holding-card .nameline { display: flex; align-items: center; gap: var(--space-2); }
 .holding-card .thumb {
-  width: 36px; height: 50px;
-  border-radius: 5px;
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: start;
+  /* the only thing on the tile that identifies the card by sight; at 36×50
+     a Charizard and an Umbreon are the same object at arm's length */
+  width: 52px;
+  aspect-ratio: 2.5 / 3.5;   /* reserves the box, so nothing reflows on load */
+  border-radius: 6px;
   background: var(--primary-soft);
   object-fit: cover;
   display: block;
-  flex: none;
   box-shadow: var(--shadow-thumb);
 }
 /* the card name is never truncated — a long one wraps to a second line */
@@ -324,15 +331,18 @@ input, select {
   text-align: right;
 }
 .holding-card .r2 {
+  grid-column: 1; grid-row: 2;
   display: flex; align-items: center; justify-content: space-between;
+  align-self: end;
   margin-top: 12px;
 }
 .holding-card .worth { font-size: 13px; color: var(--ink-muted); }
 .holding-card .worth b { color: var(--ink); font-weight: 500; font-size: 15px; font-variant-numeric: tabular-nums; }
 .holding-card .r3 {
+  grid-column: 1 / -1;
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--space-2);
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 14px; color: var(--ink-muted);
 }
 /* the two period figures: label muted, only the number carries colour */
@@ -657,6 +667,11 @@ input, select {
   display: flex; align-items: center; justify-content: space-between;
 }
 .section-head h2 { margin: 0; font-size: 16px; font-weight: 500; }
+/* heading and its qualifier read as one thing, the link stays at the far end */
+.section-head .head-group {
+  display: flex; align-items: baseline; gap: var(--space-2);
+  min-width: 0;
+}
 .section-head a, .section-head .link { font-size: 13px; font-weight: 500; color: var(--primary); }
 
 /* ---------- cross-world banner ---------- */

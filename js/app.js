@@ -36,7 +36,7 @@
     periodWeek: "שבוע",
     buyPill: (pct) => `מקנייה ${pct}`,
     movers: "זזו השבוע",
-    moversSub: (n, total) => `${n} מתוך ${total} קלפים מדורגים שינו שווי בשבעת הימים האחרונים`,
+    moversCount: (n, total) => `${n} מתוך ${total}`,
     moversQuiet: "אף קלף לא שינה שווי השבוע",
     allSingles: "לכל הסינגלים",
     slabBanner: "רוצה להוסיף סילד לתיק?",
@@ -565,7 +565,6 @@
     const setBits = [displaySet(hh.setName), hh.number].filter(Boolean).join(" ");
     if (setBits) txt.appendChild(h("span", "setnum num", setBits));
     r1.appendChild(txt);
-    r1.appendChild(thumbEl(hh.cardId, null, "thumb", hh.jp));
     a.appendChild(r1);
 
     /* the value stands alone so the amount stays the tile's anchor */
@@ -581,6 +580,9 @@
     }
     r2.appendChild(worth);
     a.appendChild(r2);
+    /* DOM order follows the grid: the thumbnail spans rows 1-2 so it tracks
+       the text height instead of assuming it, and ends level with the value */
+    a.appendChild(thumbEl(hh.cardId, null, "thumb", hh.jp));
 
     /* Row 3: the two periods as plain text, and the one emphasised figure on
        the tile — the buy return, carrying its own label inside the pill.
@@ -778,9 +780,11 @@
     /* A section that disappears on a quiet week makes the screen feel broken,
        so it stays and says plainly that nothing moved. */
     const quiet = !moved.length;
-    $("home-movers-sub").textContent = quiet
+    /* the qualifier sits in the heading row: a filtered list of three has to
+       say it is filtered, and on a quiet week has to say why it is not */
+    $("home-movers-count").textContent = quiet
       ? T.moversQuiet
-      : T.moversSub(moved.length, gradedPos.length);
+      : T.moversCount(Math.min(moved.length, 3), gradedPos.length);
     const host = $("home-holdings");
     host.replaceChildren();
     const shown = quiet
