@@ -1,0 +1,28 @@
+# One-off diagnostic: which rows a PPT search returns, and their setIds.
+# Manual only — no includes, so it costs one credit per row and writes nothing.
+name: probe find
+on:
+  workflow_dispatch:
+    inputs:
+      search:
+        description: 'PPT search string'
+        required: true
+        default: 'Charmander'
+      limit:
+        description: 'how many rows (each row costs a credit)'
+        required: false
+        default: '60'
+      setMatch:
+        description: 'highlight rows whose name+set contain this'
+        required: false
+        default: ''
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/probe-find.mjs "${{ inputs.search }}" "${{ inputs.limit }}" "${{ inputs.setMatch }}"
+        env:
+          PPT_TOKEN: ${{ secrets.PPT_TOKEN }}
