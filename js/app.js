@@ -52,6 +52,11 @@
     spreadWide: "מדגם מפוזר",
     thinSample: "מדגם דל",
     noSalesWeek: "לא נמכר השבוע",
+    /* the provider states the window it averaged over; a number that hides it
+       reads as "what it sells for now", which is the misreading the window
+       itself causes on a card whose price is climbing */
+    avgWindow: (d) => `ממוצע ${d} יום`,
+    lastSale: (d) => `מכירה אחרונה ${d}`,
     estTag: "הערכה",
     untrackedTitle: "קלפים ללא מחיר מדורג",
     untrackedBody: "הקלפים האלה לא נכללים בעדכון היומי, ולכן השווי שלהם הוא הערכה גסה (מחיר סינגל × מקדם דירוג) ולא מחיר מכירות אמיתי. העתיקו את השורות והוסיפו אותן ל-data/watchlist.json במאגר.",
@@ -327,10 +332,15 @@
      the user cannot trust (POCKETFOLIO-PRICING.md §4) */
   /* What the number is, said plainly — a filtered market price is not a
      median, and saying "median" when it is not is the overclaim we removed. */
-  function methodName(priceField, grade) {
-    if (priceField === "smartMarketPrice") return T.srcSmartGrade(grade);
-    if (priceField === "marketPrice7Day") return T.src7dGrade(grade);
-    return T.srcEbayGrade(grade);
+  function methodName(m, grade) {
+    const field = m?.priceField;
+    if (field === "marketPrice7Day") return T.src7dGrade(grade);
+    if (field !== "smartMarketPrice") return T.srcEbayGrade(grade);
+    /* smartMarketPrice is a filtered weighted average over a window the
+       provider chooses — 90 days on this card. Charmander PSA 9 sold at
+       $63.41 on 13.09 and the 90-day figure read $49.94: not wrong, just
+       not the same question. The window says which question it answered. */
+    return T.srcSmartGrade(grade) + (m.daysUsed ? ` · ${T.avgWindow(m.daysUsed)}` : "");
   }
 
   /* Caveats the number cannot carry on its own: a sample that spans a wide
@@ -344,7 +354,14 @@
        thin sample, and saying the other thing is its own small overclaim. */
     if (wide) out.push(T.spreadWide);
     else if (m.effective === "medium" || m.effective === "low") out.push(T.thinSample);
-    if (m.dailyVolume7Day === 0) out.push(T.noSalesWeek);
+    /* "did not sell this week" is true of a card whose last sale was six weeks
+       ago and tells the user almost nothing. The date is the same fact, and
+       it is one they can act on. */
+    const age = m.lastSaleDate
+      ? Math.round((Date.parse(todayISO()) - Date.parse(m.lastSaleDate)) / 864e5)
+      : null;
+    if (age != null && age > 7) out.push(T.lastSale(fmtDM(m.lastSaleDate)));
+    else if (m.dailyVolume7Day === 0) out.push(T.noSalesWeek);
     return out.length ? ` · ${out.join(" · ")}` : "";
   }
 
@@ -371,7 +388,7 @@
     const en = val.jpFallback ? ` · ${T.enFallback}` : "";
     if (val.src === "snapshot") {
       return (grade && grade !== "raw"
-        ? methodName(val.m?.priceField, grade)
+        ? methodName(val.m, grade)
         : T.rawMarket) + en + caveats(val.m);
     }
     if (val.src === "raw") return T.rawMarket + en;
@@ -1395,7 +1412,7 @@
       each = snapG / 100;
       note = gradeValue === "raw"
         ? `מחושב לפי ${T.rawMarket}`
-        : `מחושב לפי ${methodName(m?.priceField, gradeValue)}`;
+        : `מחושב לפי ${methodName(m, gradeValue)}`;
       if (selectedCard.jp && !jpEntry) note += ` · ${T.enFallback}`;
       if (gradeValue !== "raw") note += caveats(m);
     } else if (selectedCard.price) {
