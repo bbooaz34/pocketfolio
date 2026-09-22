@@ -104,6 +104,8 @@
     months: (n) => (n === 1 ? "חודש" : n === 2 ? "חודשיים" : `${n} חודשים`),
     years: (n) => (n === 1 ? "שנה" : n === 2 ? "שנתיים" : `${n} שנים`),
     noPrice: "אין נתוני מחיר לקלף הזה",
+    /* the catalogue knows only a European price; the portfolio counts dollars */
+    foreignOnlyLine: (c) => `המחיר היחיד בקטלוג הוא ${c === "EUR" ? "ביורו" : `ב-${c}`} — לא נספר בתיק הדולרי`,
     backToToday: "חזרה להיום",
     pastViewing: (d) => `צפייה בנתונים מ-${d}`,
     lastBuilt: (d, t) => `עודכן לאחרונה: ${d} בשעה ${t}`,
@@ -257,11 +259,25 @@
       return { each: (rawP / 100) * (GRADE_MULT[hh.grade] ?? 1), src: "est", jpFallback };
     }
     const price = cards.get(hh.cardId)?.price;
+    /* Everything this portfolio adds up is USD: the cost, every snapshot
+       price, the total. A Cardmarket trend in EUR is not that number in
+       another unit — it is a different market, and there is no rate here to
+       convert it with. Counted as dollars it quietly mis-states the whole
+       portfolio, so it is not a value at all. The details row still shows it,
+       labelled in its own currency, and the source line says why. */
+    if (price && price.currency && price.currency !== "USD") return null;
     if (price) {
       if (hh.grade === "raw") return { each: price.value, src: "raw" };
       return { each: price.value * (GRADE_MULT[hh.grade] ?? 1), src: "est" };
     }
     return null;
+  }
+
+  /* Why a holding has no value, when "no data" would be a lie: there is a
+     price, it is just in a currency this portfolio cannot add up. */
+  function foreignOnly(hh) {
+    const price = cards.get(hh.cardId)?.price;
+    return price && price.currency && price.currency !== "USD" ? price.currency : null;
   }
 
   function positions(snap = snapActive) {
@@ -315,8 +331,11 @@
 
   /* The date chip beside the value carries the timestamp, so this line is
      only ever about WHERE the number came from — no "נכון ל:" here. */
-  function sourceLine(val, grade) {
-    if (!val) return T.noPrice;
+  function sourceLine(val, grade, hh) {
+    if (!val) {
+      const cur = hh ? foreignOnly(hh) : null;
+      return cur ? T.foreignOnlyLine(cur) : T.noPrice;
+    }
     if (val.src === "manual") return T.manualLine;
     const en = val.jpFallback ? ` · ${T.enFallback}` : "";
     if (val.src === "snapshot") {
@@ -823,7 +842,7 @@
     vl.appendChild(h("span", "t-text2 muted", `· ${hh.qty} ${T.units}`));
     txt.appendChild(vl);
     const srcRow = h("div", "t-text4 faint");
-    srcRow.appendChild(document.createTextNode(sourceLine(p.val, hh.grade)));
+    srcRow.appendChild(document.createTextNode(sourceLine(p.val, hh.grade, hh)));
     txt.appendChild(srcRow);
     const chipDate = snapActive?.date || todayISO();
     const chip = h("span", "chip sm num",
