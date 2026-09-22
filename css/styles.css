@@ -449,17 +449,22 @@ input, select {
 /* grade rail — one row, never wrapped. The leftmost chip bleeds past the
    screen edge so the row reads as "there is more" rather than as an end:
    cancel the screen's side padding on that edge and re-add it inside. */
-.grade-rail {
-  margin-top: var(--space-2);
+/* One rail, built once and used twice — the grade selector and the date
+   picker. Two rails that scroll differently is the kind of thing nobody
+   notices and everybody feels. */
+.rail {
   display: flex; gap: var(--space-2);
   overflow-x: auto; -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
-  margin-left: calc(var(--space-4) * -1);
   padding-left: var(--space-4);
 }
-.grade-rail::-webkit-scrollbar { display: none; }
-.grade-rail .grade-pill { flex: none; scroll-snap-align: end; }
+.rail::-webkit-scrollbar { display: none; }
+.rail > * { flex: none; scroll-snap-align: end; }
+/* pulls a rail (or the wrapper that collapses one) out to the screen edge */
+.bleed-left { margin-left: calc(var(--space-4) * -1); }
+
+.grade-rail { margin-top: var(--space-2); }
 .grade-pill {
   height: 42px; padding: 0 14px;
   border-radius: var(--radius-pill);
@@ -750,19 +755,26 @@ input, select {
 
 /* ---------- date carousel (POCKETFOLIO-PRICING.md §7) ---------- */
 
-.date-strip {
-  display: flex; gap: 8px;
-  margin-top: 10px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 2px;
+/* The bleed lives on the wrapper, not the rail: the wrapper clips vertically
+   to collapse, and clipping at the screen edge would eat the bleed. */
+.date-picker {
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height 280ms cubic-bezier(.2, .8, .2, 1),
+              opacity 280ms cubic-bezier(.2, .8, .2, 1);
 }
-.date-strip::-webkit-scrollbar { display: none; }
+.date-picker.is-open { max-height: 96px; opacity: 1; }
+.date-strip { padding-top: 10px; padding-bottom: 2px; }
+
+/* the chevron is the only thing saying the chip is pressable */
+.chip-chevron { transition: transform 240ms cubic-bezier(.2, .8, .2, 1); }
+.chip[aria-expanded="true"] .chip-chevron { transform: rotate(180deg); }
+button.chip { gap: 6px; }
+
 .date-chip {
-  width: 56px; height: 64px; flex: none;
+  width: 52px; height: 64px; flex: none;
   border-radius: var(--radius-sm);
   background: var(--surface);
-  box-shadow: var(--shadow-active);
+  border: 1px solid var(--border);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 2px;
   position: relative;
@@ -770,7 +782,7 @@ input, select {
 }
 .date-chip .dw { font-size: 12px; color: var(--ink-faint); }
 .date-chip .dd { font-size: 16px; line-height: 21px; font-weight: 500; }
-.date-chip[aria-pressed="true"] { background: var(--primary); }
+.date-chip[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); }
 .date-chip[aria-pressed="true"] .dw,
 .date-chip[aria-pressed="true"] .dd { color: var(--surface); }
 .date-chip .dot {
@@ -946,4 +958,5 @@ a.article-card { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   .sheet { transition: none; transform: none; }
   .sheet[hidden] { display: none; }
+  .date-picker, .chip-chevron { transition: none; }
 }

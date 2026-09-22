@@ -40,6 +40,7 @@
     moversQuiet: "אף קלף לא שינה שווי השבוע",
     allSingles: "לכל הסינגלים",
     slabBanner: "רוצה להוסיף סילד לתיק?",
+    datePick: "בחירת תאריך תצוגה",
     worldBanner: "רוצה להוסיף סינגלים או סילד לתיק?",
     graded: (n) => `קלפים מדורגים (${n})`,
     fanLabel: (n) => `הקלפים המובילים בתיק, ${n} קלפים`,
@@ -616,10 +617,51 @@
 
   let dateStripOpen = false;
 
+  /* A chip that states a date and a button that changes it are the same
+     control split in two, so the chip is the control. With fewer than two
+     dates there is nothing to pick and it is not a button at all — a control
+     that opens an empty list is worse than no control, and for a new user
+     that is the normal state, not an edge case. */
+  const datesPickable = () => !!(snapIndex && snapIndex.dates.length >= 2);
+
+  function renderDateChip() {
+    const slot = $("date-slot");
+    const shownDate = activeDate || snapLatest?.date || null;
+    const past = !!shownDate && shownDate !== todayISO();
+    if (!datesPickable()) dateStripOpen = false;
+    const pickable = datesPickable();
+
+    slot.replaceChildren();
+    const el = h(pickable ? "button" : "span", "chip num" + (past ? " chip--past" : ""));
+    el.id = "date-chip";
+    el.appendChild(document.createTextNode(past ? fmtDMY(shownDate) : fmtDateChip(new Date())));
+    if (pickable) {
+      el.type = "button";
+      el.setAttribute("aria-expanded", String(dateStripOpen));
+      el.setAttribute("aria-label", T.datePick);
+      const sv = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      sv.setAttribute("viewBox", "0 0 24 24");
+      sv.setAttribute("width", "14"); sv.setAttribute("height", "14");
+      sv.setAttribute("aria-hidden", "true");
+      sv.setAttribute("class", "chip-chevron");
+      sv.innerHTML = '<path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" ' +
+        'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+      el.appendChild(sv);
+      el.addEventListener("click", () => {
+        dateStripOpen = !dateStripOpen;
+        renderDateChip();
+        renderDateStrip();
+      });
+    }
+    slot.appendChild(el);
+  }
+
   function renderDateStrip() {
     const host = $("date-strip");
-    host.hidden = !dateStripOpen || !snapIndex || !snapIndex.dates.length;
-    if (host.hidden) return;
+    const open = dateStripOpen && datesPickable();
+    $("date-picker").classList.toggle("is-open", open);
+    $("date-picker").setAttribute("aria-hidden", String(!open));
+    if (!open) return;
     host.replaceChildren();
     const selected = activeDate || snapIndex.dates[0];
     for (const d of snapIndex.dates) {
@@ -630,7 +672,8 @@
         new Intl.DateTimeFormat("he-IL", { weekday: "short" }).format(new Date(d + "T12:00:00")))); 
       b.appendChild(h("span", "dd num", String(parseInt(d.slice(8, 10), 10))));
       if (d === todayISO() && d !== selected) b.appendChild(h("span", "dot"));
-      b.addEventListener("click", () => selectDate(d));
+      /* picking closes the rail in the same gesture */
+      b.addEventListener("click", () => { dateStripOpen = false; selectDate(d); });
       host.appendChild(b);
     }
   }
@@ -656,15 +699,7 @@
   function renderHome(pos) {
     /* the date label is the snapshot indicator (§7); a historical date is
        blue, per the Leumi rule */
-    const dc = $("date-chip");
-    const shownDate = activeDate || snapLatest?.date || null;
-    if (shownDate && shownDate !== todayISO()) {
-      dc.textContent = fmtDMY(shownDate);
-      dc.classList.add("chip--past");
-    } else {
-      dc.textContent = fmtDateChip(new Date());
-      dc.classList.remove("chip--past");
-    }
+    renderDateChip();
     renderDateStrip();
 
     /* past view: read-only — actions inert, a return strip under the header */
@@ -1888,11 +1923,8 @@
   /* TODO: portfolio switcher is rendered but inert — POCKETFOLIO-REDESIGN.md §10 */
   $("portfolio-switcher").addEventListener("click", () => {});
 
-  /* date travel (POCKETFOLIO-PRICING.md §7) */
-  $("date-change-btn").addEventListener("click", () => {
-    dateStripOpen = !dateStripOpen;
-    renderDateStrip();
-  });
+  /* date travel (POCKETFOLIO-PRICING.md §7) — the chip is the control, and
+     it wires itself in renderDateChip */
   $("past-strip-back").addEventListener("click", () => {
     if (snapIndex?.dates?.length) selectDate(snapIndex.dates[0]);
   });

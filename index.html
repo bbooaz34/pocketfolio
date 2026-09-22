@@ -40,12 +40,14 @@
 
     <main class="screen-pad">
       <div class="date-row">
-        <span class="chip num" id="date-chip"></span>
-        <!-- TODO: date travel — rendered, inert (POCKETFOLIO-REDESIGN.md §10) -->
-        <button type="button" class="text-btn" id="date-change-btn">שינוי תאריך</button>
+        <span id="date-slot"></span>
       </div>
 
-      <div id="date-strip" class="date-strip" hidden></div>
+      <!-- the picker expands inline and pushes the value card down: the user
+           is choosing which day's numbers to read, so the numbers stay visible -->
+      <div id="date-picker" class="date-picker bleed-left">
+        <div id="date-strip" class="date-strip rail"></div>
+      </div>
 
       <div id="past-strip" class="past-strip" hidden>
         <span id="past-strip-label" class="num"></span>
@@ -328,7 +330,7 @@
 
         <div class="form-field">
           <div class="field-label" id="grade-label">דירוג</div>
-          <div class="grade-rail" id="grade-pills" aria-labelledby="grade-label"></div>
+          <div class="grade-rail rail bleed-left" id="grade-pills" aria-labelledby="grade-label"></div>
         </div>
 
         <div class="form-row">
