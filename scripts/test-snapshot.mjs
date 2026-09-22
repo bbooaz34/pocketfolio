@@ -61,6 +61,12 @@ CARDS.push({ id: "psa-999@jp", name: "Promo", setName: "CoroCoro Promotional Car
    Exclusive Print)" pair. Only nameExact says which one this is. */
 CARDS.push({ id: "miscp-1", name: "Twinned", setName: "Misc Promos",
   setMatch: "misc", nameExact: "Twinned", number: "1" });
+/* the same collision when the provider's exact name string is unknown: a
+   special-edition variant shares set AND number, and only the words that name
+   it can be ruled out — the live Charmander 044 / "(Pokemon Center
+   Exclusive)" pair. */
+CARDS.push({ id: "svp-44", name: "Stamped", setName: "Promo Cards",
+  setMatch: "promo", nameExclude: ["pokemon center"], number: "44" });
 
 const HISTORY_DAYS = 120;
 const makeHistory = (base) => {
@@ -174,6 +180,17 @@ const server = createServer((req, res) => {
   let rows;
   if (match.id === "base1-10") {
     rows = [rowFor(match, 0, 130), rowFor(match, 0, 102)];
+  } else if (match.id === "svp-44") {
+    /* the variant is listed first and its name merely EXTENDS the one we
+       want, so an exact-name guard could not be written without knowing the
+       provider's string */
+    const wrong = rowFor(match, 0);
+    wrong.name = "Stamped - 044 (Pokemon Center Exclusive)";
+    wrong.setName = "Promo Cards"; wrong.tcgPlayerId = "STAMPED";
+    const right = rowFor(match, 0);
+    right.name = "Stamped - 044";
+    right.setName = "Promo Cards"; right.tcgPlayerId = "PLAIN";
+    rows = [wrong, right];
   } else if (match.id === "miscp-1") {
     /* the other printing is listed first, same set and same number, and its
        name merely starts with the one we want */
@@ -329,6 +346,9 @@ check("a watchlist image overrides the provider's",
 check("an unnumbered promo binds by set name, not by name alone",
   s5.cards["psa-999@jp"]?.tcgPlayerId === "RIGHTSET",
   `bound to ${s5.cards["psa-999@jp"]?.tcgPlayerId} (RIGHTSET = CoroCoro, WRONGSET = the namesake)`);
+check("a special-edition variant is ruled out by nameExclude",
+  s5.cards["svp-44"]?.tcgPlayerId === "PLAIN",
+  `bound to ${s5.cards["svp-44"]?.tcgPlayerId} (PLAIN = the ordinary print, STAMPED = the Pokemon Center variant, listed first)`);
 check("two printings in one set are told apart by nameExact, not by order",
   s5.cards["miscp-1"]?.tcgPlayerId === "RIGHTPRINT",
   `bound to ${s5.cards["miscp-1"]?.tcgPlayerId} (RIGHTPRINT = the plain name, WRONGPRINT = the other printing, listed first)`);

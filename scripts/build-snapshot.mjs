@@ -510,7 +510,18 @@ async function priceWithPPT(cards, out, prev) {
          first. `nameExact` says which one this card is. */
       const wantName = String(card.nameExact || "").toLowerCase();
       const wrongName = (r) => wantName !== "" && String(r.name ?? "").toLowerCase() !== wantName;
-      const usable = rows.filter((r) => !wrongSet(r) && !wrongName(r));
+      /* `nameExact` needs to know the provider's exact string, and it varies
+         by set — PPT answers "Charizard" for Base but "Charizard ex - 006/165"
+         for 151. When what we know is which variant we do NOT want, say that
+         instead: Charmander 044 and "Charmander 044 (Pokemon Center
+         Exclusive)" share set and number, and only the words rule them apart
+         under either naming convention. */
+      const notWanted = [].concat(card.nameExclude || []).map((x) => String(x).toLowerCase()).filter(Boolean);
+      const excluded = (r) => {
+        const n = String(r.name ?? "").toLowerCase();
+        return notWanted.some((x) => n.includes(x));
+      };
+      const usable = rows.filter((r) => !wrongSet(r) && !wrongName(r) && !excluded(r));
       if (rows.length && !usable.length) {
         console.log(`  PPT rows for ${card.id} are all another card` +
           ` (want ${wantName ? `"${wantName}" in ` : ""}` +

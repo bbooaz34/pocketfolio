@@ -139,6 +139,17 @@
       "nameExact": "Ancient Mew",
       "note": "The Power of One movie promo (2000), PSA-slabbed as \"2000 Pokemon Game Movie\". TCGplayer keeps two Ancient Mews in the same set — 108589 (this one, English) and 482427 \"Ancient Mew (Japanese Exclusive Print)\" — so setMatch alone cannot tell them apart and nameExact pins the English one. Graded copies are by definition out of the sealed sleeve; sealed prices are a different market and are not what this row tracks.",
       "pcQuery": "ancient mew movie promo pokemon"
+    },
+    {
+      "id": "svp-044",
+      "name": "Charmander",
+      "setName": "SV Scarlet & Violet Promo Cards",
+      "setMatch": "violet promo",
+      "nameExclude": [
+        "pokemon center"
+      ],
+      "note": "The Obsidian Flames Elite Trainer Box promo, TCGplayer 512035. A second product sits at the SAME set and the SAME number 044 — 512036, \"Charmander - 044 (Pokemon Center Exclusive)\", the silver-stamped one — and it sells for more. nameExact cannot separate them because PPT's name string varies by set (\"Charizard\" for Base, \"Charizard ex - 006/165\" for 151), so the stamped variant is excluded by name instead. If the physical card carries a Pokemon Center stamp, this row is the wrong one.",
+      "pcQuery": "charmander svp 044 scarlet violet promo pokemon"
     }
   ]
 }
