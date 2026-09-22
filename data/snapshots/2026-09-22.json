@@ -1,8 +1,169 @@
 {
  "date": "2026-09-22",
- "builtAt": "2026-09-22T11:13:12.331Z",
+ "builtAt": "2026-09-22T11:19:07.838Z",
  "source": "ppt",
  "cards": {
+  "svp-044": {
+   "pcId": null,
+   "tcgPlayerId": "512035",
+   "name": "Charmander",
+   "set": "SV Scarlet & Violet Promo Cards",
+   "number": "044",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/512035_in_400x400.jpg",
+   "grades": {
+    "1": 20350,
+    "2": 14250,
+    "4": 5151,
+    "5": 6850,
+    "6": 5185,
+    "7": 6082,
+    "8": 6000,
+    "9": 9311,
+    "10": 54000,
+    "raw": 5682
+   },
+   "metrics": {
+    "1": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "down",
+     "dailyVolume7Day": 0,
+     "salesCount": 3,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-11",
+     "spread": {
+      "low": 20350,
+      "high": 25999
+     }
+    },
+    "2": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": 1,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 51,
+     "lastSaleDate": "2026-08-02",
+     "spread": {
+      "low": 14250,
+      "high": 14250
+     }
+    },
+    "4": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 3,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-18",
+     "spread": {
+      "low": 3521,
+      "high": 5700
+     }
+    },
+    "5": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "stable",
+     "dailyVolume7Day": 0,
+     "salesCount": 5,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 147,
+     "lastSaleDate": "2026-08-05",
+     "spread": {
+      "low": 6500,
+      "high": 6999
+     }
+    },
+    "6": {
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 11,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-08-24",
+     "spread": {
+      "low": 3000,
+      "high": 7100
+     }
+    },
+    "7": {
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.2857142857142857,
+     "salesCount": 74,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-19",
+     "spread": {
+      "low": 2999,
+      "high": 9100
+     }
+    },
+    "8": {
+     "confidence": "high",
+     "effective": "high",
+     "trend": "stable",
+     "dailyVolume7Day": 1.4285714285714286,
+     "salesCount": 342,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-20",
+     "spread": {
+      "low": 3500,
+      "high": 10450
+     }
+    },
+    "9": {
+     "confidence": "high",
+     "effective": "high",
+     "trend": "up",
+     "dailyVolume7Day": 3.7142857142857144,
+     "salesCount": 734,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-21",
+     "spread": {
+      "low": 6300,
+      "high": 17000
+     }
+    },
+    "10": {
+     "confidence": "high",
+     "effective": "high",
+     "trend": "up",
+     "dailyVolume7Day": 1.5714285714285714,
+     "salesCount": 403,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 7,
+     "lastSaleDate": "2026-09-21",
+     "spread": {
+      "low": 44500,
+      "high": 80597
+     }
+    }
+   },
+   "salesVelocityWeekly": 43.72093023255814,
+   "salesVolume": null,
+   "confidence": "high",
+   "pricedOn": "2026-09-22"
+  },
   "base1-4": {
    "pcId": null,
    "tcgPlayerId": "42382",
