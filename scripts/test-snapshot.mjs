@@ -67,6 +67,11 @@ CARDS.push({ id: "miscp-1", name: "Twinned", setName: "Misc Promos",
    Exclusive)" pair. */
 CARDS.push({ id: "svp-44", name: "Stamped", setName: "Promo Cards",
   setMatch: "promo", nameExclude: ["pokemon center"], number: "44" });
+/* the same pair, but with PPT's set pinned — the live fix. One row is not
+   enough here: the pinned set holds both variants, and the guard must be
+   handed more than whichever one the provider lists first. */
+CARDS.push({ id: "svp-45", name: "Varianted", setName: "Promo Cards",
+  pptSetId: "ppt-promo", nameExclude: ["pokemon center"], number: "45" });
 
 const HISTORY_DAYS = 120;
 const makeHistory = (base) => {
@@ -180,6 +185,18 @@ const server = createServer((req, res) => {
   let rows;
   if (match.id === "base1-10") {
     rows = [rowFor(match, 0, 130), rowFor(match, 0, 102)];
+  } else if (match.id === "svp-45") {
+    /* Unreachable by name, like the live card: a probe of 80 "Charmander"
+       rows found SVP 044 at position 33, so only the pinned set reaches it. */
+    if (!setId) return send([], 80);
+    /* a pinned set holding both variants, the unwanted one first */
+    const wrong = rowFor(match, 0);
+    wrong.name = "Varianted - 045 (Pokemon Center Exclusive)";
+    wrong.setName = "Promo Cards"; wrong.tcgPlayerId = "PINSTAMPED";
+    const right = rowFor(match, 0);
+    right.name = "Varianted - 045";
+    right.setName = "Promo Cards"; right.tcgPlayerId = "PINPLAIN";
+    rows = [wrong, right].slice(0, limit);
   } else if (match.id === "svp-44") {
     /* Two things at once, both live. The variant is listed first and its name
        merely EXTENDS the one we want, so an exact-name guard could not be
@@ -354,6 +371,9 @@ check("a watchlist image overrides the provider's",
 check("an unnumbered promo binds by set name, not by name alone",
   s5.cards["psa-999@jp"]?.tcgPlayerId === "RIGHTSET",
   `bound to ${s5.cards["psa-999@jp"]?.tcgPlayerId} (RIGHTSET = CoroCoro, WRONGSET = the namesake)`);
+check("a pinned set still reads enough rows to rule out its variants",
+  s5.cards["svp-45"]?.tcgPlayerId === "PINPLAIN",
+  `bound to ${s5.cards["svp-45"]?.tcgPlayerId} — at limit=1 only the variant is returned`);
 check("a guarded card gets a page wide enough for its guards to work",
   s5.cards["svp-44"]?.tcgPlayerId === "PLAIN",
   `bound to ${s5.cards["svp-44"]?.tcgPlayerId} — the wanted row is 7th, unreachable at limit=3`);

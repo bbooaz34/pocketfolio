@@ -48,6 +48,8 @@ const PPT_LIMIT_FIRST = 3;      // first touch — room to match by number/name 
    wide page. It costs rows × includes once: the setId is learned from the
    match and every later day drops back to one row. */
 const PPT_LIMIT_GUARDED = 20;
+/* inside a pinned set, a handful of rows covers every variant of one card */
+const PPT_LIMIT_PINNED_GUARDED = 5;
 /* The API tier serves 6 months of history; Free serves 3 days. Backfilling
    the chart from the provider beats waiting for our snapshots to accumulate. */
 const PPT_HISTORY_DAYS = Number(process.env.PPT_HISTORY_DAYS || 180);
@@ -407,8 +409,14 @@ function pptAttempts(card) {
   const pinned = card.pptSetId != null ? String(card.pptSetId) : null;
   if (pinned) {
     /* the watchlist names PPT's set outright. It overrides anything learned,
-       which is how a card bound to the wrong printing gets corrected. */
-    attempts.push({ search: known?.search || card.name, setId: pinned, limit: String(PPT_LIMIT_RESOLVED) });
+       which is how a card bound to the wrong printing gets corrected.
+       One row is enough only when the set holds one such card: setId 22872
+       holds both "Charmander - 044" and "Charmander - 044 (Pokemon Center
+       Exclusive)", and at limit=1 the guard that rules the variant out could
+       be handed the variant and nothing else. A pinned set is cheap to read. */
+    const guardedPin = !!(card.nameExact || card.nameExclude);
+    attempts.push({ search: known?.search || card.name, setId: pinned,
+      limit: String(guardedPin ? PPT_LIMIT_PINNED_GUARDED : PPT_LIMIT_RESOLVED) });
   } else if (known?.search) {
     attempts.push({
       search: known.search,

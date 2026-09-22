@@ -144,12 +144,12 @@
       "id": "svp-044",
       "name": "Charmander",
       "setName": "SV Scarlet & Violet Promo Cards",
-      "pptSearch": "Charmander 044",
+      "pptSetId": 22872,
       "setMatch": "violet promo",
       "nameExclude": [
         "pokemon center"
       ],
-      "note": "The Obsidian Flames Elite Trainer Box promo, TCGplayer 512035. A second product sits at the SAME set and the SAME number 044 — 512036, \"Charmander - 044 (Pokemon Center Exclusive)\", the silver-stamped one — and it sells for more. nameExact cannot separate them because PPT's name string varies by set (\"Charizard\" for Base, \"Charizard ex - 006/165\" for 151), so the stamped variant is excluded by name instead. If the physical card carries a Pokemon Center stamp, this row is the wrong one.",
+      "note": "The Obsidian Flames Elite Trainer Box promo, TCGplayer 512035, confirmed by the owner. PPT set 22872 is \"SV: Scarlet & Violet Promo Cards\" and holds BOTH 512035 and 512036, \"Charmander - 044 (Pokemon Center Exclusive)\" — same set, same number 044, the stamped one worth more. nameExact cannot separate them because PPT's name string varies by set, so the variant is excluded by name. The setId is pinned because searching by name cannot reach this card: a probe of 80 Charmander rows found it 33rd, so neither the default page of 3 nor a widened 20 ever saw it. If the physical card carries a Pokemon Center stamp, this row is the wrong one.",
       "pcQuery": "charmander svp 044 scarlet violet promo pokemon"
     }
   ]
