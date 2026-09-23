@@ -285,8 +285,11 @@ function pptGrades(row) {
          card last sold. A $74.26 sale at 15:47 on 22.09 was absent from a
          response fetched at 16:56 the same day, because this card's market
          data had not been refreshed since 17.09. Without this field the two
-         are indistinguishable: no recent sales, or nobody checked. */
-      marketUpdatedAt: typeof v.lastMarketUpdate === "string" ? v.lastMarketUpdate.slice(0, 10) : null,
+         are indistinguishable: no recent sales, or nobody checked.
+         Kept as the full timestamp, not the date: the hour is what says when
+         the provider's daily cycle runs, and that is what our own cron has to
+         sit after. Truncating it threw away the only way to measure that. */
+      marketUpdatedAt: typeof v.lastMarketUpdate === "string" ? v.lastMarketUpdate : null,
       spread: lo && hi ? { low: lo, high: hi } : null,
     };
   }
