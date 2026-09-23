@@ -7,13 +7,17 @@
 # Secrets: PRICECHARTING_TOKEN (optional but primary), PPT_TOKEN (fallback).
 name: price snapshot
 on:
-  # 20:00 UTC. The provider refreshes a card's market data in the evening UTC
-  # (the one full timestamp seen so far: 2026-09-17T18:38:35Z), so a 04:00 run
-  # carried the PREVIOUS evening's data — about nine hours stale on arrival.
-  # Running after the provider's cycle puts that same day's refresh in that
-  # day's snapshot. Kept four hours clear of midnight UTC because GitHub's
-  # scheduler runs cron late, sometimes by hours: the 04:00 job fired at 09:05
-  # on 20.09, and a delay that size must not push the run onto the next date.
+  # 20:00 UTC. NOT because the provider has an evening batch — it does not.
+  # Full timestamps across the watchlist land at 02, 07, 07, 07, 09, 11, 12,
+  # 12, 15, 16, 16, 17, 18, 19, 20, 21 and 22 UTC: it refreshes cards around
+  # the clock, and the single 18:38 sample this hour was first chosen from was
+  # a coincidence. The reason that survives is duller and still holds — the
+  # later in the day we build, the more of that day's refreshes we have caught.
+  # On 23.09 five cards refreshed between 07:07 and 16:04; a 20:00 build has
+  # all five, a 04:00 build would have carried the previous day's data for
+  # every one of them. Kept four hours clear of midnight UTC because GitHub
+  # runs cron late, sometimes by hours: the 04:00 job fired at 09:06 on 23.09,
+  # and a delay that size must not push the run onto the next date.
   schedule: [{ cron: '0 20 * * *' }]   # 20:00 UTC
   workflow_dispatch:
 permissions:
