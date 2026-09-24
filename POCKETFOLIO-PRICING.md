@@ -50,6 +50,20 @@ export const PC_GRADE_FIELD = {
 PriceCharting serves no price history. **Our history is the sequence of our own
 snapshots** — which is the whole reason they are committed rather than cached.
 
+`data/history/<cardId>.json` merges two kinds of point into one series, and they
+are **not the same quantity**: a provider point is what a card sold for that
+day, ours is the aggregate the app displayed. Ours therefore carry `o: 1`:
+
+```json
+{ "d": "2026-09-13", "v": 6341 }            // a sale that day
+{ "d": "2026-09-23", "v": 4994, "o": 1 }    // what we showed that day
+```
+
+Anything comparing two points over time must compare like with like. Reading a
+$63.41 sale against a $49.94 ninety-day average produced a 21% weekly fall that
+never happened, and put the card at the top of "זזו השבוע" as the week's biggest
+loser in a week it did not move.
+
 ---
 
 ## 3. Repo layout
@@ -161,19 +175,32 @@ filtered weighted price a median is exactly the overclaim this line exists to
 prevent: `smartMarketPrice` → `מחיר eBay מסונן לדירוג N`, `marketPrice7Day` →
 `מחיר eBay ב-7 ימים לדירוג N`, `medianPrice` → `חציון מכירות eBay לדירוג N`.
 
-Two caveats append to states 1 and 3, because the number cannot carry them itself
-(see the 19.09 investigation in PRICING-ATTEMPTS.md — the provider's
-aggregates are not bounded by the window we ask for):
+The number cannot carry its own caveats, so states 1 and 3 append them (see the
+19.09 investigation in PRICING-ATTEMPTS.md — the provider's aggregates are not
+bounded by the window we ask for):
 
 | Condition | Appended |
 |---|---|
+| `priceField` is `smartMarketPrice` | `· ממוצע {daysUsed} יום` |
 | the grade's spread is wider than 2× | `· מדגם מפוזר` |
 | otherwise, `effective` is `medium`/`low` | `· מדגם דל` |
-| `dailyVolume7Day === 0` | `· לא נמכר השבוע` |
+| `lastSaleDate` older than 7 days | `· מכירה אחרונה dd.MM` |
+| else `dailyVolume7Day === 0` | `· לא נמכר השבוע` |
 
-The first two are separate because they are different facts: base1-4 at PSA 9
-is three sales between $1,400 and $1,500, none of them recent — thin, not
-scattered, and calling it scattered would be its own small overclaim.
+The window is not decoration. `smartMarketPrice` is a filtered weighted average
+over a window the provider picks per grade — 90 days on Charmander PSA 9, 14 on
+PSA 8, 30 on PSA 10 — and it returns both `method` and `daysUsed` saying so. On
+a rising card a 90-day average lags structurally: that card sold at $63.41 on
+13.09 while the figure read $49.94. Not a wrong number, an answer to a different
+question, and the window is what says which question.
+
+The spread and sample caveats are separate because they are different facts:
+base1-4 at PSA 9 is three sales between $1,400 and $1,500, none of them recent —
+thin, not scattered, and calling it scattered would be its own small overclaim.
+
+The date replaces the vague flag for the same reason. "Did not sell this week"
+is equally true of a card that last sold six weeks ago, and tells the owner
+nothing; `מכירה אחרונה 11.08` is the same fact in a form they can act on.
 
 A lifetime sales count is never printed beside a date. If it is ever shown it
 reads `סה"כ מכירות מאז ומעולם`, never `מכירות אחרונות`.
@@ -193,7 +220,7 @@ is optional: an empty field is "unknown", and `0` is a real answer.
 ```yaml
 name: price snapshot
 on:
-  schedule: [{ cron: '0 4 * * *' }]   # 04:00 UTC
+  schedule: [{ cron: '0 20 * * *' }]  # 20:00 UTC — see "provider freshness" below
   workflow_dispatch:
 permissions:
   contents: write
@@ -223,6 +250,37 @@ jobs:
 - **never write a snapshot that is more than 40% smaller than yesterday's** — abort
   and fail the job instead. A half-empty snapshot is worse than a stale one;
 - write `snapshots/<date>.json`, then `latest.json`, then rebuild `index.json`.
+
+### Provider freshness, and why the job runs at 20:00 (measured 22-23.09.26)
+
+The provider refreshes a card's market data **per card, on no fixed schedule**,
+and our snapshot can only ever be as fresh as its last refresh. That fact is
+stored per grade as `metrics[grade].marketUpdatedAt`, whole, not truncated to
+the date — the hour is the measurement.
+
+What 17 cards over two days showed:
+
+- **Refreshes land at every hour of the clock** — 02, 07, 07, 07, 09, 11, 12,
+  12, 15, 16, 16, 17, 18, 19, 20, 21, 22 UTC. There is no nightly batch to run
+  after. An earlier reading of a single 18:38 timestamp suggested one; it was a
+  coincidence, and a cron was moved on it before the full timestamps existed.
+- **Later in the day is strictly better anyway.** On 23.09 five cards refreshed
+  between 07:07 and 16:04. A 20:00 build has all five; the old 04:00 build would
+  have carried the previous day's numbers for every one of them. That is the
+  whole justification — 20:00 stays four hours clear of midnight UTC because
+  GitHub runs cron late, sometimes by hours, and a delay that size must not push
+  the run onto the next date.
+- **Six of seventeen refreshed in 26 hours.** The rest sat still, and four cards
+  are persistently stale: The Boss's Way 8 days, Bulbasaur 7, Charmander and
+  Togepi 6.
+- **It is not about how traded a card is.** Base Set Charizard, the most traded
+  card on the list, went a day without a refresh while an anonymous Misty's
+  Tears refreshed the same afternoon. The mechanism is unknown; only the lag is
+  established.
+
+The consequence for the UI is the rule in §4: a price is reported with the
+window it averaged and the date it last sold, because on a card the provider
+has not looked at for a week neither is implied by the number.
 
 ---
 
