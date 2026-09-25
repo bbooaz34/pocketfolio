@@ -673,15 +673,22 @@ const fresh = entries.size;
 
 /* A card the budget did not reach today keeps yesterday's price, flagged so the
    app can show its real age. Every snapshot stays complete; only `pricedOn`
-   tells you how old a given number is. */
-let carried = 0;
+   tells you how old a given number is.
+   Only a card still ON the watchlist is carried. Carrying by yesterday's
+   snapshot alone meant a card removed from the watchlist never left the
+   snapshot: it just aged in place, priced forever by a build that no longer
+   asks about it. Eight removed cards survived that way. */
+const tracked = new Set(watchlist.map((c) => c.id));
+let carried = 0, dropped = 0;
 if (prev) {
   for (const [id, entry] of Object.entries(prev.cards || {})) {
     if (entries.has(id)) continue;
+    if (!tracked.has(id)) { dropped++; continue; }
     entries.set(id, { ...entry, carried: true, pricedOn: entry.pricedOn || prev.date });
     carried++;
   }
 }
+if (dropped) console.log(`dropped ${dropped} card(s) no longer on the watchlist`);
 for (const [, e] of entries) if (!e.pricedOn) e.pricedOn = today;
 
 const cards = Object.fromEntries(entries);

@@ -404,6 +404,21 @@ const h6 = JSON.parse(readFileSync(join(work, "data", "history",
 check("today's raw series still grows when graded history is missing",
   (h6.series?.raw?.length ?? 0) > 100, `raw ${h6.series?.raw?.length} pts`);
 
+/* a card removed from the watchlist must leave the snapshot, not age in it:
+   carrying by yesterday's file alone kept eight deleted cards alive for days */
+{
+  const wl = JSON.parse(readFileSync(join(work, "data", "watchlist.json"), "utf8"));
+  const removed = wl.cards.pop();
+  writeFileSync(join(work, "data", "watchlist.json"), JSON.stringify(wl));
+  await run("2026-09-26", { PPT_CREDIT_BUDGET: "2000" });
+  const after = snap("2026-09-26");
+  check("a card dropped from the watchlist leaves the snapshot",
+    !Object.keys(after.cards).includes(removed.id),
+    `${removed.id} still present among ${Object.keys(after.cards).length} cards`);
+  wl.cards.push(removed);
+  writeFileSync(join(work, "data", "watchlist.json"), JSON.stringify(wl));
+}
+
 server.close();
 console.log(`\nworkspace: ${work}`);
 console.log(failures ? `\n${failures} check(s) failed` : "\nall checks passed — zero credits spent");
