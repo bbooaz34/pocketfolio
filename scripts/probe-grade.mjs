@@ -24,6 +24,7 @@ const mapPath = join(ROOT, "data", "ppt-map.json");
 const map = existsSync(mapPath) ? JSON.parse(readFileSync(mapPath, "utf8")) : {};
 const cardId = process.argv[2] || Object.keys(map)[0];
 const grade = (process.argv[3] || "psa1").toLowerCase();
+const since = process.argv[4] || "";
 const known = map[cardId];
 if (!known?.search) { console.error(`no ppt-map entry for ${cardId}`); process.exit(1); }
 
@@ -47,7 +48,9 @@ console.log(`row keys: ${Object.keys(row).join(",")}`);
 
 const e = row.ebay || {};
 console.log(`ebay keys: ${Object.keys(e).join(",")}`);
-console.log(`totalSales=${e.totalSales} range=${String(e.dateRangeStart).slice(0,10)}..${String(e.dateRangeEnd).slice(0,10)}`);
+console.log(`totalSales=${e.totalSales} totalValue=${e.totalValue} gradesTracked=${JSON.stringify(e.gradesTracked)}`);
+console.log(`range=${String(e.dateRangeStart).slice(0,10)}..${String(e.dateRangeEnd).slice(0,10)}`);
+console.log(`ebay.updatedAt=${e.updatedAt} lastScrapedDate=${e.lastScrapedDate} lastEbayCheck=${e.lastEbayCheck}`);
 
 console.log(`\n=== salesByGrade.${grade}`);
 console.log(JSON.stringify(e.salesByGrade?.[grade], null, 1));
@@ -61,6 +64,25 @@ if (series && !Array.isArray(series)) {
   for (const d of Object.keys(series).sort()) console.log(`  ${d}  ${JSON.stringify(series[d])}`);
 } else {
   console.log(JSON.stringify(series, null, 1));
+}
+
+/* Where did the recent sales land? Every bucket, not just PSA: if a sale the
+   owner saw on eBay was filed under another grading company or another grade,
+   this is where it shows. */
+if (since) {
+  console.log(`\n=== every bucket, dated points on/after ${since}`);
+  for (const [g, s2] of Object.entries(e.priceHistory || {})) {
+    if (!s2 || typeof s2 !== "object" || Array.isArray(s2)) continue;
+    for (const d of Object.keys(s2).sort()) {
+      if (d >= since) console.log(`  ${g.padEnd(10)} ${d}  ${JSON.stringify(s2[d])}`);
+    }
+  }
+  console.log(`\n=== every bucket: count / lastSaleDate / lastMarketUpdate`);
+  for (const [g, v] of Object.entries(e.salesByGrade || {})) {
+    if (!v || typeof v !== "object") continue;
+    console.log(`  ${g.padEnd(10)} count=${String(v.count).padStart(4)} last=${String(v.lastSaleDate).slice(0,10)}` +
+      ` upd=${String(v.lastMarketUpdate).slice(0,16)} min=${v.minPrice} max=${v.maxPrice} vol7=${v.dailyVolume7Day} p7=${v.marketPrice7Day}`);
+  }
 }
 
 /* Any per-sale list anywhere in the payload? Hunt for arrays of objects that
