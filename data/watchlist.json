@@ -11,24 +11,6 @@
       "pcQuery": "charizard base set 4/102 pokemon"
     },
     {
-      "id": "base1-2",
-      "name": "Blastoise",
-      "setName": "Base",
-      "number": "2",
-      "setTotal": 102,
-      "pptSetId": 604,
-      "pcQuery": "blastoise base set 2/102 pokemon"
-    },
-    {
-      "id": "base1-15",
-      "name": "Venusaur",
-      "setName": "Base",
-      "number": "15",
-      "setTotal": 102,
-      "pptSetId": 604,
-      "pcQuery": "venusaur base set 15/102 pokemon"
-    },
-    {
       "id": "base1-46",
       "name": "Charmander",
       "setName": "Base",
@@ -36,15 +18,6 @@
       "setTotal": 102,
       "pptSetId": 604,
       "pcQuery": "charmander base set 46/102 pokemon"
-    },
-    {
-      "id": "base1-58",
-      "name": "Pikachu",
-      "setName": "Base",
-      "number": "58",
-      "setTotal": 102,
-      "pptSetId": 604,
-      "pcQuery": "pikachu base set 58/102 pokemon"
     },
     {
       "id": "base1-63",
@@ -63,14 +36,6 @@
       "setTotal": 102,
       "pptSetId": 604,
       "pcQuery": "bulbasaur base set 44/102 pokemon"
-    },
-    {
-      "id": "gym2-118",
-      "name": "Misty's Tears",
-      "setName": "Gym Challenge",
-      "number": "118",
-      "setTotal": 132,
-      "pcQuery": "misty's tears gym challenge 118/132 pokemon"
     },
     {
       "id": "psa-77452905@jp",
@@ -92,44 +57,12 @@
       "pcQuery": "togepi corocoro comics japanese promo pokemon"
     },
     {
-      "id": "neo1-9",
-      "name": "Lugia",
-      "setName": "Neo Genesis",
-      "number": "9",
-      "setTotal": 111,
-      "pcQuery": "lugia neo genesis 9/111 pokemon"
-    },
-    {
       "id": "base5-73",
       "name": "The Boss's Way",
       "setName": "Team Rocket",
       "number": "73",
       "setTotal": 82,
       "pcQuery": "the boss's way team rocket 73/82 pokemon"
-    },
-    {
-      "id": "swsh7-215",
-      "name": "Umbreon VMAX",
-      "setName": "Evolving Skies",
-      "number": "215",
-      "setTotal": 203,
-      "pcQuery": "umbreon vmax alt art evolving skies 215/203 pokemon"
-    },
-    {
-      "id": "swsh4-188",
-      "name": "Pikachu VMAX",
-      "setName": "Vivid Voltage",
-      "number": "188",
-      "setTotal": 185,
-      "pcQuery": "pikachu vmax vivid voltage 188/185 pokemon"
-    },
-    {
-      "id": "sv3pt5-6",
-      "name": "Charizard",
-      "setName": "151",
-      "number": "6",
-      "setTotal": 165,
-      "pcQuery": "charizard 151 6/165 pokemon"
     },
     {
       "id": "miscp-001",
