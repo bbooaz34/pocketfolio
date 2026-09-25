@@ -1,0 +1,13 @@
+{
+  "name": "pocketfolio",
+  "private": true,
+  "description": "The app has no dependencies and no build. Playwright is only for scripts/scrape-ebay-sold.mjs, which runs on the owner's Mac.",
+  "scripts": {
+    "test": "node scripts/test-snapshot.mjs",
+    "scrape": "node scripts/scrape-ebay-sold.mjs",
+    "nightly": "bash scripts/nightly.sh"
+  },
+  "devDependencies": {
+    "playwright": "^1.47.0"
+  }
+}

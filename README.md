@@ -87,6 +87,53 @@ it once via the browser console:
 TCGdex prices come from TCGplayer (USD) or, when that's missing, Cardmarket
 (shown in €).
 
+## Graded prices from eBay, read nightly on the Mac
+
+Graded values in the daily snapshot come from eBay's own sold listings, read
+once a night from a logged-in browser on the owner's Mac
+(`TASK-ebay-direct.md`). Price providers only resell a sample of eBay. Raw
+prices still come from the catalog.
+
+The job, `scripts/nightly.sh`, does one search per graded card, page one only,
+sorted by most recent. The search text is the card's `psaTitle`. It merges what
+it finds into `data/sales/<cardId>.json`, builds the snapshot, and commits and
+pushes `data/`. It never runs in GitHub Actions. The Action there keeps its
+schedule and builds from whatever `data/sales` the Mac last pushed.
+
+**One-time setup:**
+
+```sh
+# 1. dependencies (Playwright is only for the scraper; the app has none)
+cd ~/path/to/pocketfolio && npm install
+
+# 2. a DEDICATED browser profile, never your daily Chrome one
+mkdir -p ~/.pocketfolio/chrome-profile
+
+# 3. first run: a window opens, sign in to eBay, close the window.
+#    The scrape then runs headless on the same profile.
+node scripts/scrape-ebay-sold.mjs --login
+
+# 4. the 04:00 launchd job
+sed -e "s#REPO_PATH#$PWD#" -e "s#HOME_PATH#$HOME#" \
+  scripts/launchd/com.pocketfolio.nightly.plist \
+  > ~/Library/LaunchAgents/com.pocketfolio.nightly.plist
+launchctl load ~/Library/LaunchAgents/com.pocketfolio.nightly.plist
+```
+
+That's it. The log is `~/.pocketfolio/nightly.log`. Run `bash scripts/nightly.sh`
+to try it end to end. Put `PPT_TOKEN=...` in `~/.pocketfolio/env` if you want
+the provider to fill grades our own sales don't cover while the subscription
+lasts.
+
+- **Every graded card needs `psaTitle`** in `data/watchlist.json`. That is the
+  PSA label title, copied exactly from the cert page on psacard.com. A graded
+  card without one is not searched and shows `— —`.
+- If eBay shows a login wall, run `--login` again. If it shows a bot check, the
+  job stops. That is on purpose: there is no workaround.
+- If every page comes back empty, the job exits with an error and writes
+  nothing. An empty day is an alert, not a price.
+- If a push fails (no network), the commit stays and the next run pushes both.
+
 ## Graded prices proxy (required for eBay PSA prices)
 
 The PokemonPriceTracker API doesn't allow calls from web pages (no CORS

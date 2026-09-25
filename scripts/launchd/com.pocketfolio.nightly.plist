@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Copy to ~/Library/LaunchAgents/com.pocketfolio.nightly.plist, replace
+     REPO_PATH and HOME_PATH, then: launchctl load ~/Library/LaunchAgents/com.pocketfolio.nightly.plist -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.pocketfolio.nightly</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>REPO_PATH/scripts/nightly.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>4</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>RunAtLoad</key>
+  <false/>
+  <key>StandardOutPath</key>
+  <string>HOME_PATH/.pocketfolio/nightly.log</string>
+  <key>StandardErrorPath</key>
+  <string>HOME_PATH/.pocketfolio/nightly.log</string>
+</dict>
+</plist>
