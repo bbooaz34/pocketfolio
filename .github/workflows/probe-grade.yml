@@ -1,0 +1,24 @@
+# One-off diagnostic: everything the provider holds for one grade of one card.
+# Manual only — spends ~3 credits and writes nothing.
+name: probe grade
+on:
+  workflow_dispatch:
+    inputs:
+      cardId:
+        description: 'watchlist card id (default: first in ppt-map.json)'
+        required: false
+        default: ''
+      grade:
+        description: 'grade key, e.g. psa1'
+        required: false
+        default: 'psa1'
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/probe-grade.mjs "${{ inputs.cardId }}" "${{ inputs.grade }}"
+        env:
+          PPT_TOKEN: ${{ secrets.PPT_TOKEN }}
