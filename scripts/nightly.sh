@@ -27,11 +27,14 @@ if ! git pull -q --rebase --autostash -X theirs origin main; then
   echo "pull failed — building on the local copy"
 fi
 
+# a graded card with a cert but no label title gets it from its PSA cert
+# page (a no-op once every title is in); failing here never blocks the run
+node scripts/fill-psa-titles.mjs || echo "psaTitle fill failed — those cards stay unpriced"
 node scripts/scrape-ebay-sold.mjs
 node scripts/build-snapshot.mjs
 node scripts/prune-snapshots.mjs
 
-git add data/
+git add data/   # includes watchlist.json when titles were filled
 if git diff --cached --quiet; then
   echo "nothing changed"
 else

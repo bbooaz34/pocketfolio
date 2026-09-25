@@ -110,6 +110,8 @@ cd ~/path/to/pocketfolio && npm install
 mkdir -p ~/.pocketfolio/chrome-profile
 
 # 3. first run: a window opens, sign in to eBay, close the window.
+#    (psaTitle for every graded card with a `cert` is read from its PSA
+#    cert page by scripts/fill-psa-titles.mjs; nightly.sh runs it first)
 #    The scrape then runs headless on the same profile.
 node scripts/scrape-ebay-sold.mjs --login
 
@@ -126,8 +128,9 @@ the provider to fill grades our own sales don't cover while the subscription
 lasts.
 
 - **Every graded card needs `psaTitle`** in `data/watchlist.json`. That is the
-  PSA label title, copied exactly from the cert page on psacard.com. A graded
-  card without one is not searched and shows `— —`.
+  PSA label title from the card's cert page on psacard.com. With `cert` set,
+  `node scripts/fill-psa-titles.mjs` reads it for you (it never overwrites a
+  title already there). A graded card without one is not searched and shows `— —`.
 - If eBay shows a login wall, run `--login` again. If it shows a bot check, the
   job stops. That is on purpose: there is no workaround.
 - If every page comes back empty, the job exits with an error and writes

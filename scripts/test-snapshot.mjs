@@ -499,6 +499,24 @@ check("today's raw series still grows when graded history is missing",
     ok.code === 0 && ok.docs.size === 2 && ok.docs.get("base1-2").grades["1"].length === 0);
 }
 
+/* ---- psaTitle from the cert page: PSA's fields, in label order ---- */
+{
+  const { parseCertText, titleOf } = await import(join(ROOT, "scripts", "fill-psa-titles.mjs"));
+  const page = (f) => Object.entries(f).map(([k, v]) => `${k}\n${v}`).join("\n");
+  const tg = parseCertText(page({ "Certification Number": "154146687", "Label Type": "Standard", "Year": "1999",
+    "Brand/Title": "POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD...", "Subject": "TOGEPI", "Item Grade": "PR 1" }));
+  const ms = parseCertText(page({ "Certification Number": "77452905", "Year": "1998",
+    "Brand/Title": "POKEMON JAPANESE HANADA CITY GYM DECK", "Subject": "MISTY'S TEARS", "Item Grade": "NM 7" }));
+  check("cert fields reproduce the hand-copied Togepi title",
+    titleOf(tg) === "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI" && tg.grade === "1" && tg.cert === "154146687", titleOf(tg));
+  check("cert fields reproduce the hand-copied Misty's Tears title",
+    titleOf(ms) === "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS" && ms.grade === "7", titleOf(ms));
+  const bw = parseCertText(page({ "Year": "2000", "Brand/Title": "POKEMON ROCKET", "Card Number": "73",
+    "Subject": "THE BOSS'S WAY-HOLO", "Variety/Pedigree": "1ST EDITION", "Item Grade": "MINT 9" }));
+  check("the edition rides in the title from the cert's own variety", /1ST EDITION/.test(titleOf(bw)), titleOf(bw));
+  check("no subject, no title", titleOf(parseCertText(page({ "Year": "1999" }))) === null);
+}
+
 /* ---- graded prices from a fake data/sales ---- */
 const sale = (d, p, bo = false) => ({ d, p, bo, t: "fixture", url: `https://www.ebay.com/itm/${d.replace(/-/g, "")}${p}${bo ? 1 : 0}` });
 const writeSales = (id, grades, scrapedAt = new Date().toISOString()) => {
