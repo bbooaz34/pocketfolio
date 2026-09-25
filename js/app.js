@@ -57,6 +57,8 @@
        itself causes on a card whose price is climbing */
     avgWindow: (d) => `ממוצע ${d} יום`,
     lastSale: (d) => `מכירה אחרונה ${d}`,
+    ebayMedian: (n, d) => `חציון ${n} מכירות ב-eBay · אחרונה ${d}`,
+    ebayOne: (d) => `מכירה אחת · ${d}`,
     estTag: "הערכה",
     untrackedTitle: "קלפים ללא מחיר מדורג",
     untrackedBody: "הקלפים האלה לא נכללים בעדכון היומי, ולכן השווי שלהם הוא הערכה גסה (מחיר סינגל × מקדם דירוג) ולא מחיר מכירות אמיתי. העתיקו את השורות והוסיפו אותן ל-data/watchlist.json במאגר.",
@@ -275,6 +277,10 @@
       };
     }
     if (manual) return { each: hh.manualValue, src: "manual" };
+    /* A graded holding is priced from the PSA label title or not at all: a
+       multiplier on a raw price, for a card we cannot even name exactly, is
+       how the wrong Togepi got a number. "— —" is the honest answer. */
+    if (hh.grade !== "raw" && !psaTitleOf(hh)) return null;
     const rawP = entry?.grades?.raw;
     if (rawP != null) {
       if (hh.grade === "raw") return { each: rawP / 100, src: "raw", jpFallback };
@@ -293,6 +299,14 @@
       return { each: price.value * (GRADE_MULT[hh.grade] ?? 1), src: "est" };
     }
     return null;
+  }
+
+  /* the holding's own title (attached with its cert), else the watchlist's,
+     which the daily build copies into the snapshot */
+  function psaTitleOf(hh) {
+    const key = hh.jp ? hh.cardId + "@jp" : hh.cardId;
+    return hh.psaTitle || snapLatest?.cards?.[key]?.psaTitle ||
+      snapLatest?.cards?.[hh.cardId]?.psaTitle || null;
   }
 
   /* Why a holding has no value, when "no data" would be a lie: there is a
@@ -334,6 +348,13 @@
      median, and saying "median" when it is not is the overclaim we removed. */
   function methodName(m, grade) {
     const field = m?.priceField;
+    /* our own eBay reads: what the number is, and how recent — checkable,
+       because the sales it came from are one tap away */
+    if (field === "ebay-median-5" && m.used?.length) {
+      return m.used.length === 1
+        ? T.ebayOne(fmtDM(m.used[0].d))
+        : T.ebayMedian(m.used.length, fmtDM(m.lastSale || m.used[0].d));
+    }
     if (field === "marketPrice7Day") return T.src7dGrade(grade);
     if (field !== "smartMarketPrice") return T.srcEbayGrade(grade);
     /* smartMarketPrice is a filtered weighted average over a window the
@@ -348,6 +369,15 @@
   function caveats(m) {
     if (!m) return "";
     const out = [];
+    /* our own sales: page one of most-recent is complete, not a sample, so
+       the same two rules read straight off it. The method line already
+       carries the date, so the week is the only thing left to say. */
+    if (m.priceField === "ebay-median-5") {
+      if (m.spread && m.spread.low > 0 && m.spread.high / m.spread.low > 2) out.push(T.spreadWide);
+      const last = m.lastSale ? Math.round((Date.parse(todayISO()) - Date.parse(m.lastSale)) / 864e5) : null;
+      if (last != null && last > 7) out.push(T.noSalesWeek);
+      return out.length ? ` · ${out.join(" · ")}` : "";
+    }
     const wide = m.spread && m.spread.low > 0 && m.spread.high / m.spread.low > 2;
     /* "scattered" is only true of a wide spread. A shaky number from a tight
        cluster (base1-4 PSA 9: $1400-1500, three sales, none for weeks) is a
@@ -1064,7 +1094,34 @@
     vl.appendChild(h("span", "t-text2 muted", `· ${hh.qty} ${T.units}`));
     txt.appendChild(vl);
     const srcRow = h("div", "t-text4 faint");
-    srcRow.appendChild(document.createTextNode(sourceLine(p.val, hh.grade, hh)));
+    const used = p.val?.src === "snapshot" && p.val.m?.priceField === "ebay-median-5" ? p.val.m.used : null;
+    if (used?.length) {
+      /* the number becomes checkable in one tap: the sales it is the median of */
+      const btn = h("button", "src-toggle", sourceLine(p.val, hh.grade, hh));
+      btn.type = "button";
+      btn.setAttribute("aria-expanded", "false");
+      const list = h("ul", "sales-list");
+      list.id = "cd-sales";
+      list.hidden = true;
+      btn.setAttribute("aria-controls", list.id);
+      for (const s of used) {
+        const li = h("li");
+        const a = h("a", "num", `${fmtDMY(s.d)} · ${fmtUSD(s.p / 100, false)}`);
+        a.href = s.url;
+        a.target = "_blank"; a.rel = "noopener";
+        li.appendChild(a);
+        list.appendChild(li);
+      }
+      btn.addEventListener("click", () => {
+        const open = list.hidden;
+        list.hidden = !open;
+        btn.setAttribute("aria-expanded", String(open));
+      });
+      srcRow.appendChild(btn);
+      srcRow.appendChild(list);
+    } else {
+      srcRow.appendChild(document.createTextNode(sourceLine(p.val, hh.grade, hh)));
+    }
     txt.appendChild(srcRow);
     const chipDate = snapActive?.date || todayISO();
     const chip = h("span", "chip sm num",
@@ -1256,6 +1313,9 @@
       setName: hh.setName || null,
       ...(hh.number ? { number: String(hh.number) } : {}),
       ...(hh.jp ? { language: "japanese" } : {}),
+      grades: [String(hh.grade)],
+      ...(hh.cert ? { cert: hh.cert } : {}),
+      ...(hh.psaTitle ? { psaTitle: hh.psaTitle } : {}),
     })).join(",\n");
   }
 
@@ -1339,6 +1399,7 @@
 
   let searchTimer = null;
   let searchSeq = 0;
+  let certInfo = null; // the last cert page read, for its label title
 
   function resultCard(c, onClick, opts) {
     const btn = h("button", "result-card" + ((opts && opts.selected) ? " selected" : ""));
@@ -1501,6 +1562,7 @@
     r.appendChild(headB);
     r.hidden = false;
 
+    certInfo = info;
     /* prefill grade + cert as soon as the cert parses — not only after a
        printing is picked */
     if (info.grade && GRADES.some(([v]) => v === info.grade)) setGrade(info.grade);
@@ -1644,6 +1706,10 @@
     ev.preventDefault();
     if (!selectedCard) return;
     const cost = numOrNull($("cost-input"));
+    const cert = $("cert-input").value.trim().replace(/[^\w-]/g, "") || null;
+    /* whichever path picked the card — catalog or manual — a cert read from
+       PSA carries its label title onto the holding */
+    const psaTitle = cert && certInfo && certInfo.cert === cert ? API.psaTitleOf(certInfo) : null;
     Store.upsert({
       cardId: selectedCard.id,
       provider: selectedCard.provider,
@@ -1656,9 +1722,11 @@
       cost,
       manualValue: null, // the snapshot supplies the market price
       purchaseDate: $("date-input").value || null,
-      cert: $("cert-input").value.trim().replace(/[^\w-]/g, "") || null,
+      cert,
+      psaTitle,
       jp: !!selectedCard.jp,
     });
+    certInfo = null;
     cards.set(selectedCard.id, selectedCard);
     if (cost) lsSet(monthKey(), String(monthSpend() + cost * qtyVal));
 

@@ -975,3 +975,13 @@ a.article-card { color: var(--ink); }
   .sheet[hidden] { display: none; }
   .date-picker, .chip-chevron { transition: none; }
 }
+
+/* card detail: the eBay method line opens the sales it is the median of */
+.src-toggle {
+  font: inherit; color: inherit; background: none; border: 0; padding: 0;
+  text-align: start; cursor: pointer;
+  text-decoration: underline dotted; text-underline-offset: 3px;
+}
+.sales-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.sales-list li { line-height: 22px; }
+.sales-list a { color: var(--ink-muted); text-decoration: underline; text-underline-offset: 3px; }

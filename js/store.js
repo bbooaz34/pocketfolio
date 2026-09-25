@@ -100,6 +100,7 @@
       }
       if (pos.purchaseDate) existing.purchaseDate = pos.purchaseDate;
       if (pos.cert) existing.cert = pos.cert;
+      if (pos.psaTitle) existing.psaTitle = pos.psaTitle;
       if (pos.jp) existing.jp = true;
     } else {
       holdings.push({
@@ -117,6 +118,9 @@
         manualSetAt: pos.manualValue != null ? new Date().toISOString() : null,
         purchaseDate: pos.purchaseDate || null,
         cert: pos.cert || null,
+        /* the PSA label title, read from the cert page — the eBay search
+           string for a graded price (TASK-ebay-direct.md §0) */
+        psaTitle: pos.psaTitle || null,
         /* a Japanese print prices from the snapshot's "<cardId>@jp" entry */
         jp: !!pos.jp,
         slot: nextFreeSlot(),

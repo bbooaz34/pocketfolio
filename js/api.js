@@ -617,6 +617,19 @@
     throw err;
   }
 
+  /* The label title, as PSA prints it on the slab: year, brand/title, card
+     number, subject, variety — "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW
+     WORLD... TOGEPI". This is PSA's own description of the card, not a name
+     we construct from a catalog: sellers copy it from the slab, which is why
+     it is the eBay search that finds the exact card (TASK-ebay-direct.md §0).
+     Null when the page gave no subject — then there is nothing to search. */
+  function psaTitleOf(info) {
+    if (!info || !info.subject) return null;
+    return [info.year, info.brand, info.cardNumber ? "#" + info.cardNumber : null,
+      info.subject, info.variety]
+      .filter(Boolean).join(" ").replace(/\s+/g, " ").trim() || null;
+  }
+
   /* Turn a PSA "Subject" like "CHARIZARD-HOLO" into a searchable card name. */
   const SUBJECT_NOISE = new Set([
     "holo", "holofoil", "foil", "reverse", "1st", "edition", "ed",
@@ -636,7 +649,7 @@
   }
 
   window.PocketfolioAPI = {
-    searchCards, getCard, getCards, lookupCert, certCardQuery,
+    searchCards, getCard, getCards, lookupCert, certCardQuery, psaTitleOf,
     hasGradedProxy, fetchNews,
     loadSnapshot, loadIndex, loadHistory, cachedLatestSnapshot,
   };
