@@ -22,6 +22,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Full history, not the default shallow one: the mirror below is a plain
+      # fast-forward push, and git can only prove a fast-forward if it holds
+      # the ancestry. With fetch-depth 1 it does not, and the push is rejected
+      # with "(fetch first)" — which is what silently broke the deploy on
+      # 25.09.26, the first day main advanced by a merge commit rather than a
+      # straight line.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Mirror main to gh-pages
-        run: git push origin HEAD:gh-pages
+        run: |
+          git fetch origin gh-pages
+          git push origin HEAD:gh-pages
