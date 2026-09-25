@@ -25,6 +25,17 @@
  *  10. Confidence and per-grade metrics come from the provider.
  *  11. Per-card history files are backfilled from the provider and today's
  *      own value joins the series.
+ *
+ * And graded prices from our own eBay reads (TASK-ebay-direct.md), from a
+ * fake data/sales — no browser, no eBay:
+ *
+ *  12. The scraper's filters: exact grade, label tokens, lots, languages,
+ *      qualifiers, Best Offer flagged; urls normalised; merge never drops.
+ *  13. An all-empty scrape, or a login wall, exits non-zero and writes nothing.
+ *  14. Median of the newest five clean sales wins over PPT; a Best-Offer-only
+ *      grade is null and falls to PPT; a stale file is not used.
+ *  15. No psaTitle, no graded price — from any source.
+ *  16. Without PPT, the grades our sales did not answer are carried, flagged.
  */
 
 import { createServer } from "node:http";
@@ -36,6 +47,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BUILDER = join(ROOT, "scripts", "build-snapshot.mjs");
+const Scraper = await import(join(ROOT, "scripts", "scrape-ebay-sold.mjs"));
 
 /* ---- fixture: 8 cards, more than one day's small budget can cover ---- */
 const CARDS = Array.from({ length: 8 }, (_, i) => ({
@@ -72,6 +84,10 @@ CARDS.push({ id: "svp-44", name: "Stamped", setName: "Promo Cards",
    handed more than whichever one the provider lists first. */
 CARDS.push({ id: "svp-45", name: "Varianted", setName: "Promo Cards",
   pptSetId: "ppt-promo", nameExclude: ["pokemon center"], number: "45" });
+
+/* every card so far is priced from its PSA label; one graded card is not */
+for (const c of CARDS) c.psaTitle = `TEST ${c.name.toUpperCase()}`;
+CARDS.push({ id: "base1-12", name: "Untitled", setName: "Base", number: "12", grades: ["9"] });
 
 const HISTORY_DAYS = 120;
 const makeHistory = (base) => {
@@ -252,6 +268,7 @@ const work = mkdtempSync(join(tmpdir(), "pf-snap-"));
 mkdirSync(join(work, "data", "snapshots"), { recursive: true });
 mkdirSync(join(work, "scripts"), { recursive: true });
 cpSync(BUILDER, join(work, "scripts", "build-snapshot.mjs"));
+cpSync(join(ROOT, "scripts", "providers"), join(work, "scripts", "providers"), { recursive: true });
 writeFileSync(join(work, "data", "watchlist.json"), JSON.stringify({ cards: CARDS }, null, 1));
 
 /* spawn, not spawnSync: the fake server runs on this process's event loop,
@@ -417,6 +434,143 @@ check("today's raw series still grows when graded history is missing",
     `${removed.id} still present among ${Object.keys(after.cards).length} cards`);
   wl.cards.push(removed);
   writeFileSync(join(work, "data", "watchlist.json"), JSON.stringify(wl));
+}
+
+/* ---- the scraper, offline ---- */
+{
+  const card = { id: "base1-4", psaTitle: "1999 POKEMON GAME #4 CHARIZARD-HOLO", grades: ["1"] };
+  const row = (title, price, caption, extra = {}) => ({
+    title, price, caption: caption ?? "Sold  Sep 21, 2026", text: title + " " + (extra.text || ""),
+    href: extra.href || `https://www.ebay.com/itm/${extra.id || Math.floor(1e11 + Math.random() * 8e11)}?hash=abc&_trkparms=x`,
+  });
+  const rows = [
+    row("1999 POKEMON GAME #4 CHARIZARD-HOLO PSA 1Opens in a new window or tab", "$400.00", undefined, { id: "111111111111" }),
+    row("1999 Pokemon Game Charizard Holo PSA 1 Base Set", "$332.89", "Sold Sep 21, 2026", { id: "222222222222" }),
+    row("1999 Pokemon Game Charizard Holo PSA 10 GEM MINT", "$17,500.00"),
+    row("1999 Pokemon Game Charizard Holo PSA 1.5", "$450.00"),
+    row("Blastoise Pokemon Game PSA 1", "$90.00"),
+    row("1999 Pokemon Game Charizard Holo PSA 1 lot of 2", "$700.00"),
+    row("1999 Pokemon Game Charizard Holo PSA 1 Italian", "$300.00"),
+    row("1999 Pokemon Game Charizard Holo PSA 1 OC", "$250.00"),
+    row("1999 Pokemon Game Charizard Holo PSA 1", "ILS 1,300.00"),
+    row("1999 Pokemon Game Charizard Holo PSA 1 Best Offer", "$500.00", "Sold Sep 20, 2026",
+      { id: "333333333333", text: "Best offer accepted" }),
+  ];
+  const { sales, dropped } = Scraper.filterRows(rows, card, "1");
+  const urls = sales.map((x) => x.url);
+  check("scraper keeps the exact grade, drops PSA 10 / PSA 1.5", dropped.grade === 2, JSON.stringify(dropped));
+  check("scraper needs two label tokens (drops the padded 'similar items')", dropped.tokens === 1);
+  check("scraper drops lots, other languages and qualifiers",
+    dropped.lot === 1 && dropped.language === 1 && dropped.qualifier === 1);
+  check("scraper refuses a price that is not in dollars", dropped.price === 1);
+  check("scraper keeps Best Offer rows, flagged", sales.length === 3 && sales.filter((x) => x.bo).length === 1,
+    sales.map((x) => `${x.p}${x.bo ? "bo" : ""}`).join(","));
+  check("titles lose the 'Opens in a new window' tail", sales[0].t === "1999 POKEMON GAME #4 CHARIZARD-HOLO PSA 1", sales[0].t);
+  check("urls are the bare item link", urls.includes("https://www.ebay.com/itm/111111111111"), urls.join(" "));
+  check("sold date and pennies parsed", sales[0].d === "2026-09-21" && sales[0].p === 40000);
+  check("the search is the label title verbatim, plus the grade",
+    new URL(Scraper.searchUrl("2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY", "9")).searchParams.get("_nkw") ===
+      "2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY PSA 9");
+
+  const prevDoc = { cardId: "base1-4", psaTitle: card.psaTitle, scrapedAt: "2026-09-20T04:00:00+03:00",
+    grades: { "1": [{ d: "2026-07-23", p: 37559, bo: false, t: "old", url: "https://www.ebay.com/itm/999999999999" },
+                     { d: "2026-09-21", p: 40000, bo: false, t: "seen", url: "https://www.ebay.com/itm/111111111111" }],
+              "10": [{ d: "2025-10-30", p: 1750000, bo: false, t: "x", url: "https://www.ebay.com/itm/888888888888" }] } };
+  const merged = Scraper.mergeSales(prevDoc, card, "1", sales, "2026-09-26T04:02:11+03:00");
+  check("a re-scrape merges by url and never drops a sale",
+    merged.grades["1"].length === 4 && merged.grades["10"].length === 1 &&
+    merged.grades["1"].some((x) => x.url.endsWith("999999999999")),
+    merged.grades["1"].map((x) => x.d).join(","));
+  check("merged sales are newest first", merged.grades["1"][0].d >= merged.grades["1"].at(-1).d);
+
+  const targets = Scraper.targetsOf([card, { id: "x", grades: ["9"] }, { id: "y", grades: ["raw"], psaTitle: "Y" }]);
+  check("only titled graded cards are searched", targets.length === 1 && targets[0].card.id === "base1-4");
+
+  const scrapeDir = mkdtempSync(join(tmpdir(), "pf-scrape-"));
+  const two = [{ card, grade: "1" }, { card: { ...card, id: "base1-2" }, grade: "1" }];
+  const quiet = { dataDir: scrapeDir, pause: async () => {} };
+  const empty = await Scraper.scrape(two, async () => ({ kind: "results", rows: [] }), quiet);
+  check("an all-empty scrape exits non-zero and writes nothing", empty.code !== 0 && empty.docs === null);
+  const wall = await Scraper.scrape(two, async (u) => ({ kind: "login", url: u }), quiet);
+  check("a login wall exits non-zero and writes nothing", wall.code !== 0 && wall.docs === null);
+  let reads = 0;
+  const ok = await Scraper.scrape(two, async () => (reads++ ? { kind: "results", rows: [] } : { kind: "results", rows }), quiet);
+  check("one empty page among full ones still writes, and its card is stamped",
+    ok.code === 0 && ok.docs.size === 2 && ok.docs.get("base1-2").grades["1"].length === 0);
+}
+
+/* ---- graded prices from a fake data/sales ---- */
+const sale = (d, p, bo = false) => ({ d, p, bo, t: "fixture", url: `https://www.ebay.com/itm/${d.replace(/-/g, "")}${p}${bo ? 1 : 0}` });
+const writeSales = (id, grades, scrapedAt = new Date().toISOString()) => {
+  mkdirSync(join(work, "data", "sales"), { recursive: true });
+  writeFileSync(join(work, "data", "sales", `${id}.json`), JSON.stringify({ cardId: id, psaTitle: "fixture", scrapedAt, grades }));
+};
+/* the Charizard shape: the three sales the provider never had, and more */
+writeSales("base1-1", { "10": [
+  sale("2026-09-25", 70000), sale("2026-09-24", 65000), sale("2026-09-22", 60000),
+  sale("2026-09-21", 64000), sale("2026-09-20", 68000), sale("2026-09-01", 1000000),
+  sale("2026-09-23", 90000, true)] });
+/* the Togepi shape: $200 on two July Best Offers, three clean sales since */
+writeSales("psa-999@jp", { "1": [
+  sale("2026-07-10", 20000, true), sale("2026-07-12", 20000, true),
+  sale("2026-09-20", 10000), sale("2026-09-10", 4600), sale("2026-08-30", 6000)] });
+/* Best Offer only at PSA 8, and one old clean sale at PSA 4 */
+writeSales("base1-2", { "8": [sale("2026-09-20", 99900, true)], "4": [sale("2026-05-01", 3000)] });
+/* read four days ago — too old to trust */
+writeSales("base1-3", { "10": [sale("2026-09-20", 999900), sale("2026-09-19", 999900), sale("2026-09-18", 999900)] },
+  new Date(Date.now() - 4 * 864e5).toISOString());
+/* a file for a card with no psaTitle is ignored */
+writeSales("base1-12", { "9": [sale("2026-09-20", 5000), sale("2026-09-19", 5000), sale("2026-09-18", 5000)] });
+
+{
+  const r = await run("2026-09-27", { PPT_CREDIT_BUDGET: "2000" });
+  if (r.status !== 0) { console.log(r.stdout, r.stderr); throw new Error("eBay day failed"); }
+  const s = snap("2026-09-27");
+  const cz = s.cards["base1-1"], tg = s.cards["psa-999@jp"], b2 = s.cards["base1-2"], b3 = s.cards["base1-3"];
+  const m = cz?.metrics?.["10"];
+  check("eBay: median of the newest five clean sales beats PPT", cz?.grades?.["10"] === 65000,
+    `$${(cz?.grades?.["10"] ?? 0) / 100} (PPT would be $501)`);
+  check("eBay: priceField ebay-median-5, source ebay, high on five recent",
+    m?.priceField === "ebay-median-5" && m?.source === "ebay" && m?.confidence === "high", JSON.stringify(m)?.slice(0, 160));
+  check("eBay: n counts clean sales in 90 days, nBO the Best Offers",
+    m?.n === 6 && m?.nBO === 1 && m?.lastSale === "2026-09-25", `n=${m?.n} nBO=${m?.nBO} last=${m?.lastSale}`);
+  check("eBay: spread is the min/max of the five used, and they are listed",
+    m?.spread?.low === 60000 && m?.spread?.high === 70000 && m?.used?.length === 5 && m.used.every((u) => u.url));
+  check("eBay: no provider fields carried forward", m && !("salesCount" in m) && !("daysUsed" in m));
+  check("eBay: other grades still come from PPT, and say so",
+    cz?.grades?.["9"] === 20500 && cz?.metrics?.["9"]?.source === "ppt");
+  check("Togepi shape: median of recent clean sales, not the $200 Best Offers",
+    tg?.grades?.["1"] === 6000 && tg?.metrics?.["1"]?.nBO === 2, `$${(tg?.grades?.["1"] ?? 0) / 100}`);
+  check("a Best-Offer-only grade is no price — PPT fills it",
+    b2?.grades?.["8"] === 29000 && b2?.metrics?.["8"]?.source === "ppt", `$${(b2?.grades?.["8"] ?? 0) / 100} via ${b2?.metrics?.["8"]?.source}`);
+  check("one old clean sale: low confidence, with its age",
+    b2?.grades?.["4"] === 3000 && b2?.metrics?.["4"]?.confidence === "low" && b2?.metrics?.["4"]?.ageDays > 90,
+    JSON.stringify(b2?.metrics?.["4"])?.slice(0, 120));
+  check("a sales file older than 48h is not used", b3?.grades?.["10"] === 50300, `$${(b3?.grades?.["10"] ?? 0) / 100}`);
+  check("the psaTitle travels into the snapshot", cz?.psaTitle === "TEST TESTMON 1");
+  check("no psaTitle, no graded price — PPT's and its sales file both ignored",
+    s.cards["base1-12"] && Object.keys(s.cards["base1-12"].grades).every((g) => g === "raw"),
+    JSON.stringify(s.cards["base1-12"]?.grades));
+  check("every grade says its source and pricedOn",
+    Object.values(s.cards).every((c) => Object.keys(c.grades).every((g) => c.metrics?.[g]?.source && c.metrics?.[g]?.pricedOn)));
+  const hz = JSON.parse(readFileSync(join(work, "data", "history", "base1-1.json"), "utf8"));
+  check("history keeps accumulating, marked with the source",
+    hz.series["10"].some((p) => p.d === "2026-09-27" && p.v === 65000 && p.s === "ebay"));
+}
+
+/* ---- the subscription lapses: our sales, and yesterday for the rest ---- */
+{
+  const r = await run("2026-09-28", { PPT_TOKEN: "" });
+  if (r.status !== 0) { console.log(r.stdout, r.stderr); throw new Error("no-PPT day failed"); }
+  const s = snap("2026-09-28");
+  const cz = s.cards["base1-1"];
+  check("without PPT the build runs from data/sales alone", cz?.grades?.["10"] === 65000 && !cz.carried);
+  check("a grade our sales did not answer is carried, flagged, with its real date",
+    cz?.grades?.["9"] === 20500 && cz?.metrics?.["9"]?.carried === true &&
+    cz?.metrics?.["9"]?.source === "carried" && cz?.metrics?.["9"]?.pricedOn === "2026-09-27");
+  check("cards with no fresh sales are carried whole", s.cards["base1-5"]?.carried === true);
+  check("carrying never brings back an untitled graded price",
+    s.cards["base1-12"] && Object.keys(s.cards["base1-12"].grades).every((g) => g === "raw"));
 }
 
 server.close();

@@ -14,16 +14,26 @@
  *   2. Pokémon Price Tracker (PPT_TOKEN) — fills watchlist cards PriceCharting
  *      missed, serialized, capped at PPT_CALL_CAP calls.
  *
+ * Graded grades then come from our own eBay reads (TASK-ebay-direct.md §3):
+ *   1. ebay-sales, when data/sales/<cardId>.json is fresher than 48h;
+ *   2. PPT — only while the subscription lasts, and only for grades ebay-sales
+ *      returned null;
+ *   3. yesterday's value, carried and flagged as such.
+ * A card with no `psaTitle` gets no graded price at all — not from eBay, not
+ * from PPT, not carried. Raw is untouched by any of this.
+ * Every grade's metrics say `source` and `pricedOn`.
+ *
  * Safety: never writes a snapshot more than 40% smaller than yesterday's —
  * the job fails instead. All prices are integer pennies.
  *
- * Env: PC_TOKEN, PPT_TOKEN (at least one required),
+ * Env: PC_TOKEN, PPT_TOKEN (at least one required unless data/sales exists),
  *      PC_BASE / PPT_BASE (test overrides), SNAPSHOT_DATE (test override).
  */
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { valueSales, readSales } from "./providers/ebay-sales.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DATA = join(ROOT, "data");
@@ -55,8 +65,10 @@ const PPT_LIMIT_PINNED_GUARDED = 5;
 const PPT_HISTORY_DAYS = Number(process.env.PPT_HISTORY_DAYS || 180);
 const HIST = join(DATA, "history");
 
-if (!PC_TOKEN && !PPT_TOKEN) {
-  console.error("need PC_TOKEN and/or PPT_TOKEN");
+const SALES = join(DATA, "sales");
+const haveSales = existsSync(SALES) && readdirSync(SALES).some((f) => f.endsWith(".json"));
+if (!PC_TOKEN && !PPT_TOKEN && !haveSales) {
+  console.error("need PC_TOKEN and/or PPT_TOKEN, or data/sales from scripts/scrape-ebay-sold.mjs");
   process.exit(1);
 }
 
@@ -230,7 +242,7 @@ function pptGrades(row) {
       const p = pennies(v);
       if (!p) continue;
       grades[g] = p;
-      metrics[g] = { confidence: null, effective: "low", trend: null, dailyVolume7Day: null,
+      metrics[g] = { source: "ppt", confidence: null, effective: "low", trend: null, dailyVolume7Day: null,
         salesCount: null, priceField: "value", daysUsed: null, lastSaleDate: null,
         marketUpdatedAt: null, spread: null };
       continue;
@@ -269,6 +281,7 @@ function pptGrades(row) {
     const daily = [v.dailyVolume7Day, v.dailyVolume].find((x) => typeof x === "number");
     const stated = String(smart?.confidence ?? v.smartMarketConfidence ?? "").toLowerCase();
     metrics[g] = {
+      source: "ppt",
       confidence: RANK[stated] !== undefined ? stated : null, // provider's, about the calculation
       effective: effectiveConfidence(v, priceField, RANK[stated] !== undefined ? stated : null),
       trend: v.marketTrend ?? null,
@@ -649,7 +662,7 @@ function writeHistories(fresh) {
       const byDate = new Map((points || []).map((p) => [p.d, p]));
       for (const p of prev.series?.[grade] || []) byDate.set(p.d, p); // ours wins
       prev.series[grade] = [...byDate.values()]
-        .map((p) => (p.o ? { d: p.d, v: p.v, o: 1 } : { d: p.d, v: p.v }))
+        .map((p) => ({ d: p.d, v: p.v, ...(p.o ? { o: 1 } : {}), ...(p.s ? { s: p.s } : {}) }))
         .sort((a, b) => a.d.localeCompare(b.d));
     }
     prev.cardId = cardId;
@@ -657,6 +670,63 @@ function writeHistories(fresh) {
     writeFileSync(file, JSON.stringify(prev));
   }
   console.log(`history: wrote ${fresh.size} card series`);
+}
+
+/* ---------------- graded: our own eBay reads ---------------- */
+
+function isGraded(g) { return g !== "raw"; }
+
+/* Nothing graded is priced without the PSA label title: without it we cannot
+   say which card a number is for — that is how the wrong Togepi got priced.
+   Raw stays. Returns false when nothing is left of the entry. */
+function stripUntitled(card, entry) {
+  if (!entry || card?.psaTitle) return true;
+  for (const g of Object.keys(entry.grades || {}).filter(isGraded)) {
+    delete entry.grades[g];
+    if (entry.metrics) delete entry.metrics[g];
+  }
+  return Object.keys(entry.grades || {}).length > 0;
+}
+
+function applyEbaySales(entries, prev) {
+  let used = 0;
+  const notUsed = [];
+  for (const card of watchlist) {
+    const entry = entries.get(card.id);
+    if (!card.psaTitle) {
+      if (entry && !stripUntitled(card, entry)) entries.delete(card.id);
+      continue;
+    }
+    if (entry) entry.psaTitle = card.psaTitle;
+    const { doc, why } = readSales(DATA, card.id);
+    if (!doc) { notUsed.push(`${card.id} (${why})`); continue; }
+    const { grades, metrics } = valueSales(doc, today);
+    if (!Object.keys(grades).length) { notUsed.push(`${card.id} (no clean sale at any grade)`); continue; }
+    const was = prev?.cards?.[card.id];
+    const e = entry || {
+      pcId: null, tcgPlayerId: was?.tcgPlayerId ?? null,
+      name: card.name, set: card.setName || null, number: card.number || null,
+      image: card.image ?? was?.image ?? null,
+      grades: {}, metrics: {}, salesVolume: null,
+    };
+    for (const [g, v] of Object.entries(grades)) {
+      e.grades[g] = v;
+      e.metrics[g] = { ...metrics[g], pricedOn: today };
+    }
+    e.psaTitle = card.psaTitle;
+    e.salesScrapedAt = doc.scrapedAt;
+    e.confidence = gradeConfidence(e.metrics, e.salesVelocityWeekly ?? null);
+    entries.set(card.id, e);
+    used++;
+    console.log(`  ${card.id} <- eBay sold · ` + Object.entries(metrics)
+      .map(([g, m]) => `PSA ${g} $${(grades[g] / 100).toFixed(2)} (${m.confidence}, n=${m.n}, bo=${m.nBO}, last ${m.lastSale})`)
+      .join(" · "));
+  }
+  const titled = watchlist.filter((c) => c.psaTitle).length;
+  console.log(`eBay sales: ${used}/${titled} titled card(s) priced from our own reads` +
+    (notUsed.length ? ` · not used: ${notUsed.join(", ")} — PPT, else yesterday's value, carried` : ""));
+  const untitled = watchlist.filter((c) => !c.psaTitle && [].concat(c.grades || []).some((g) => isGraded(String(g))));
+  if (untitled.length) console.log(`no psaTitle, so no graded price: ${untitled.map((c) => c.id).join(", ")}`);
 }
 
 /* ---------------- write ---------------- */
@@ -668,6 +738,30 @@ const prev = prevFile ? JSON.parse(readFileSync(join(SNAPS, prevFile), "utf8")) 
 
 const entries = PC_TOKEN ? await priceWithPC(watchlist) : new Map();
 if (PPT_TOKEN) await priceWithPPT(watchlist, entries, prev);
+for (const [, e] of entries) {
+  const src = e.pcId ? "pricecharting" : "ppt";
+  e.metrics ||= {};
+  for (const g of Object.keys(e.grades || {})) {
+    e.metrics[g] = { ...(e.metrics[g] || {}), source: e.metrics[g]?.source || src, pricedOn: today };
+  }
+}
+applyEbaySales(entries, prev);
+
+/* A grade today's sources did not answer keeps yesterday's value, flagged —
+   the same rule as a whole card, one grade at a time. */
+for (const [id, e] of entries) {
+  const was = prev?.cards?.[id];
+  if (!was) continue;
+  const card = watchlist.find((c) => c.id === id);
+  for (const [g, v] of Object.entries(was.grades || {})) {
+    if (e.grades[g] != null) continue;
+    if (isGraded(g) && !card?.psaTitle) continue;
+    const wm = was.metrics?.[g] || {};
+    e.grades[g] = v;
+    e.metrics[g] = { ...wm, source: "carried", carried: true,
+      pricedOn: wm.pricedOn || was.pricedOn || prev.date };
+  }
+}
 
 const fresh = entries.size;
 
@@ -684,7 +778,14 @@ if (prev) {
   for (const [id, entry] of Object.entries(prev.cards || {})) {
     if (entries.has(id)) continue;
     if (!tracked.has(id)) { dropped++; continue; }
-    entries.set(id, { ...entry, carried: true, pricedOn: entry.pricedOn || prev.date });
+    const c = { ...entry, grades: { ...entry.grades }, metrics: { ...(entry.metrics || {}) },
+      carried: true, pricedOn: entry.pricedOn || prev.date };
+    for (const g of Object.keys(c.grades)) {
+      c.metrics[g] = { ...(c.metrics[g] || {}), source: "carried", carried: true,
+        pricedOn: c.metrics[g]?.pricedOn || c.pricedOn };
+    }
+    if (!stripUntitled(watchlist.find((w) => w.id === id), c)) continue;
+    entries.set(id, c);
     carried++;
   }
 }
@@ -703,7 +804,8 @@ if (fresh === 0) {
 const snapshot = {
   date: today,
   builtAt: new Date().toISOString(),
-  source: PC_TOKEN && entries.size ? "pricecharting" : "ppt",
+  source: [...new Set(Object.values(cards).flatMap((c) => Object.values(c.metrics || {})
+    .map((m) => m.source)).filter((s) => s && s !== "carried"))].sort().join("+") || "carried",
   cards,
 };
 
@@ -727,8 +829,13 @@ for (const [cardId, entry] of entries) {
   for (const [grade, value] of Object.entries(entry.grades || {})) {
     const arr = (doc.series[grade] ||= []);
     const i = arr.findIndex((p) => p.d === today);
-    if (i >= 0) arr[i] = { d: today, v: value, o: 1 };
-    else arr.push({ d: today, v: value, o: 1 });
+    /* the source travels with the point: a median of our own eBay reads and
+       a provider's smart price are different numbers */
+    const src = entry.metrics?.[grade]?.source;
+    if (src === "carried") continue;
+    const pt = { d: today, v: value, o: 1, ...(src ? { s: src } : {}) };
+    if (i >= 0) arr[i] = pt;
+    else arr.push(pt);
     arr.sort((a, b) => a.d.localeCompare(b.d));
   }
   doc.updatedAt = today;
