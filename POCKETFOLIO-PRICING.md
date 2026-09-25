@@ -282,6 +282,42 @@ The consequence for the UI is the rule in §4: a price is reported with the
 window it averaged and the date it last sold, because on a card the provider
 has not looked at for a week neither is implied by the number.
 
+**One correction to the above, measured 25.09.26:** `marketUpdatedAt` is a
+**card-level** timestamp, not a per-grade one. All 38 grade buckets on base1-4
+carried the identical value down to the millisecond, equal to the card's
+`ebay.lastScrapedDate`. The measurements above count cards, so they stand — but
+the field never says anything about an individual grade.
+
+### The provider samples eBay, it does not index it (measured 25.09.26)
+
+A refresh is not coverage. On 25.09 the provider had scraped base1-4 that
+morning (10:17) with a window running to 24.09 and 411 sales on file — and
+across **all 38 grade buckets** it held exactly three dated sale points from
+18.09 onward: psa7 $499.99 on 21.09, psa7 $1,111 on 24.09, and one ungraded on
+21.09. Three sales in a week, on the most traded card in vintage Pokémon.
+Three real PSA 1 sales the owner found on eBay the same weekend ($400, $332.89,
+$380) appear in no bucket at all.
+
+The clinching number is `psa10: count=1, lastSaleDate=2025-10-30` — one PSA 10
+Base Set Charizard sale in the provider's entire history of the card. That is
+not a description of the market; it is a description of what its crawler
+happened to catch.
+
+So: **`lastSaleDate` is the last sale the provider ingested, never the last
+sale that happened**, and `count` is a sample size, not a volume. Two rules
+follow, and both are already how we behave — they now have evidence behind
+them rather than caution:
+
+- Never present a provider price as "the market price". §4's labelling (window
+  averaged + date last sold) is the minimum honest framing.
+- Never infer "no sales this week" from `dailyVolume7Day: 0`. It means the
+  provider caught none, which on this evidence is the usual case.
+
+A related gap: the aggregate and the dated series are not the same set. PSA 1
+reports `count: 6` totalling $1,890.04 while the series holds five dated points
+totalling $1,590.09 — a sixth sale of $299.95 exists in the aggregate with no
+date anywhere. `smartMarketPrice` cannot be reconstructed from the series.
+
 ---
 
 ## 6. Client
