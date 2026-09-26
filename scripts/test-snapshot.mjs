@@ -471,6 +471,9 @@ check("today's raw series still grows when graded history is missing",
   check("the search keeps the label's words and drops its commas and dots",
     new URL(Scraper.searchUrl("1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI", "1")).searchParams.get("_nkw") ===
       "1999 POKEMON JAPANESE GOLD SILVER TO A NEW WORLD TOGEPI PSA 1");
+  check("a hyphen in the label is not an eBay exclusion",
+    new URL(Scraper.searchUrl("1999 POKEMON GAME #4 CHARIZARD-HOLO", "1")).searchParams.get("_nkw") ===
+      "1999 POKEMON GAME #4 CHARIZARD HOLO PSA 1");
   check("the search is the label title verbatim, plus the grade",
     new URL(Scraper.searchUrl("2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY", "9")).searchParams.get("_nkw") ===
       "2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY PSA 9");

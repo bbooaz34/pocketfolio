@@ -49,8 +49,10 @@ export function searchUrl(psaTitle, grade) {
   const u = new URL("https://www.ebay.com/sch/i.html");
   /* the label's words, verbatim — but not its punctuation. "GOLD, SILVER,
      TO A NEW WORLD... TOGEPI" returned nothing at all on 26.09 while the
-     same words without the commas and dots are what sellers type. */
-  const words = String(psaTitle).replace(/[.,]+/g, " ").replace(/\s+/g, " ").trim();
+     same words without the commas and dots are what sellers type. A hyphen
+     goes too: to eBay "-HOLO" can read as "without holo", which would hide
+     exactly the CHARIZARD-HOLO listings we want. */
+  const words = String(psaTitle).replace(/[.,-]+/g, " ").replace(/\s+/g, " ").trim();
   u.searchParams.set("_nkw", `${words} PSA ${grade}`);
   u.searchParams.set("LH_Sold", "1");
   u.searchParams.set("LH_Complete", "1");
