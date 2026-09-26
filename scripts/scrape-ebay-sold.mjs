@@ -190,15 +190,30 @@ export function gradedGrades(card) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /* the selectors that worked on 22.09, with the newer card layout beside them */
+/* Only the exact matches. When few listings match every word, eBay pads the
+   page under a "Results matching fewer words" divider — and a padded row can
+   be the Unlimited print of a 1ST EDITION label. Everything after the
+   divider is counted, not kept. */
 function extract() {
   const q = (el, sel) => el.querySelector(sel);
-  return [...document.querySelectorAll("li.s-item, li.s-card")].map((li) => ({
-    title: (q(li, ".s-item__title, .s-card__title") || {}).textContent || "",
-    price: (q(li, ".s-item__price, .s-card__price") || {}).textContent || "",
-    caption: (q(li, ".s-item__caption, .s-card__caption, .s-item__title--tag") || {}).textContent || "",
-    text: li.textContent || "",
-    href: (q(li, "a.s-item__link, a.su-link, a[href*='/itm/']") || {}).href || "",
-  }));
+  const rows = [];
+  let fewer = 0, cut = false;
+  for (const li of document.querySelectorAll("li.s-item, li.s-card, li.srp-river-answer")) {
+    const isItem = li.matches("li.s-item, li.s-card");
+    if (!isItem) {
+      if (/REWRITE_START/.test(li.className) || /matching fewer words/i.test(li.textContent || "")) cut = true;
+      continue;
+    }
+    if (cut) { fewer++; continue; }
+    rows.push({
+      title: (q(li, ".s-item__title, .s-card__title") || {}).textContent || "",
+      price: (q(li, ".s-item__price, .s-card__price") || {}).textContent || "",
+      caption: (q(li, ".s-item__caption, .s-card__caption, .s-item__title--tag") || {}).textContent || "",
+      text: li.textContent || "",
+      href: (q(li, "a.s-item__link, a.su-link, a[href*='/itm/']") || {}).href || "",
+    });
+  }
+  return { rows, fewer };
 }
 
 /** What kind of page did we land on — results, a login wall, or a bot check. */
@@ -254,8 +269,9 @@ export async function scrape(targets, read, { dataDir = DATA, pause = () => slee
       continue;
     }
     const rows = page.rows || [];
-    if (rows.length) anyItems = true;
-    else console.log(`  ${card.id} PSA ${grade}: no items at ${searchUrl(card.psaTitle, grade)}`);
+    if (rows.length || page.fewer) anyItems = true;
+    if (page.fewer) console.log(`  ${card.id} PSA ${grade}: ${page.fewer} "fewer words" row(s) not read`);
+    if (!rows.length) console.log(`  ${card.id} PSA ${grade}: no exact matches at ${searchUrl(card.psaTitle, grade)}`);
     const { sales, dropped } = filterRows(rows, card, grade);
     const nBO = sales.filter((s) => s.bo).length;
     const why = Object.entries(dropped).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(", ");
@@ -323,7 +339,8 @@ async function main(argv) {
         return { kind: "error", error: err.message.split("\n")[0] };
       }
       const kind = await pageKind(page);
-      return { kind, url: page.url(), rows: kind === "results" ? await page.evaluate(extract) : [] };
+      const got = kind === "results" ? await page.evaluate(extract) : { rows: [], fewer: 0 };
+      return { kind, url: page.url(), rows: got.rows, fewer: got.fewer };
     });
   } finally {
     await ctx.close().catch(() => {});
