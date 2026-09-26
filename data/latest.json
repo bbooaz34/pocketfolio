@@ -1,8 +1,125 @@
 {
  "date": "2026-09-26",
- "builtAt": "2026-09-26T09:27:02.411Z",
- "source": "ebay",
+ "builtAt": "2026-09-26T22:23:24.809Z",
+ "source": "ebay+ppt",
  "cards": {
+  "base1-46": {
+   "pcId": null,
+   "tcgPlayerId": "42389",
+   "name": "Charmander",
+   "set": "Base",
+   "number": "46",
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/42389_in_400x400.jpg",
+   "grades": {
+    "6": 2500,
+    "7": 2706,
+    "8": 3438,
+    "9": 4994,
+    "10": 33500,
+    "raw": 318
+   },
+   "metrics": {
+    "6": {
+     "source": "ppt",
+     "confidence": "low",
+     "effective": "low",
+     "trend": null,
+     "dailyVolume7Day": 0,
+     "salesCount": 2,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 190,
+     "lastSaleDate": "2026-04-02",
+     "marketUpdatedAt": "2026-09-17T18:38:35.714Z",
+     "spread": {
+      "low": 2500,
+      "high": 3000
+     },
+     "pricedOn": "2026-09-26"
+    },
+    "7": {
+     "source": "ppt",
+     "confidence": "low",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 4,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-14",
+     "marketUpdatedAt": "2026-09-17T18:38:35.714Z",
+     "spread": {
+      "low": 1300,
+      "high": 3500
+     },
+     "pricedOn": "2026-09-26"
+    },
+    "8": {
+     "source": "ppt",
+     "confidence": "medium",
+     "effective": "medium",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 18,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 14,
+     "lastSaleDate": "2026-09-12",
+     "marketUpdatedAt": "2026-09-17T18:38:35.713Z",
+     "spread": {
+      "low": 1050,
+      "high": 5429
+     },
+     "pricedOn": "2026-09-26"
+    },
+    "9": {
+     "source": "ppt",
+     "confidence": "high",
+     "effective": "high",
+     "trend": "up",
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 32,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 90,
+     "lastSaleDate": "2026-09-13",
+     "marketUpdatedAt": "2026-09-17T18:38:35.714Z",
+     "spread": {
+      "low": 1450,
+      "high": 6500
+     },
+     "pricedOn": "2026-09-26"
+    },
+    "10": {
+     "source": "ppt",
+     "confidence": "medium",
+     "effective": "low",
+     "trend": "up",
+     "dailyVolume7Day": 0,
+     "salesCount": 17,
+     "priceField": "smartMarketPrice",
+     "smartRejected": null,
+     "daysUsed": 30,
+     "lastSaleDate": "2026-09-09",
+     "marketUpdatedAt": "2026-09-17T18:38:35.713Z",
+     "spread": {
+      "low": 9900,
+      "high": 40000
+     },
+     "pricedOn": "2026-09-26"
+    },
+    "raw": {
+     "source": "ppt",
+     "pricedOn": "2026-09-26"
+    }
+   },
+   "salesVelocityWeekly": 4.4186046511627906,
+   "salesVolume": null,
+   "confidence": "high",
+   "psaTitle": "1999 POKEMON GAME #46 CHARMANDER",
+   "pricedOn": "2026-09-26"
+  },
   "base1-63": {
    "pcId": null,
    "tcgPlayerId": "42408",
@@ -18,10 +135,11 @@
     "8": 3517,
     "9": 7999,
     "10": 34434,
-    "raw": 574
+    "raw": 684
    },
    "metrics": {
     "4": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -36,11 +154,10 @@
       "low": 1499,
       "high": 1499
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "5": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -55,11 +172,10 @@
       "low": 1999,
       "high": 1999
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "6": {
+     "source": "ppt",
      "confidence": "medium",
      "effective": "low",
      "trend": "up",
@@ -74,11 +190,10 @@
       "low": 2500,
       "high": 4302
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "7": {
+     "source": "ppt",
      "confidence": "medium",
      "effective": "low",
      "trend": "up",
@@ -93,11 +208,10 @@
       "low": 1250,
       "high": 3999
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "8": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "down",
@@ -112,9 +226,7 @@
       "low": 2495,
       "high": 37395
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "9": {
      "priceField": "ebay-median-5",
@@ -159,6 +271,7 @@
      "pricedOn": "2026-09-26"
     },
     "10": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "up",
@@ -173,20 +286,18 @@
       "low": 20750,
       "high": 36000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "raw": {
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "source": "ppt",
+     "pricedOn": "2026-09-26"
     }
    },
+   "salesVelocityWeekly": 1.627906976744186,
    "salesVolume": null,
+   "confidence": "high",
    "psaTitle": "1999 POKEMON GAME #63 SQUIRTLE",
    "salesScrapedAt": "2026-09-26T09:25:09+00:00",
-   "confidence": "high",
    "pricedOn": "2026-09-26"
   },
   "base1-44": {
@@ -203,10 +314,11 @@
     "8": 3300,
     "9": 4500,
     "10": 36000,
-    "raw": 402
+    "raw": 382
    },
    "metrics": {
     "5": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "up",
@@ -214,18 +326,17 @@
      "salesCount": 3,
      "priceField": "smartMarketPrice",
      "smartRejected": null,
-     "daysUsed": 146,
+     "daysUsed": 156,
      "lastSaleDate": "2026-08-17",
-     "marketUpdatedAt": "2026-09-16T20:08:49.175Z",
+     "marketUpdatedAt": "2026-09-26T13:50:36.043Z",
      "spread": {
       "low": 1500,
       "high": 2999
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "6": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "down",
@@ -233,18 +344,17 @@
      "salesCount": 3,
      "priceField": "medianPrice",
      "smartRejected": "flagged-outlier",
-     "daysUsed": 177,
+     "daysUsed": 187,
      "lastSaleDate": "2026-06-21",
-     "marketUpdatedAt": "2026-09-16T20:08:49.175Z",
+     "marketUpdatedAt": "2026-09-26T13:50:36.043Z",
      "spread": {
       "low": 1050,
       "high": 2699
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "7": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "up",
@@ -252,18 +362,17 @@
      "salesCount": 5,
      "priceField": "smartMarketPrice",
      "smartRejected": null,
-     "daysUsed": 255,
+     "daysUsed": 265,
      "lastSaleDate": "2026-07-17",
-     "marketUpdatedAt": "2026-09-16T20:08:49.175Z",
+     "marketUpdatedAt": "2026-09-26T13:50:36.043Z",
      "spread": {
       "low": 2500,
       "high": 3587
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "8": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "up",
@@ -273,14 +382,12 @@
      "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-07",
-     "marketUpdatedAt": "2026-09-16T20:08:49.175Z",
+     "marketUpdatedAt": "2026-09-26T13:50:36.043Z",
      "spread": {
       "low": 2000,
       "high": 4999
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "9": {
      "priceField": "ebay-median-5",
@@ -325,34 +432,33 @@
      "pricedOn": "2026-09-26"
     },
     "10": {
-     "confidence": "low",
+     "source": "ppt",
+     "confidence": "medium",
      "effective": "low",
      "trend": "up",
      "dailyVolume7Day": 0,
      "salesCount": 14,
      "priceField": "smartMarketPrice",
      "smartRejected": null,
-     "daysUsed": 30,
+     "daysUsed": 90,
      "lastSaleDate": "2026-08-27",
-     "marketUpdatedAt": "2026-09-16T20:08:49.174Z",
+     "marketUpdatedAt": "2026-09-26T13:50:36.043Z",
      "spread": {
       "low": 15299,
       "high": 44343
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "raw": {
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "source": "ppt",
+     "pricedOn": "2026-09-26"
     }
    },
+   "salesVelocityWeekly": 1.3953488372093024,
    "salesVolume": null,
+   "confidence": "high",
    "psaTitle": "1999 POKEMON GAME #44 BULBASAUR",
    "salesScrapedAt": "2026-09-26T09:25:09+00:00",
-   "confidence": "high",
    "pricedOn": "2026-09-26"
   },
   "base1-4": {
@@ -419,6 +525,7 @@
      "pricedOn": "2026-09-26"
     },
     "2": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "down",
@@ -433,11 +540,10 @@
       "low": 22750,
       "high": 31500
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "3": {
+     "source": "ppt",
      "confidence": "medium",
      "effective": "low",
      "trend": "stable",
@@ -452,11 +558,10 @@
       "low": 25000,
       "high": 30000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "4": {
+     "source": "ppt",
      "confidence": "high",
      "effective": "low",
      "trend": "down",
@@ -471,11 +576,10 @@
       "low": 27500,
       "high": 35000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "5": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "stable",
@@ -490,11 +594,10 @@
       "low": 28700,
       "high": 45000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "6": {
+     "source": "ppt",
      "confidence": "medium",
      "effective": "low",
      "trend": "up",
@@ -509,11 +612,10 @@
       "low": 32500,
       "high": 60000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "7": {
+     "source": "ppt",
      "confidence": "medium",
      "effective": "medium",
      "trend": "down",
@@ -528,11 +630,10 @@
       "low": 39000,
       "high": 80000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "8": {
+     "source": "ppt",
      "confidence": "high",
      "effective": "low",
      "trend": "up",
@@ -547,11 +648,10 @@
       "low": 61000,
       "high": 144000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "9": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "down",
@@ -566,11 +666,10 @@
       "low": 150000,
       "high": 400000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "10": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -585,20 +684,18 @@
       "low": 1750000,
       "high": 1750000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "raw": {
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "source": "ppt",
+     "pricedOn": "2026-09-26"
     }
    },
+   "salesVelocityWeekly": 6.279069767441861,
    "salesVolume": null,
+   "confidence": "high",
    "psaTitle": "1999 POKEMON GAME #4 CHARIZARD-HOLO",
    "salesScrapedAt": "2026-09-26T09:25:09+00:00",
-   "confidence": "high",
    "pricedOn": "2026-09-26"
   },
   "psa-154146687@jp": {
@@ -657,6 +754,7 @@
      "pricedOn": "2026-09-26"
     },
     "5": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -671,11 +769,10 @@
       "low": 4266,
       "high": 11999
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "6": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -690,11 +787,10 @@
       "low": 2600,
       "high": 2600
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "7": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -709,11 +805,10 @@
       "low": 4300,
       "high": 4300
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "8": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -728,11 +823,10 @@
       "low": 12050,
       "high": 20250
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "9": {
+     "source": "ppt",
      "confidence": "medium",
      "effective": "low",
      "trend": "up",
@@ -747,11 +841,10 @@
       "low": 8000,
       "high": 119900
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "10": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -766,20 +859,18 @@
       "low": 1065500,
       "high": 1065500
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "raw": {
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "source": "ppt",
+     "pricedOn": "2026-09-26"
     }
    },
+   "salesVelocityWeekly": 1.3953488372093024,
    "salesVolume": null,
+   "confidence": "high",
    "psaTitle": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI",
    "salesScrapedAt": "2026-09-26T09:25:09+00:00",
-   "confidence": "high",
    "pricedOn": "2026-09-26"
   },
   "base5-73": {
@@ -799,6 +890,7 @@
    },
    "metrics": {
     "5": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -813,11 +905,10 @@
       "low": 1873,
       "high": 1873
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "7": {
+     "source": "ppt",
      "confidence": "medium",
      "effective": "low",
      "trend": "up",
@@ -832,11 +923,10 @@
       "low": 1140,
       "high": 1450
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "8": {
+     "source": "ppt",
      "confidence": "high",
      "effective": "low",
      "trend": "up",
@@ -851,9 +941,7 @@
       "low": 1280,
       "high": 2500
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "9": {
      "priceField": "ebay-median-5",
@@ -898,6 +986,7 @@
      "pricedOn": "2026-09-26"
     },
     "10": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": null,
@@ -912,20 +1001,18 @@
       "low": 5000,
       "high": 17293
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "raw": {
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "source": "ppt",
+     "pricedOn": "2026-09-26"
     }
    },
+   "salesVelocityWeekly": 1.3953488372093024,
    "salesVolume": null,
+   "confidence": "high",
    "psaTitle": "2000 POKEMON ROCKET #73 THE BOSS'S WAY 1ST EDITION",
    "salesScrapedAt": "2026-09-26T09:25:09+00:00",
-   "confidence": "high",
    "pricedOn": "2026-09-26"
   },
   "psa-77452905@jp": {
@@ -936,39 +1023,39 @@
    "number": null,
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/614817_in_400x400.jpg",
    "grades": {
-    "1": 9500,
+    "1": 9125,
     "2": 5600,
     "3": 5150,
-    "4": 5700,
+    "4": 7300,
     "5": 5650,
-    "6": 10812,
+    "6": 11312,
     "7": 12900,
-    "8": 15400,
+    "8": 14775,
     "9": 28750,
     "10": 200000,
     "raw": 14954
    },
    "metrics": {
     "1": {
-     "confidence": "high",
-     "effective": "high",
+     "source": "ppt",
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "down",
-     "dailyVolume7Day": 0.7142857142857143,
+     "dailyVolume7Day": 0.42857142857142855,
      "salesCount": 98,
      "priceField": "smartMarketPrice",
      "smartRejected": null,
      "daysUsed": 7,
      "lastSaleDate": "2026-09-20",
-     "marketUpdatedAt": "2026-09-22T19:32:16.967Z",
+     "marketUpdatedAt": "2026-09-26T03:58:18.864Z",
      "spread": {
       "low": 4577,
       "high": 17000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "2": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "up",
@@ -976,18 +1063,17 @@
      "salesCount": 15,
      "priceField": "smartMarketPrice",
      "smartRejected": null,
-     "daysUsed": 265,
+     "daysUsed": 269,
      "lastSaleDate": "2026-09-04",
-     "marketUpdatedAt": "2026-09-22T19:32:16.967Z",
+     "marketUpdatedAt": "2026-09-26T03:58:18.864Z",
      "spread": {
       "low": 2800,
       "high": 6200
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "3": {
+     "source": "ppt",
      "confidence": "medium",
      "effective": "low",
      "trend": "up",
@@ -997,35 +1083,33 @@
      "smartRejected": null,
      "daysUsed": 90,
      "lastSaleDate": "2026-09-13",
-     "marketUpdatedAt": "2026-09-22T19:32:16.967Z",
+     "marketUpdatedAt": "2026-09-26T03:58:18.864Z",
      "spread": {
       "low": 3164,
       "high": 7700
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "4": {
-     "confidence": "low",
-     "effective": "low",
+     "source": "ppt",
+     "confidence": "medium",
+     "effective": "medium",
      "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 15,
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 16,
      "priceField": "smartMarketPrice",
      "smartRejected": null,
      "daysUsed": 30,
-     "lastSaleDate": "2026-09-10",
-     "marketUpdatedAt": "2026-09-22T19:32:16.967Z",
+     "lastSaleDate": "2026-09-22",
+     "marketUpdatedAt": "2026-09-26T03:58:18.864Z",
      "spread": {
       "low": 3600,
-      "high": 8200
+      "high": 10500
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "5": {
+     "source": "ppt",
      "confidence": "medium",
      "effective": "low",
      "trend": "up",
@@ -1035,33 +1119,30 @@
      "smartRejected": "outside-observed-range",
      "daysUsed": 90,
      "lastSaleDate": "2026-09-13",
-     "marketUpdatedAt": "2026-09-22T19:32:16.967Z",
+     "marketUpdatedAt": "2026-09-26T03:58:18.864Z",
      "spread": {
       "low": 3500,
       "high": 9999
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "6": {
+     "source": "ppt",
      "confidence": "medium",
-     "effective": "low",
+     "effective": "medium",
      "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 11,
+     "dailyVolume7Day": 0.14285714285714285,
+     "salesCount": 12,
      "priceField": "smartMarketPrice",
      "smartRejected": null,
      "daysUsed": 14,
-     "lastSaleDate": "2026-09-14",
-     "marketUpdatedAt": "2026-09-22T19:32:16.967Z",
+     "lastSaleDate": "2026-09-25",
+     "marketUpdatedAt": "2026-09-26T03:58:18.864Z",
      "spread": {
       "low": 4500,
       "high": 15000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "7": {
      "priceField": "ebay-median-5",
@@ -1106,6 +1187,7 @@
      "pricedOn": "2026-09-26"
     },
     "8": {
+     "source": "ppt",
      "confidence": "high",
      "effective": "low",
      "trend": "up",
@@ -1115,35 +1197,33 @@
      "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-10",
-     "marketUpdatedAt": "2026-09-22T19:32:16.967Z",
+     "marketUpdatedAt": "2026-09-26T03:58:18.864Z",
      "spread": {
       "low": 5100,
       "high": 25000
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "9": {
+     "source": "ppt",
      "confidence": "high",
-     "effective": "high",
+     "effective": "low",
      "trend": "up",
-     "dailyVolume7Day": 0.2857142857142857,
+     "dailyVolume7Day": 0,
      "salesCount": 83,
      "priceField": "smartMarketPrice",
      "smartRejected": null,
      "daysUsed": 14,
      "lastSaleDate": "2026-09-18",
-     "marketUpdatedAt": "2026-09-22T19:32:16.967Z",
+     "marketUpdatedAt": "2026-09-26T03:58:18.864Z",
      "spread": {
       "low": 15969,
       "high": 43028
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "10": {
+     "source": "ppt",
      "confidence": "low",
      "effective": "low",
      "trend": "up",
@@ -1153,149 +1233,24 @@
      "smartRejected": null,
      "daysUsed": 30,
      "lastSaleDate": "2026-09-15",
-     "marketUpdatedAt": "2026-09-22T19:32:16.967Z",
+     "marketUpdatedAt": "2026-09-26T03:58:18.864Z",
      "spread": {
       "low": 90000,
       "high": 269900
      },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "pricedOn": "2026-09-26"
     },
     "raw": {
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "source": "ppt",
+     "pricedOn": "2026-09-26"
     }
    },
+   "salesVelocityWeekly": 9.767441860465116,
    "salesVolume": null,
+   "confidence": "high",
    "psaTitle": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS",
    "salesScrapedAt": "2026-09-26T09:25:09+00:00",
-   "confidence": "high",
    "pricedOn": "2026-09-26"
-  },
-  "base1-46": {
-   "pcId": null,
-   "tcgPlayerId": "42389",
-   "name": "Charmander",
-   "set": "Base",
-   "number": "46",
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/42389_in_400x400.jpg",
-   "grades": {
-    "6": 2500,
-    "7": 2706,
-    "8": 3438,
-    "9": 4994,
-    "10": 33500,
-    "raw": 310
-   },
-   "metrics": {
-    "6": {
-     "confidence": "low",
-     "effective": "low",
-     "trend": null,
-     "dailyVolume7Day": 0,
-     "salesCount": 2,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 190,
-     "lastSaleDate": "2026-04-02",
-     "marketUpdatedAt": "2026-09-17T18:38:35.714Z",
-     "spread": {
-      "low": 2500,
-      "high": 3000
-     },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
-    },
-    "7": {
-     "confidence": "low",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": 4,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 90,
-     "lastSaleDate": "2026-09-14",
-     "marketUpdatedAt": "2026-09-17T18:38:35.714Z",
-     "spread": {
-      "low": 1300,
-      "high": 3500
-     },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
-    },
-    "8": {
-     "confidence": "medium",
-     "effective": "medium",
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": 18,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 14,
-     "lastSaleDate": "2026-09-12",
-     "marketUpdatedAt": "2026-09-17T18:38:35.713Z",
-     "spread": {
-      "low": 1050,
-      "high": 5429
-     },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
-    },
-    "9": {
-     "confidence": "high",
-     "effective": "high",
-     "trend": "up",
-     "dailyVolume7Day": 0.14285714285714285,
-     "salesCount": 32,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 90,
-     "lastSaleDate": "2026-09-13",
-     "marketUpdatedAt": "2026-09-17T18:38:35.714Z",
-     "spread": {
-      "low": 1450,
-      "high": 6500
-     },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
-    },
-    "10": {
-     "confidence": "medium",
-     "effective": "low",
-     "trend": "up",
-     "dailyVolume7Day": 0,
-     "salesCount": 17,
-     "priceField": "smartMarketPrice",
-     "smartRejected": null,
-     "daysUsed": 30,
-     "lastSaleDate": "2026-09-09",
-     "marketUpdatedAt": "2026-09-17T18:38:35.713Z",
-     "spread": {
-      "low": 9900,
-      "high": 40000
-     },
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
-    },
-    "raw": {
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
-    }
-   },
-   "salesVelocityWeekly": 4.4186046511627906,
-   "salesVolume": null,
-   "confidence": "high",
-   "pricedOn": "2026-09-25",
-   "carried": true
   },
   "miscp-001": {
    "pcId": null,
@@ -1305,20 +1260,18 @@
    "number": null,
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/108589_in_400x400.jpg",
    "grades": {
-    "raw": 11721
+    "raw": 11739
    },
    "metrics": {
     "raw": {
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "source": "ppt",
+     "pricedOn": "2026-09-26"
     }
    },
    "salesVelocityWeekly": 3.255813953488372,
    "salesVolume": null,
    "confidence": "low",
-   "pricedOn": "2026-09-25",
-   "carried": true
+   "pricedOn": "2026-09-26"
   },
   "svp-044": {
    "pcId": null,
@@ -1328,20 +1281,18 @@
    "number": "044",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/512035_in_400x400.jpg",
    "grades": {
-    "raw": 5597
+    "raw": 5540
    },
    "metrics": {
     "raw": {
-     "source": "carried",
-     "carried": true,
-     "pricedOn": "2026-09-25"
+     "source": "ppt",
+     "pricedOn": "2026-09-26"
     }
    },
    "salesVelocityWeekly": 43.02325581395349,
    "salesVolume": null,
    "confidence": "high",
-   "pricedOn": "2026-09-25",
-   "carried": true
+   "pricedOn": "2026-09-26"
   }
  }
 }
