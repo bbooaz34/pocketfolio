@@ -47,7 +47,11 @@ export const PROFILE_DIR = join(homedir(), ".pocketfolio", "chrome-profile");
 
 export function searchUrl(psaTitle, grade) {
   const u = new URL("https://www.ebay.com/sch/i.html");
-  u.searchParams.set("_nkw", `${psaTitle} PSA ${grade}`);
+  /* the label's words, verbatim — but not its punctuation. "GOLD, SILVER,
+     TO A NEW WORLD... TOGEPI" returned nothing at all on 26.09 while the
+     same words without the commas and dots are what sellers type. */
+  const words = String(psaTitle).replace(/[.,]+/g, " ").replace(/\s+/g, " ").trim();
+  u.searchParams.set("_nkw", `${words} PSA ${grade}`);
   u.searchParams.set("LH_Sold", "1");
   u.searchParams.set("LH_Complete", "1");
   u.searchParams.set("_sop", "13");
@@ -251,6 +255,7 @@ export async function scrape(targets, read, { dataDir = DATA, pause = () => slee
     }
     const rows = page.rows || [];
     if (rows.length) anyItems = true;
+    else console.log(`  ${card.id} PSA ${grade}: no items at ${searchUrl(card.psaTitle, grade)}`);
     const { sales, dropped } = filterRows(rows, card, grade);
     const nBO = sales.filter((s) => s.bo).length;
     const why = Object.entries(dropped).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(", ");

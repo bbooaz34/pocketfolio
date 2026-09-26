@@ -98,8 +98,16 @@ async function main(argv) {
         console.log(`  ${card.id}: cert page did not load (${err.message.split("\n")[0]})`);
         continue;
       }
-      const title = await page.title().catch(() => "");
-      if (/just a moment|attention required|access denied|captcha/i.test(title)) {
+      /* Cloudflare's "Just a moment..." clears by itself in a real browser
+         after a few seconds. Wait for it — never try to get past it. */
+      const CHALLENGE = /just a moment|attention required|access denied|captcha/i;
+      let title = await page.title().catch(() => "");
+      for (let waited = 0; CHALLENGE.test(title) && waited < 45000; waited += 1500) {
+        await page.waitForTimeout(1500);
+        title = await page.title().catch(() => "");
+      }
+      if (!CHALLENGE.test(title)) await page.waitForTimeout(1500);
+      if (CHALLENGE.test(title)) {
         console.error(`STOP: psacard.com is showing a bot check (${title}). Run again with --headed, or copy the titles by hand.`);
         break;
       }

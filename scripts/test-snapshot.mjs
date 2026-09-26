@@ -468,6 +468,9 @@ check("today's raw series still grows when graded history is missing",
   check("titles lose the 'Opens in a new window' tail", sales[0].t === "1999 POKEMON GAME #4 CHARIZARD-HOLO PSA 1", sales[0].t);
   check("urls are the bare item link", urls.includes("https://www.ebay.com/itm/111111111111"), urls.join(" "));
   check("sold date and pennies parsed", sales[0].d === "2026-09-21" && sales[0].p === 40000);
+  check("the search keeps the label's words and drops its commas and dots",
+    new URL(Scraper.searchUrl("1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI", "1")).searchParams.get("_nkw") ===
+      "1999 POKEMON JAPANESE GOLD SILVER TO A NEW WORLD TOGEPI PSA 1");
   check("the search is the label title verbatim, plus the grade",
     new URL(Scraper.searchUrl("2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY", "9")).searchParams.get("_nkw") ===
       "2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY PSA 9");
