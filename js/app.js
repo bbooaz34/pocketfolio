@@ -88,6 +88,8 @@
     costPerUnit: "מחיר רכישה",
     rawMarket: "מחיר סינגל",
     psaCert: "מספר תעודת PSA",
+    ebaySold: "מכירות אחרונות ב-eBay",
+    ebaySoldLink: "לרשימת המכירות",
     certLooking: (c) => `מאתר תעודת PSA ‎#${c}…`,
     certMatch: "בחירת ההדפסה המדויקת תצרף מחיר שוק:",
     certNoMatch: (s) => `לא נמצאה הדפסה תואמת בקטלוג עבור ${s}.`,
@@ -307,6 +309,20 @@
     const key = hh.jp ? hh.cardId + "@jp" : hh.cardId;
     return hh.psaTitle || snapLatest?.cards?.[key]?.psaTitle ||
       snapLatest?.cards?.[hh.cardId]?.psaTitle || null;
+  }
+
+  /* eBay's sold listings for exactly this slab: the label title and the
+     grade, most recent first — the same search the nightly scraper reads
+     (searchUrl in scripts/scrape-ebay-sold.mjs; keep the two in step).
+     Commas, dots and hyphens go: "-HOLO" would read as "without holo". */
+  function ebaySoldUrl(title, grade) {
+    const words = String(title).replace(/[.,-]+/g, " ").replace(/\s+/g, " ").trim();
+    const u = new URL("https://www.ebay.com/sch/i.html");
+    u.searchParams.set("_nkw", `${words} PSA ${grade}`);
+    u.searchParams.set("LH_Sold", "1");
+    u.searchParams.set("LH_Complete", "1");
+    u.searchParams.set("_sop", "13");
+    return u.toString();
   }
 
   /* Why a holding has no value, when "no data" would be a lie: there is a
@@ -1241,6 +1257,19 @@
       kv(T.psaCert, a);
     } else {
       kv(T.psaCert, h("span", "v faint", "—"));
+    }
+    /* graded only: without the label title there is no exact search, and a
+       search built from the card's name is how the wrong card gets read */
+    if (hh.grade !== "raw") {
+      const title = psaTitleOf(hh);
+      if (title) {
+        const a = h("a", "v", T.ebaySoldLink);
+        a.href = ebaySoldUrl(title, hh.grade);
+        a.target = "_blank"; a.rel = "noopener";
+        kv(T.ebaySold, a);
+      } else {
+        kv(T.ebaySold, h("span", "v faint", "—"));
+      }
     }
     body.appendChild(dc);
 
