@@ -487,6 +487,14 @@ check("today's raw series still grows when graded history is missing",
     merged.grades["1"].length === 4 && merged.grades["10"].length === 1 &&
     merged.grades["1"].some((x) => x.url.endsWith("999999999999")),
     merged.grades["1"].map((x) => x.d).join(","));
+  const seeded = Scraper.mergeSales({ grades: { "1": [
+      { d: "2026-09-21", p: 40000, bo: false, t: "seed", url: "https://www.ebay.com/sch/i.html?_nkw=x#seed-1", seeded: true },
+      { d: "2026-09-01", p: 30000, bo: false, t: "seed", url: "https://www.ebay.com/sch/i.html?_nkw=x#seed-2", seeded: true }] } },
+    card, "1", sales, "2026-09-27T04:00:00+03:00");
+  check("a real listing replaces the seeded sale it matches, and only that one",
+    seeded.grades["1"].filter((x) => x.d === "2026-09-21" && x.p === 40000).length === 1 &&
+    seeded.grades["1"].some((x) => x.url.endsWith("#seed-2")),
+    seeded.grades["1"].map((x) => `${x.d}:${x.p}`).join(","));
   check("merged sales are newest first", merged.grades["1"][0].d >= merged.grades["1"].at(-1).d);
 
   const targets = Scraper.targetsOf([card, { id: "x", grades: ["9"] }, { id: "y", grades: ["raw"], psaTitle: "Y" }]);

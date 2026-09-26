@@ -1,0 +1,50 @@
+{
+ "cardId": "psa-154146687@jp",
+ "grades": {
+  "1": [
+   {
+    "d": "2026-09-21",
+    "p": 6000,
+    "bo": false,
+    "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD+SILVER+TO+A+NEW+WORLD+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1&_sop=13#seed-1",
+    "seeded": true
+   },
+   {
+    "d": "2026-09-08",
+    "p": 4601,
+    "bo": false,
+    "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD+SILVER+TO+A+NEW+WORLD+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1&_sop=13#seed-2",
+    "seeded": true
+   },
+   {
+    "d": "2026-08-08",
+    "p": 10000,
+    "bo": false,
+    "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD+SILVER+TO+A+NEW+WORLD+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1&_sop=13#seed-3",
+    "seeded": true
+   },
+   {
+    "d": "2026-07-26",
+    "p": 20000,
+    "bo": false,
+    "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD+SILVER+TO+A+NEW+WORLD+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1&_sop=13#seed-4",
+    "seeded": true
+   },
+   {
+    "d": "2026-07-24",
+    "p": 20000,
+    "bo": true,
+    "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD+SILVER+TO+A+NEW+WORLD+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1&_sop=13#seed-5",
+    "seeded": true
+   }
+  ]
+ },
+ "psaTitle": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI",
+ "scrapedAt": "2026-09-26T09:25:09+00:00",
+ "note": "Seeded 26.09 from the owner reading these searches in their own Chrome (page one, above the fewer-words divider). No item links were captured, so each sale links to its search; the first real read replaces a seeded sale with its listing."
+}

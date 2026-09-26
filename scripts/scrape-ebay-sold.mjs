@@ -189,7 +189,12 @@ export function mergeSales(prev, card, grade, sales, scrapedAt) {
   doc.cardId = card.id;
   doc.psaTitle = card.psaTitle;
   doc.scrapedAt = scrapedAt;
-  const byUrl = new Map((doc.grades[grade] || []).map((s) => [s.url, s]));
+  /* A sale seeded from a manual read has no listing url of its own (it links
+     to the search). When a real read finds the same date and price, that
+     listing replaces it — the same sale must not count twice. */
+  const seen = new Set(sales.map((s) => `${s.d}|${s.p}`));
+  const kept = (doc.grades[grade] || []).filter((s) => /\/itm\//.test(s.url) || !seen.has(`${s.d}|${s.p}`));
+  const byUrl = new Map(kept.map((s) => [s.url, s]));
   for (const s of sales) {
     const old = byUrl.get(s.url);
     /* the first sighting keeps its date; a later read may only add the flag */
