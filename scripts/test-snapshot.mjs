@@ -502,6 +502,25 @@ check("today's raw series still grows when graded history is missing",
     ok.code === 0 && ok.docs.size === 2 && ok.docs.get("base1-2").grades["1"].length === 0);
 }
 
+/* ---- a printing not on our label is another card (Charmander, 26.09) ---- */
+{
+  const r = (title, id) => ({ title, price: "$60.00", caption: "Sold Sep 20, 2026", text: title, href: `https://www.ebay.com/itm/${id}` });
+  const rows = [
+    r("1999 POKEMON GAME #46 CHARMANDER PSA 9 MINT UNLIMITED BASE SET", "500000000001"),
+    r("1999 Pokemon Game Charmander 1st Edition #46 PSA 9", "500000000002"),
+    r("Charmander First Edition #46 Pokemon Game Promo PSA 9", "500000000003"),
+    r("1999 POKEMON GAME SHADOWLESS #46 CHARMANDER PSA 9", "500000000004"),
+  ];
+  const unl = Scraper.filterRows(rows, { id: "c", psaTitle: "1999 POKEMON GAME #46 CHARMANDER" }, "9");
+  check("an Unlimited label drops 1st Edition and Shadowless sales",
+    unl.sales.length === 1 && unl.dropped.printing === 3, JSON.stringify(unl.dropped));
+  const first = Scraper.filterRows([
+    r("2000 Pokemon Rocket 1st Edition #73 The Boss's Way Holo PSA 9", "500000000005"),
+    r("2000 POKEMON ROCKET #73 THE BOSS'S WAY 1ST EDITION PSA 9", "500000000006"),
+  ], { id: "b", psaTitle: "2000 POKEMON ROCKET #73 THE BOSS'S WAY 1ST EDITION" }, "9");
+  check("a 1ST EDITION label keeps its own 1st Edition sales", first.sales.length === 2, JSON.stringify(first.dropped));
+}
+
 /* ---- psaTitle from the cert page: PSA's fields, in label order ---- */
 {
   const { parseCertText, titleOf } = await import(join(ROOT, "scripts", "fill-psa-titles.mjs"));

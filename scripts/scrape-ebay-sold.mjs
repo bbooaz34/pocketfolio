@@ -79,6 +79,15 @@ const LOT = /\blot\b|bundle|set of|x\d/i;
 const OTHER_LANG = /italian|french|german|spanish|japanese|portuguese|dutch|korean|chinese/i;
 const QUALIFIER = /\b(OC|MK|MC|ST|PD)\b/;
 const BEST_OFFER = /best offer/i;
+/* Printings PSA names on the label. A listing that names one the card's own
+   label does not is another card: "#46 CHARMANDER" (Unlimited) is a word-for-
+   word subset of the 1st Edition and Shadowless labels, and eBay's exact
+   matches returned $580 1st Edition sales for it on 26.09. The rule is only
+   "not on our label", so a 1ST EDITION label keeps its own sales. */
+const PRINTINGS = [
+  ["1st edition", /\b(1st|first)\s*ed(ition|\.)?\b/i],
+  ["shadowless", /\bshadowless\b/i],
+];
 
 export function cleanTitle(t) {
   return String(t || "")
@@ -129,7 +138,8 @@ export function filterRows(rows, card, grade) {
   const tokens = distinctiveTokens(card.psaTitle);
   const need = Math.min(2, tokens.length);
   const english = !card.language || card.language === "english";
-  const dropped = { grade: 0, tokens: 0, lot: 0, language: 0, qualifier: 0, price: 0, date: 0, url: 0 };
+  const notOurs = PRINTINGS.filter(([, re]) => !re.test(card.psaTitle)).map(([, re]) => re);
+  const dropped = { grade: 0, tokens: 0, printing: 0, lot: 0, language: 0, qualifier: 0, price: 0, date: 0, url: 0 };
   const sales = [];
   const seen = new Set();
   for (const r of rows) {
@@ -137,6 +147,7 @@ export function filterRows(rows, card, grade) {
     if (!want.test(t)) { dropped.grade++; continue; }
     const low = t.toLowerCase();
     if (tokens.filter((w) => low.includes(w)).length < need) { dropped.tokens++; continue; }
+    if (notOurs.some((re) => re.test(t))) { dropped.printing++; continue; }
     if (LOT.test(t)) { dropped.lot++; continue; }
     if (english && OTHER_LANG.test(t)) { dropped.language++; continue; }
     if (QUALIFIER.test(t)) { dropped.qualifier++; continue; }
