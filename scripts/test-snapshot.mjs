@@ -524,6 +524,26 @@ check("today's raw series still grows when graded history is missing",
   check("a 1ST EDITION label keeps its own 1st Edition sales", first.sales.length === 2, JSON.stringify(first.dropped));
 }
 
+/* ---- the real pages of 26.09, read in the owner's own Chrome ---- */
+{
+  const fx = JSON.parse(readFileSync(join(ROOT, "scripts", "fixtures", "ebay-2026-09-26.json"), "utf8"));
+  const wl = JSON.parse(readFileSync(join(ROOT, "data", "watchlist.json"), "utf8")).cards;
+  const { valueGrade } = await import(join(ROOT, "scripts", "providers", "ebay-sales.mjs"));
+  const want = { "base1-63": 7999, "base1-44": 4500, "base1-4": 35500, "psa-154146687@jp": 8000, "base5-73": 3600, "psa-77452905@jp": 12900 };
+  for (const [id, pg] of Object.entries(fx.pages)) {
+    const card = wl.find((c) => c.id === id);
+    const { sales } = Scraper.filterRows(pg.rows, card, pg.grade);
+    const r = valueGrade(sales, fx.capturedOn);
+    check(`real page: ${card.name} PSA ${pg.grade} = $${want[id] / 100}`, r?.value === want[id],
+      `$${(r?.value ?? 0) / 100} from ${sales.length} kept of ${pg.rows.length}`);
+  }
+  const cz = Scraper.filterRows(fx.pages["base1-4"].rows, wl.find((c) => c.id === "base1-4"), "1").sales;
+  check("real page: no 1st Edition, Shadowless or Base Set 2 Charizard survives",
+    cz.every((x) => !/1st|shadowless|base ii/i.test(x.t)) && cz.length === 16);
+  const bw = Scraper.filterRows(fx.pages["base5-73"].rows, wl.find((c) => c.id === "base5-73"), "9").sales;
+  check("real page: every Boss's Way sale kept is 1st Edition", bw.every((x) => /1st|first/i.test(x.t)));
+}
+
 /* ---- psaTitle from the cert page: PSA's fields, in label order ---- */
 {
   const { parseCertText, titleOf } = await import(join(ROOT, "scripts", "fill-psa-titles.mjs"));

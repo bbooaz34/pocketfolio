@@ -63,7 +63,9 @@ export function searchUrl(psaTitle, grade) {
 /** `PSA 1` must not match `PSA 10`, nor `PSA 1.5`. */
 export function gradeRe(g) {
   const esc = String(g).replace(".", "\\.");
-  return new RegExp(`PSA\\s*${esc}(\\b|\\.0)(?!\\d|\\.5)`, "i");
+  /* PSA's condition words may sit between the brand and the number: "PSA MINT 9" */
+  const cond = "(?:(?:GEM\\s*)?(?:MINT|MT)|NM[-\\s]?MT|NM|EX[-\\s]?MT|EX|VG[-\\s]?EX|VG|GOOD|GD|FAIR|FR|POOR|PR)?";
+  return new RegExp(`PSA\\s*${cond}\\s*${esc}(\\b|\\.0)(?!\\d|\\.5)`, "i");
 }
 
 /* words on every PSA label, or too short to tell one card from another */
@@ -80,7 +82,11 @@ export function distinctiveTokens(psaTitle) {
 const LOT = /\blot\b|bundle|set of|x\d/i;
 const OTHER_LANG = /italian|french|german|spanish|japanese|portuguese|dutch|korean|chinese/i;
 const QUALIFIER = /\b(OC|MK|MC|ST|PD)\b/;
-const BEST_OFFER = /best offer/i;
+/* Only an ACCEPTED offer hides the real price. "or Best Offer" on a sold row
+   says the listing allowed offers, and its price is what it sold for — on
+   26.09 the looser /best offer/ flagged 6 of Misty's Tears' 9 sales where
+   eBay said "Best offer accepted" on 2. */
+const BEST_OFFER = /best offer accepted/i;
 /* Printings PSA names on the label. A listing that names one the card's own
    label does not is another card: "#46 CHARMANDER" (Unlimited) is a word-for-
    word subset of the 1st Edition and Shadowless labels, and eBay's exact
@@ -89,7 +95,9 @@ const BEST_OFFER = /best offer/i;
 const PRINTINGS = [
   ["1st edition", /\b(1st|first)\s*ed(ition|\.)?\b/i],
   ["shadowless", /\bshadowless\b/i],
+  ["base set 2", /\bbase\s*(set\s*)?(ii|2)\b/i],
 ];
+const YEARS = /\b(19[89]\d|20[0-3]\d)\b/g;
 
 export function cleanTitle(t) {
   return String(t || "")
@@ -141,6 +149,10 @@ export function filterRows(rows, card, grade) {
   const need = Math.min(2, tokens.length);
   const english = !card.language || card.language === "english";
   const notOurs = PRINTINGS.filter(([, re]) => !re.test(card.psaTitle)).map(([, re]) => re);
+  /* a label's year names the print run: "2000 POKEMON GAME BASE II #4
+     CHARIZARD-HOLO" is Base Set 2, not the 1999 card. A listing naming years,
+     none of them ours, is another card. ("PSA 9 2026 CERT … 1999" keeps.) */
+  const ourYear = (String(card.psaTitle).match(YEARS) || [])[0] || null;
   const dropped = { grade: 0, tokens: 0, printing: 0, lot: 0, language: 0, qualifier: 0, price: 0, date: 0, url: 0 };
   const sales = [];
   const seen = new Set();
@@ -150,6 +162,8 @@ export function filterRows(rows, card, grade) {
     const low = t.toLowerCase();
     if (tokens.filter((w) => low.includes(w)).length < need) { dropped.tokens++; continue; }
     if (notOurs.some((re) => re.test(t))) { dropped.printing++; continue; }
+    const years = t.match(YEARS);
+    if (ourYear && years && !years.includes(ourYear)) { dropped.printing++; continue; }
     if (LOT.test(t)) { dropped.lot++; continue; }
     if (english && OTHER_LANG.test(t)) { dropped.language++; continue; }
     if (QUALIFIER.test(t)) { dropped.qualifier++; continue; }
