@@ -781,6 +781,19 @@ writeSales("base1-12", { "9": [sale("2026-09-20", 5000), sale("2026-09-19", 5000
     MC.importAnswer(txt, wl9, { dataDir: d9, readOn: "2026-09-27", log: quiet, accept: true });
     check("--accept takes it", JSON.parse(readFileSync(join(d9, "market", "miscp-001.json"), "utf8")).market === 3343);
   }
+  /* TCGplayer's latest sales, 27.09: a DMG copy sits among NM ones */
+  {
+    const d10 = mkdtempSync(join(tmpdir(), "pf-manual10-"));
+    const wlR = [{ id: "miscp-001", name: "Ancient Mew", grades: ["raw"], tcgPlayerId: "108589" }];
+    const rr = MC.importAnswer([
+      "miscp-001 raw (Ancient Mew, ungraded)",
+      "9/27/26 · NM Holofoil  · $107.99", "9/27/26 · NM Holofoil  · $109.00", "9/27/26 · LP Holofoil  · $119.53",
+      "9/27/26 · NM Holofoil  · $120.72", "9/26/26 · DMG Holofoil · $32.99",
+    ].join("\n"), wlR, { dataDir: d10, readOn: "2026-09-27", log: quiet });
+    const mk10 = JSON.parse(readFileSync(join(d10, "market", "miscp-001.json"), "utf8"));
+    check("a single is priced from its Near Mint sales only, as their median",
+      rr.ok && mk10.market === 10900 && mk10.basis === "nm-median-3" && mk10.sales.length === 5, `$${mk10.market / 100} ${mk10.basis}`);
+  }
   const empty = MC.importAnswer("## base1-4 1\n## svp-044 raw\n", wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
   check("an empty answer is refused", !empty.ok);
 }

@@ -45,7 +45,7 @@ export function promptText(watchlist) {
     "For each section below, open the link(s) and report what the page shows, under the exact `## …` header I give.",
     "",
     "For eBay links: list every sold result on page one, one per line, as `Mon D · $price · title`, with `BO · ` before the title when the result says \"Best offer accepted\" (not for \"or Best Offer\"). If the page has a \"Results matching fewer words\" divider, stop at it. Don't click into listings or go past page one.",
-    "For TCGplayer links: one line, `Market $price`, from the product's \"Market Price\".",
+    "For TCGplayer links: the product's latest sales, one per line, as `M/D/YY · condition · $price` (e.g. `9/27/26 · NM Holofoil · $107.99`).",
     "Wait about 5 seconds between links. If a site shows a security check, stop and tell me.",
     "",
   ];
@@ -117,6 +117,17 @@ export function resolveHeader(line, watchlist) {
    them, and separates cards by a blank line only) goes to the one graded card
    whose name it contains, at a grade that card holds. Two candidates or none
    and the row is not read: a guessed card is the wrong-Togepi mistake again. */
+/* TCGplayer's condition names, short or long */
+export function conditionOf(s) {
+  const t = String(s).toLowerCase();
+  if (/\bnm\b|near mint/.test(t)) return "NM";
+  if (/\blp\b|lightly played/.test(t)) return "LP";
+  if (/\bmp\b|moderately played/.test(t)) return "MP";
+  if (/\bhp\b|heavily played/.test(t)) return "HP";
+  if (/\bdmg\b|damaged/.test(t)) return "DMG";
+  return null;
+}
+
 export function cardForTitle(title, watchlist) {
   const low = String(title).toLowerCase();
   const hits = [];
@@ -133,6 +144,7 @@ export function parseAnswer(text, readOn, watchlist = []) {
   const [yy, mm] = readOn.split("-").map(Number);
   const pages = {}, market = {}, unknown = [];
   let cur = null, n = 0, unplaced = 0;
+  const rawSales = {};
   for (const raw of rtfToText(String(text)).split(/\r?\n/)) {
     const line = raw.replace(/^\s*[*•-]\s+/, "").trim();
     if (!line) continue;
@@ -152,6 +164,17 @@ export function parseAnswer(text, readOn, watchlist = []) {
     if (cur?.grade === "raw") {
       const m = line.match(/market[^$\d]*\$\s*([\d,]+(?:\.\d{1,2})?)/i);
       if (m) { market[cur.id] = Math.round(Number(m[1].replace(/,/g, "")) * 100); continue; }
+      /* TCGplayer's latest sales: "9/27/26 · NM Holofoil · $107.99" */
+      const s = line.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s*·\s*(.+?)\s*·\s*\$\s*([\d,]+(?:\.\d{1,2})?)\s*$/);
+      if (s) {
+        const y = s[3].length === 2 ? 2000 + Number(s[3]) : Number(s[3]);
+        (rawSales[cur.id] ||= []).push({
+          d: `${y}-${s[1].padStart(2, "0")}-${s[2].padStart(2, "0")}`,
+          cond: conditionOf(s[4]), what: s[4].replace(/\s+/g, " "),
+          p: Math.round(Number(s[5].replace(/,/g, "")) * 100),
+        });
+        continue;
+      }
     }
     /* the asked-for "Mon D · $price · [BO ·] title", or a markdown table row
        "| Sep 20 | $100.00 | Yes | title |", which is what the extension
@@ -187,7 +210,22 @@ export function parseAnswer(text, readOn, watchlist = []) {
     pages[to.id].rows.push({ title, price, caption: `Sold ${dm[1]} ${dm[2]}, ${year}`,
       text: title + (bo ? " Best offer accepted" : ""), href: `https://www.ebay.com/itm/7${String(n).padStart(11, "0")}` });
   }
-  return { pages, market, unknown, unplaced };
+  /* A raw holding is priced as Near Mint: the median of the NM sales read.
+     A Damaged copy at $32.99 took Ancient Mew's reading to $33.43 on 27.09,
+     against NM sales of $108–121. Other conditions are kept as evidence only.
+     With no NM sale, an explicit "Market $" still stands. */
+  const rawBasis = {};
+  for (const [id, list] of Object.entries(rawSales)) {
+    const nm = list.filter((x) => x.cond === "NM").map((x) => x.p).sort((a, b) => a - b);
+    if (nm.length) {
+      const mid = nm.length >> 1;
+      market[id] = nm.length % 2 ? nm[mid] : Math.round((nm[mid - 1] + nm[mid]) / 2);
+      rawBasis[id] = { basis: `nm-median-${nm.length}`, sales: list };
+    } else if (market[id] != null) {
+      rawBasis[id] = { basis: "market", sales: list };
+    }
+  }
+  return { pages, market, unknown, unplaced, rawBasis };
 }
 
 /* no item link is captured by a manual read: each sale links to a sold search
@@ -210,7 +248,7 @@ function lastRaw(dataDir, id) {
 }
 
 export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = new Date(), log = console.log, accept = false } = {}) {
-  const { pages, market, unknown, unplaced } = parseAnswer(text, readOn, watchlist);
+  const { pages, market, unknown, unplaced, rawBasis } = parseAnswer(text, readOn, watchlist);
   for (const u of unknown) log(`  a section whose card could not be told — its rows were not read: ${u}`);
   if (unplaced) log(`  ${unplaced} row(s) with no header named no single watchlist card — not read`);
   const rowsRead = Object.values(pages).reduce((a, p) => a + p.rows.length, 0);
@@ -250,9 +288,12 @@ export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = ne
       continue;
     }
     const doc = { cardId: id, tcgPlayerId: card.tcgPlayerId ?? null,
-      url: card.tcgPlayerId ? tcgplayerUrl(card.tcgPlayerId) : null, readAt: at, market: pennies };
+      url: card.tcgPlayerId ? tcgplayerUrl(card.tcgPlayerId) : null, readAt: at, market: pennies,
+      ...(rawBasis[id] ? rawBasis[id] : { basis: "market" }) };
     writeFileSync(join(dataDir, "market", `${id}.json`), JSON.stringify(doc, null, 1) + "\n");
-    log(`  ${card.name} raw: TCGplayer market $${(pennies / 100).toFixed(2)}`);
+    log(`  ${card.name} raw: TCGplayer $${(pennies / 100).toFixed(2)}` +
+      (rawBasis[id]?.basis?.startsWith("nm-") ? ` (median of ${rawBasis[id].basis.split("-").pop()} Near Mint sales` +
+        `${rawBasis[id].sales.length > Number(rawBasis[id].basis.split("-").pop()) ? `; ${rawBasis[id].sales.filter((x) => x.cond !== "NM").map((x) => x.cond || "?").join(", ")} left out` : ""})` : " (Market Price)"));
   }
   if (Object.keys(pages).length) {
     const fx = join(ROOT, "scripts", "fixtures", `ebay-${readOn}.json`);
