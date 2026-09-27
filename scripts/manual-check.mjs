@@ -75,18 +75,32 @@ export function parseAnswer(text, readOn) {
     const line = raw.replace(/^\s*[*•-]\s+/, "").trim();
     if (!line) continue;
     const h = line.match(/^#+\s*(\S+)\s+(raw|\d+(?:\.5)?)\b/i);
-    if (h) { cur = { id: h[1], grade: h[2].toLowerCase() }; if (cur.grade !== "raw") pages[cur.id] ||= { grade: cur.grade, rows: [] }; continue; }
+    if (h) { cur = { id: h[1].replace(/[*`]/g, ""), grade: h[2].toLowerCase() }; if (cur.grade !== "raw") pages[cur.id] ||= { grade: cur.grade, rows: [] }; continue; }
     if (!cur) continue;
     if (cur.grade === "raw") {
       const m = line.match(/market[^$\d]*\$\s*([\d,]+(?:\.\d{1,2})?)/i);
       if (m) market[cur.id] = Math.round(Number(m[1].replace(/,/g, "")) * 100);
       continue;
     }
-    const parts = line.split(/\s+·\s+/);
-    if (parts.length < 3) continue;
-    const [d, price, ...rest] = parts;
-    const bo = rest[0]?.toUpperCase() === "BO";
-    const title = (bo ? rest.slice(1) : rest).join(" · ");
+    /* the asked-for "Mon D · $price · [BO ·] title", or a markdown table row
+       "| Sep 20 | $100.00 | Yes | title |", which is what the extension
+       tends to answer with when it is not held to the format */
+    let d, price, bo, title;
+    if (line.startsWith("|")) {
+      const cells = line.split("|").slice(1, -1).map((c) => c.trim());
+      if (cells.length < 3 || /^:?-+:?$/.test(cells[0]) || !/\$/.test(cells[1])) continue;
+      [d, price] = cells;
+      const boCell = cells.length >= 4 ? cells[2] : "";
+      bo = /^(yes|y|bo|✓|✔)$/i.test(boCell) || /best offer accepted/i.test(boCell);
+      title = cells.length >= 4 ? cells.slice(3).join(" | ") : cells[2];
+    } else {
+      const parts = line.split(/\s+·\s+/);
+      if (parts.length < 3) continue;
+      const rest = parts.slice(2);
+      [d, price] = parts;
+      bo = rest[0]?.toUpperCase() === "BO";
+      title = (bo ? rest.slice(1) : rest).join(" · ");
+    }
     const dm = d.match(/^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})$/);
     if (!dm || !MONTHS[dm[1].toLowerCase()]) continue;
     /* a sale from a later month than the read is last year's */
@@ -112,7 +126,7 @@ export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = ne
   const { pages, market } = parseAnswer(text, readOn);
   const rowsRead = Object.values(pages).reduce((a, p) => a + p.rows.length, 0);
   if (!rowsRead && !Object.keys(market).length) {
-    return { ok: false, why: "nothing read — no sale rows and no market price. An empty check is an alert, not a price." };
+    return { ok: false, why: "nothing read — no sale rows and no market price. The answer must keep the `## <cardId> <grade>` headers from the prompt, with one sale per line under each (or a table). An empty check is an alert, not a price." };
   }
   const at = localIso(now);
   mkdirSync(join(dataDir, "sales"), { recursive: true });
@@ -145,7 +159,11 @@ export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = ne
       writeFileSync(fx, JSON.stringify({ capturedOn: readOn, source: "owner's manual check (scripts/manual-check.mjs)", pages }, null, 1));
     }
   }
-  return { ok: true, graded: Object.keys(pages).length, raw: Object.keys(market).length };
+  /* a card the prompt asked about and the answer skipped is said out loud:
+     silence there reads as "checked, nothing new" */
+  const missing = watchlist.filter((c) => (gradedGrades(c).length && c.psaTitle && !pages[c.id]) ||
+    (!gradedGrades(c).length && c.tcgPlayerId && market[c.id] == null)).map((c) => c.id);
+  return { ok: true, graded: Object.keys(pages).length, raw: Object.keys(market).length, missing };
 }
 
 async function main(argv) {
@@ -158,6 +176,7 @@ async function main(argv) {
     if (!r.ok) { console.error(`ABORT: ${r.why}`); process.exit(1); }
     console.log(`\nread ${r.graded} graded card(s) and ${r.raw} raw price(s). Next:\n` +
       "  node scripts/build-snapshot.mjs && git add data scripts/fixtures && git commit -m 'prices: manual check' && git push");
+    if (r.missing.length) console.log(`\nnot in the answer (kept as they were): ${r.missing.join(", ")}`);
     return;
   }
   console.error("usage: node scripts/manual-check.mjs prompt | import <answer.txt>");

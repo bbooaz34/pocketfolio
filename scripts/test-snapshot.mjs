@@ -739,6 +739,17 @@ writeSales("base1-12", { "9": [sale("2026-09-20", 5000), sale("2026-09-19", 5000
   MC.importAnswer(answer, wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
   const again = JSON.parse(readFileSync(join(dir, "sales", "base1-4.json"), "utf8")).grades["1"];
   check("importing the same answer twice counts each sale once", again.length === 4);
+  const table = MC.importAnswer([
+    "## **base1-4** 1",
+    "| Sold | Price | Best offer accepted | Title |",
+    "|---|---|---|---|",
+    "| Sep 5 | $350.00 | | 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1 |",
+    "| Sep 2 | $350.00 | Yes | 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1 |",
+  ].join("\n"), wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
+  const t2 = JSON.parse(readFileSync(join(dir, "sales", "base1-4.json"), "utf8")).grades["1"];
+  check("a table answer imports too, with its Best Offer column",
+    table.ok && t2.some((x) => x.d === "2026-09-05" && !x.bo) && t2.some((x) => x.d === "2026-09-02" && x.bo));
+  check("a card the answer skipped is named", table.missing.includes("svp-044"), table.missing.join(","));
   const empty = MC.importAnswer("## base1-4 1\n## svp-044 raw\n", wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
   check("an empty answer is refused", !empty.ok);
 }

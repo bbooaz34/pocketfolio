@@ -99,9 +99,8 @@ scraper (`scripts/scrape-ebay-sold.mjs`) is not run. The details are in
 ```sh
 node scripts/manual-check.mjs prompt > prompt.txt   # paste into the Claude in Chrome side panel
 # save the answer as answer.txt, then:
-node scripts/manual-check.mjs import answer.txt
-node scripts/build-snapshot.mjs
-git add data scripts/fixtures && git commit -m "prices: manual check" && git push
+node scripts/manual-check.mjs import answer.txt && node scripts/build-snapshot.mjs \
+  && git add data scripts/fixtures && git commit -m "prices: manual check" && git push
 ```
 
 - The prompt lists every watchlist card with its exact links, under a
