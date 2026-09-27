@@ -62,8 +62,8 @@
     "d": "2026-07-22",
     "p": 5995,
     "bo": false,
-    "t": "Pokémon Team Rocket 1st Edition The Boss's Way 73/82 PSA 9 MINT! WOTC!",
-    "url": "https://www.ebay.com/sch/i.html?_nkw=Pok%C3%A9mon+Team+Rocket+1st+Edition+The+Boss%27s+Way+73%2F82+PSA+9+MINT%21+WOTC%21&LH_Sold=1&LH_Complete=1#2026-07-22-5995",
+    "t": "Pokémon Team Rocket 1st Edition The Boss’s Way 73/82 PSA 9 MINT! WOTC!",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=Pok%C3%A9mon+Team+Rocket+1st+Edition+The+Boss%E2%80%99s+Way+73%2F82+PSA+9+MINT%21+WOTC%21&LH_Sold=1&LH_Complete=1#2026-07-22-5995",
     "seeded": "2026-09-27"
    },
    {
@@ -77,6 +77,6 @@
   ]
  },
  "psaTitle": "2000 POKEMON ROCKET #73 THE BOSS'S WAY 1ST EDITION",
- "scrapedAt": "2026-09-27T06:05:25+00:00",
+ "scrapedAt": "2026-09-27T20:05:11+00:00",
  "note": "Seeded from the owner reading eBay sold searches in their own Chrome on 26.09 and 27.09 (scripts/fixtures/). No item links were captured: each sale links to a sold search for its own title. A real read replaces a seeded sale with its listing."
 }

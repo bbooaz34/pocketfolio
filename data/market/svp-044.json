@@ -1,0 +1,40 @@
+{
+ "cardId": "svp-044",
+ "tcgPlayerId": "512035",
+ "url": "https://www.tcgplayer.com/product/512035",
+ "readAt": "2026-09-27T20:05:11+00:00",
+ "market": 5522,
+ "basis": "nm-median-5",
+ "sales": [
+  {
+   "d": "2026-09-27",
+   "cond": "NM",
+   "what": "NM Holofoil",
+   "p": 5500
+  },
+  {
+   "d": "2026-09-27",
+   "cond": "NM",
+   "what": "NM Holofoil",
+   "p": 5522
+  },
+  {
+   "d": "2026-09-27",
+   "cond": "NM",
+   "what": "NM Holofoil",
+   "p": 5500
+  },
+  {
+   "d": "2026-09-27",
+   "cond": "NM",
+   "what": "NM Holofoil",
+   "p": 5547
+  },
+  {
+   "d": "2026-09-27",
+   "cond": "NM",
+   "what": "NM Holofoil",
+   "p": 5646
+  }
+ ]
+}

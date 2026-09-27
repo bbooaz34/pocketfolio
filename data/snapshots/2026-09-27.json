@@ -1,7 +1,7 @@
 {
  "date": "2026-09-27",
- "builtAt": "2026-09-27T07:12:00.733Z",
- "source": "ebay",
+ "builtAt": "2026-09-27T20:05:11.548Z",
+ "source": "ebay+tcgplayer",
  "cards": {
   "base1-46": {
    "pcId": null,
@@ -924,7 +924,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI",
-   "salesScrapedAt": "2026-09-27T06:05:25+00:00",
+   "salesScrapedAt": "2026-09-27T20:05:11+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-27"
   },
@@ -1038,7 +1038,7 @@
       {
        "d": "2026-07-22",
        "p": 5995,
-       "url": "https://www.ebay.com/sch/i.html?_nkw=Pok%C3%A9mon+Team+Rocket+1st+Edition+The+Boss%27s+Way+73%2F82+PSA+9+MINT%21+WOTC%21&LH_Sold=1&LH_Complete=1#2026-07-22-5995"
+       "url": "https://www.ebay.com/sch/i.html?_nkw=Pok%C3%A9mon+Team+Rocket+1st+Edition+The+Boss%E2%80%99s+Way+73%2F82+PSA+9+MINT%21+WOTC%21&LH_Sold=1&LH_Complete=1#2026-07-22-5995"
       }
      ],
      "pricedOn": "2026-09-27"
@@ -1070,7 +1070,7 @@
    },
    "salesVolume": null,
    "psaTitle": "2000 POKEMON ROCKET #73 THE BOSS'S WAY 1ST EDITION",
-   "salesScrapedAt": "2026-09-27T06:05:25+00:00",
+   "salesScrapedAt": "2026-09-27T20:05:11+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-27"
   },
@@ -1311,7 +1311,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS",
-   "salesScrapedAt": "2026-09-27T06:05:25+00:00",
+   "salesScrapedAt": "2026-09-27T20:05:11+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-27"
   },
@@ -1323,20 +1323,19 @@
    "number": null,
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/108589_in_400x400.jpg",
    "grades": {
-    "raw": 11739
+    "raw": 10900
    },
    "metrics": {
     "raw": {
-     "source": "carried",
-     "pricedOn": "2026-09-26",
-     "carried": true
+     "source": "tcgplayer",
+     "pricedOn": "2026-09-27",
+     "readAt": "2026-09-27T20:05:11+00:00",
+     "url": "https://www.tcgplayer.com/product/108589"
     }
    },
-   "salesVelocityWeekly": 3.255813953488372,
    "salesVolume": null,
    "confidence": "low",
-   "pricedOn": "2026-09-26",
-   "carried": true
+   "pricedOn": "2026-09-27"
   },
   "svp-044": {
    "pcId": null,
@@ -1346,20 +1345,19 @@
    "number": "044",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/512035_in_400x400.jpg",
    "grades": {
-    "raw": 5540
+    "raw": 5522
    },
    "metrics": {
     "raw": {
-     "source": "carried",
-     "pricedOn": "2026-09-26",
-     "carried": true
+     "source": "tcgplayer",
+     "pricedOn": "2026-09-27",
+     "readAt": "2026-09-27T20:05:11+00:00",
+     "url": "https://www.tcgplayer.com/product/512035"
     }
    },
-   "salesVelocityWeekly": 43.02325581395349,
    "salesVolume": null,
-   "confidence": "high",
-   "pricedOn": "2026-09-26",
-   "carried": true
+   "confidence": "low",
+   "pricedOn": "2026-09-27"
   }
  }
 }
