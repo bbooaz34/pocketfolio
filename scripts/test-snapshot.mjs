@@ -673,6 +673,76 @@ writeSales("base1-12", { "9": [sale("2026-09-20", 5000), sale("2026-09-19", 5000
     s.cards["base1-12"] && Object.keys(s.cards["base1-12"].grades).every((g) => g === "raw"));
 }
 
+/* ---- the manual check: TCGplayer market for raw, and no read, no failure ---- */
+{
+  mkdirSync(join(work, "data", "market"), { recursive: true });
+  writeFileSync(join(work, "data", "market", "base1-5.json"), JSON.stringify({
+    cardId: "base1-5", tcgPlayerId: "5", url: "https://www.tcgplayer.com/product/5",
+    readAt: new Date().toISOString(), market: 4321 }));
+  const r = await run("2026-09-29", { PPT_TOKEN: "" });
+  if (r.status !== 0) { console.log(r.stdout, r.stderr); throw new Error("market day failed"); }
+  const s = snap("2026-09-29");
+  check("a TCGplayer market reading prices raw, and says so",
+    s.cards["base1-5"]?.grades?.raw === 4321 && s.cards["base1-5"]?.metrics?.raw?.source === "tcgplayer" && !s.cards["base1-5"].carried,
+    JSON.stringify(s.cards["base1-5"]?.metrics?.raw));
+  check("the card's graded grades are carried beside it", s.cards["base1-5"]?.metrics?.["10"]?.source === "carried");
+
+  /* every reading four days old: nothing fresh, and no provider configured */
+  const { readdirSync } = await import("node:fs");
+  const old = new Date(Date.now() - 4 * 864e5).toISOString();
+  for (const dir of ["sales", "market"]) {
+    for (const f of readdirSync(join(work, "data", dir))) {
+      const file = join(work, "data", dir, f);
+      const doc = JSON.parse(readFileSync(file, "utf8"));
+      if (doc.scrapedAt) doc.scrapedAt = old;
+      if (doc.readAt) doc.readAt = old;
+      writeFileSync(file, JSON.stringify(doc));
+    }
+  }
+  const q = await run("2026-09-30", { PPT_TOKEN: "" });
+  check("no fresh read and no provider: the job passes and writes no snapshot",
+    q.status === 0 && !existsSync(join(work, "data", "snapshots", "2026-09-30.json")), q.stdout.trim().split("\n").at(-1));
+}
+
+/* ---- scripts/manual-check.mjs: the answer is read back through the same filters ---- */
+{
+  const MC = await import(join(ROOT, "scripts", "manual-check.mjs"));
+  const wl = [
+    { id: "base1-4", name: "Charizard", psaTitle: "1999 POKEMON GAME #4 CHARIZARD-HOLO",
+      psaTitleAlt: ["1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO"], grades: ["1"] },
+    { id: "svp-044", name: "Charmander", grades: ["raw"], tcgPlayerId: "512035" },
+  ];
+  const prompt = MC.promptText(wl);
+  check("the prompt gives both label searches and the TCGplayer page, under parseable headers",
+    prompt.includes("## base1-4 1") && prompt.includes("BASE+SET+UNLIMITED") &&
+    prompt.includes("## svp-044 raw") && prompt.includes("tcgplayer.com/product/512035"));
+  const answer = [
+    "## base1-4 1",
+    "* Sep 20 · $400.00 · 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
+    "* Sep 19 · $380.00 · 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
+    "* Aug 28 · $400.00 · BO · 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
+    "* Sep 22 · $18,000.00 · 1999 POKEMON GAME 1ST EDITION #4 CHARIZARD-HOLO PSA 6",
+    "* Aug 30 · $849.95 · 3x 1999 Pokemon Base PSA 1 Charizard 4 Blastoise 2 Venusaur 15 Holo",
+    "* Dec 30 · $300.00 · 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
+    "## svp-044 raw",
+    "Market $55.40",
+  ].join("\n");
+  const dir = mkdtempSync(join(tmpdir(), "pf-manual-"));
+  const quiet = () => {};
+  const r = MC.importAnswer(answer, wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
+  const sales = JSON.parse(readFileSync(join(dir, "sales", "base1-4.json"), "utf8")).grades["1"];
+  const mk = JSON.parse(readFileSync(join(dir, "market", "svp-044.json"), "utf8"));
+  check("an imported answer keeps only real PSA 1 sales, Best Offer flagged",
+    r.ok && sales.length === 4 && sales.filter((x) => x.bo).length === 1, sales.map((x) => `${x.d}:${x.p}${x.bo ? "bo" : ""}`).join(","));
+  check("a December sale read in September is last year's", sales.some((x) => x.d === "2025-12-30"));
+  check("the raw reading lands in data/market, in pennies", mk.market === 5540 && mk.tcgPlayerId === "512035");
+  MC.importAnswer(answer, wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
+  const again = JSON.parse(readFileSync(join(dir, "sales", "base1-4.json"), "utf8")).grades["1"];
+  check("importing the same answer twice counts each sale once", again.length === 4);
+  const empty = MC.importAnswer("## base1-4 1\n## svp-044 raw\n", wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
+  check("an empty answer is refused", !empty.ok);
+}
+
 server.close();
 console.log(`\nworkspace: ${work}`);
 console.log(failures ? `\n${failures} check(s) failed` : "\nall checks passed — zero credits spent");

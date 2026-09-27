@@ -87,55 +87,38 @@ it once via the browser console:
 TCGdex prices come from TCGplayer (USD) or, when that's missing, Cardmarket
 (shown in €).
 
-## Graded prices from eBay, read nightly on the Mac
+## Prices: the manual check
 
-Graded values in the daily snapshot come from eBay's own sold listings, read
-once a night from a logged-in browser on the owner's Mac
-(`TASK-ebay-direct.md`). Price providers only resell a sample of eBay. Raw
-prices still come from the catalog.
-
-The job, `scripts/nightly.sh`, does one search per graded card, page one only,
-sorted by most recent. The search text is the card's `psaTitle`. It merges what
-it finds into `data/sales/<cardId>.json`, builds the snapshot, and commits and
-pushes `data/`. It never runs in GitHub Actions. The Action there keeps its
-schedule and builds from whatever `data/sales` the Mac last pushed.
-
-**One-time setup:**
+Prices come from a check the owner runs in their own Chrome. Graded cards
+use eBay sold listings; singles use TCGplayer's Market Price. Nothing is
+bought from a provider. The PPT subscription was cancelled on 27.09. eBay
+blocks an automated browser, even a visible, signed-in one, so the nightly
+scraper (`scripts/scrape-ebay-sold.mjs`) is not run. The details are in
+`PRICING-ATTEMPTS.md`.
 
 ```sh
-# 1. dependencies (Playwright is only for the scraper; the app has none)
-cd ~/path/to/pocketfolio && npm install
-
-# 2. a DEDICATED browser profile, never your daily Chrome one
-mkdir -p ~/.pocketfolio/chrome-profile
-
-# 3. first run: a window opens, sign in to eBay, close the window.
-#    (psaTitle for every graded card with a `cert` is read from its PSA
-#    cert page by scripts/fill-psa-titles.mjs; nightly.sh runs it first)
-#    The scrape then runs headless on the same profile.
-node scripts/scrape-ebay-sold.mjs --login
-
-# 4. the 04:00 launchd job
-sed -e "s#REPO_PATH#$PWD#" -e "s#HOME_PATH#$HOME#" \
-  scripts/launchd/com.pocketfolio.nightly.plist \
-  > ~/Library/LaunchAgents/com.pocketfolio.nightly.plist
-launchctl load ~/Library/LaunchAgents/com.pocketfolio.nightly.plist
+node scripts/manual-check.mjs prompt > prompt.txt   # paste into the Claude in Chrome side panel
+# save the answer as answer.txt, then:
+node scripts/manual-check.mjs import answer.txt
+node scripts/build-snapshot.mjs
+git add data scripts/fixtures && git commit -m "prices: manual check" && git push
 ```
 
-That's it. The log is `~/.pocketfolio/nightly.log`. Run `bash scripts/nightly.sh`
-to try it end to end. Put `PPT_TOKEN=...` in `~/.pocketfolio/env` if you want
-the provider to fill grades our own sales don't cover while the subscription
-lasts.
-
-- **Every graded card needs `psaTitle`** in `data/watchlist.json`. That is the
-  PSA label title from the card's cert page on psacard.com. With `cert` set,
-  `node scripts/fill-psa-titles.mjs` reads it for you (it never overwrites a
-  title already there). A graded card without one is not searched and shows `— —`.
-- If eBay shows a login wall, run `--login` again. If it shows a bot check, the
-  job stops. That is on purpose: there is no workaround.
-- If every page comes back empty, the job exits with an error and writes
-  nothing. An empty day is an alert, not a price.
-- If a push fails (no network), the commit stays and the next run pushes both.
+- The prompt lists every watchlist card with its exact links, under a
+  `## <cardId> <grade>` header that the import reads back. Graded cards get
+  the PSA label search, plus the newer label form where there is one.
+  Singles get their TCGplayer product page.
+- Every graded row goes through the scraper's own filters: exact grade, the
+  card's name and label words, printing (1st Edition / Shadowless / Base
+  Set 2), lots, other languages, and Best Offer. A whole padded page is safe
+  to paste.
+- Sales merge into `data/sales/`, and a sale read twice counts once. A single's
+  reading goes to `data/market/`. The page is kept in `scripts/fixtures/`.
+- A reading is fresh for 48 hours. After that, the daily GitHub Action carries
+  the values, flagged with their real date. A day with no fresh reading writes
+  no snapshot, and the job still passes.
+- **Every graded card needs `psaTitle`**: the PSA label title from its cert
+  page. A graded card without one is not priced and shows `— —`.
 
 ## Graded prices proxy (required for eBay PSA prices)
 

@@ -127,7 +127,8 @@
       "pcQuery": "ancient mew movie promo pokemon",
       "grades": [
         "raw"
-      ]
+      ],
+      "tcgPlayerId": "108589"
     },
     {
       "id": "svp-044",
@@ -143,7 +144,8 @@
       "pcQuery": "charmander svp 044 scarlet violet promo pokemon",
       "grades": [
         "raw"
-      ]
+      ],
+      "tcgPlayerId": "512035"
     }
   ]
 }
