@@ -64,7 +64,7 @@
     "bo": false,
     "t": "1999 POKEMON GAME #44 BULBASAUR PSA 9",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%2344+BULBASAUR+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-10-5999",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-09-08",
@@ -72,7 +72,7 @@
     "bo": false,
     "t": "1999 Pokemon Game Bulbasaur PSA 9 Mint 44/102",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+Bulbasaur+PSA+9+Mint+44%2F102&LH_Sold=1&LH_Complete=1#2026-09-08-4500",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-09-03",
@@ -104,7 +104,7 @@
     "bo": false,
     "t": "1999 Pokemon Game #44 Bulbasaur PSA 9 MINT",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+%2344+Bulbasaur+PSA+9+MINT&LH_Sold=1&LH_Complete=1#2026-09-02-3300",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-09-02",
@@ -112,7 +112,7 @@
     "bo": false,
     "t": "1999 Pokemon Game #44 Bulbasaur PSA 9 MINT",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+%2344+Bulbasaur+PSA+9+MINT&LH_Sold=1&LH_Complete=1#2026-09-02-3821",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-08-28",
@@ -244,18 +244,26 @@
    },
    {
     "d": "2026-07-31",
+    "p": 4400,
+    "bo": false,
+    "t": "1999 Pokemon Basic Unlimited - Bulbasaur # 44 - PSA 9 Mint",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Basic+Unlimited+-+Bulbasaur+%23+44+-+PSA+9+Mint&LH_Sold=1&LH_Complete=1#2026-07-31-4400",
+    "seeded": "2026-09-27"
+   },
+   {
+    "d": "2026-07-31",
     "p": 4799,
     "bo": false,
     "t": "Bulbasaur 44/102 Game Pokemon PSA 9",
     "url": "https://www.ebay.com/sch/i.html?_nkw=Bulbasaur+44%2F102+Game+Pokemon+PSA+9&LH_Sold=1&LH_Complete=1#2026-07-31-4799",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-07-29",
     "p": 5999,
     "bo": false,
-    "t": "Bulbasaur #44 Base Set Unlimited 1999 Pokemon Game PSA 9 🍃",
-    "url": "https://www.ebay.com/sch/i.html?_nkw=Bulbasaur+%2344+Base+Set+Unlimited+1999+Pokemon+Game+PSA+9+%F0%9F%8D%83&LH_Sold=1&LH_Complete=1#2026-07-29-5999",
+    "t": "Bulbasaur #44 Base Set Unlimited 1999 Pokemon Game PSA 9 \ud83c \udf43",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=Bulbasaur+%2344+Base+Set+Unlimited+1999+Pokemon+Game+PSA+9+%EF%BF%BD+%EF%BF%BD&LH_Sold=1&LH_Complete=1#2026-07-29-5999",
     "seeded": "2026-09-27"
    },
    {
@@ -310,8 +318,8 @@
     "d": "2026-07-23",
     "p": 7499,
     "bo": false,
-    "t": "Bulbasaur 1999 Base Set 💥 PSA 9 Pokemon Card 44/102 Mint",
-    "url": "https://www.ebay.com/sch/i.html?_nkw=Bulbasaur+1999+Base+Set+%F0%9F%92%A5+PSA+9+Pokemon+Card+44%2F102+Mint&LH_Sold=1&LH_Complete=1#2026-07-23-7499",
+    "t": "Bulbasaur 1999 Base Set \ud83d \udca5 PSA 9 Pokemon Card 44/102 Mint",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=Bulbasaur+1999+Base+Set+%EF%BF%BD+%EF%BF%BD+PSA+9+Pokemon+Card+44%2F102+Mint&LH_Sold=1&LH_Complete=1#2026-07-23-7499",
     "seeded": "2026-09-27"
    },
    {
@@ -381,9 +389,49 @@
    {
     "d": "2026-07-06",
     "p": 6000,
-    "bo": false,
+    "bo": true,
     "t": "Pokemon Base Set Unlimited Bulbasaur 44/102 PSA 9 Mint",
     "url": "https://www.ebay.com/sch/i.html?_nkw=Pokemon+Base+Set+Unlimited+Bulbasaur+44%2F102+PSA+9+Mint&LH_Sold=1&LH_Complete=1#2026-07-06-6000",
+    "seeded": "2026-09-27"
+   },
+   {
+    "d": "2026-07-05",
+    "p": 8900,
+    "bo": false,
+    "t": "Pokemon Bulbasaur Base Set Unlimited 44/102 PSA 9",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=Pokemon+Bulbasaur+Base+Set+Unlimited+44%2F102+PSA+9&LH_Sold=1&LH_Complete=1#2026-07-05-8900",
+    "seeded": "2026-09-27"
+   },
+   {
+    "d": "2026-07-02",
+    "p": 5900,
+    "bo": true,
+    "t": "1999 Pokemon Base Set #44 Bulbasaur PSA 9 Mint",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Base+Set+%2344+Bulbasaur+PSA+9+Mint&LH_Sold=1&LH_Complete=1#2026-07-02-5900",
+    "seeded": "2026-09-27"
+   },
+   {
+    "d": "2026-07-02",
+    "p": 8191,
+    "bo": true,
+    "t": "PSA 9 MINT 1999 BASE SET POKÉMON BULBASAUR 44/102 #44 WOTC TCG GRADED CARD",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=PSA+9+MINT+1999+BASE+SET+POK%C3%89MON+BULBASAUR+44%2F102+%2344+WOTC+TCG+GRADED+CARD&LH_Sold=1&LH_Complete=1#2026-07-02-8191",
+    "seeded": "2026-09-27"
+   },
+   {
+    "d": "2026-07-01",
+    "p": 8691,
+    "bo": false,
+    "t": "1999 POKEMON BASE SET UNLIMITED #44 BULBASAUR PSA 9",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%2344+BULBASAUR+PSA+9&LH_Sold=1&LH_Complete=1#2026-07-01-8691",
+    "seeded": "2026-09-27"
+   },
+   {
+    "d": "2026-06-30",
+    "p": 5900,
+    "bo": false,
+    "t": "1999 Pokemon Base Set #44 Bulbasaur PSA 9 Mint",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Base+Set+%2344+Bulbasaur+PSA+9+Mint&LH_Sold=1&LH_Complete=1#2026-06-30-5900",
     "seeded": "2026-09-27"
    },
    {
@@ -392,11 +440,11 @@
     "bo": false,
     "t": "1999 Pokemon Game Base Set UNLIMITED PSA 9 Bulbasaur #44",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+Base+Set+UNLIMITED+PSA+9+Bulbasaur+%2344&LH_Sold=1&LH_Complete=1#2026-06-30-5799",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    }
   ]
  },
  "psaTitle": "1999 POKEMON GAME #44 BULBASAUR",
- "scrapedAt": "2026-09-27T06:05:25+00:00",
+ "scrapedAt": "2026-09-27T10:06:39+03:00",
  "note": "Seeded from the owner reading eBay sold searches in their own Chrome on 26.09 and 27.09 (scripts/fixtures/). No item links were captured: each sale links to a sold search for its own title. A real read replaces a seeded sale with its listing."
 }

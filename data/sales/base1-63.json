@@ -48,7 +48,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET SQUIRTLE GAME #63 PSA 9",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+SQUIRTLE+GAME+%2363+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-16-5300",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-09-13",
@@ -56,7 +56,7 @@
     "bo": false,
     "t": "1999 POKEMON GAME #63 SQUIRTLE PSA 9 MINT",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%2363+SQUIRTLE+PSA+9+MINT&LH_Sold=1&LH_Complete=1#2026-09-13-8999",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-09-12",
@@ -88,7 +88,7 @@
     "bo": true,
     "t": "1999 POKEMON GAME #63 SQUIRTLE PSA 9",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%2363+SQUIRTLE+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-05-7200",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-09-05",
@@ -96,7 +96,7 @@
     "bo": false,
     "t": "1999 Pokemon Game Squirtle #63 PSA 9",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+Squirtle+%2363+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-05-7999",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-09-05",
@@ -120,7 +120,7 @@
     "bo": false,
     "t": "1999 Pokemon Game #63 Squirtle PSA 9 MINT",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+%2363+Squirtle+PSA+9+MINT&LH_Sold=1&LH_Complete=1#2026-09-02-4997",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-08-28",
@@ -176,7 +176,7 @@
     "bo": true,
     "t": "1999 Pokemon Game #63 Squirtle PSA 9",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+%2363+Squirtle+PSA+9&LH_Sold=1&LH_Complete=1#2026-08-11-10000",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-07-29",
@@ -224,7 +224,7 @@
     "bo": false,
     "t": "PSA 9 Squirtle 63/102 Base Set Game Common WOTC POKEMON",
     "url": "https://www.ebay.com/sch/i.html?_nkw=PSA+9+Squirtle+63%2F102+Base+Set+Game+Common+WOTC+POKEMON&LH_Sold=1&LH_Complete=1#2026-07-18-9130",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-07-12",
@@ -296,7 +296,7 @@
     "bo": false,
     "t": "1999 Pokemon Game Base Set #63 SQUIRTLE PSA 9 Mint",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+Base+Set+%2363+SQUIRTLE+PSA+9+Mint&LH_Sold=1&LH_Complete=1#2026-06-29-5100",
-    "seeded": "2026-09-26"
+    "seeded": "2026-09-27"
    },
    {
     "d": "2026-06-29",
@@ -309,6 +309,6 @@
   ]
  },
  "psaTitle": "1999 POKEMON GAME #63 SQUIRTLE",
- "scrapedAt": "2026-09-27T06:05:25+00:00",
+ "scrapedAt": "2026-09-27T10:06:39+03:00",
  "note": "Seeded from the owner reading eBay sold searches in their own Chrome on 26.09 and 27.09 (scripts/fixtures/). No item links were captured: each sale links to a sold search for its own title. A real read replaces a seeded sale with its listing."
 }

@@ -1,6 +1,6 @@
 {
  "date": "2026-09-27",
- "builtAt": "2026-09-27T06:05:25.302Z",
+ "builtAt": "2026-09-27T07:12:00.733Z",
  "source": "ebay",
  "cards": {
   "base1-46": {
@@ -14,7 +14,7 @@
     "6": 2500,
     "7": 2706,
     "8": 3438,
-    "9": 6278,
+    "9": 6999,
     "10": 33500,
     "raw": 318
    },
@@ -81,8 +81,8 @@
      "source": "ebay",
      "confidence": "high",
      "effective": "high",
-     "n": 21,
-     "nBO": 10,
+     "n": 38,
+     "nBO": 15,
      "lastSale": "2026-09-24",
      "ageDays": null,
      "spread": {
@@ -101,6 +101,11 @@
        "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Charmander+Base+Set+046%2F102+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-20-5700"
       },
       {
+       "d": "2026-09-18",
+       "p": 6999,
+       "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+CHARMANDER+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-18-6999"
+      },
+      {
        "d": "2026-09-16",
        "p": 7426,
        "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%2346+BASE+SET+UNLIMITED+CHARMANDER+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-16-7426"
@@ -109,11 +114,6 @@
        "d": "2026-09-15",
        "p": 6999,
        "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Base+Set+CHARMANDER+%2346+PSA+9+MINT+Vintage+WOTC&LH_Sold=1&LH_Complete=1#2026-09-15-6999"
-      },
-      {
-       "d": "2026-09-13",
-       "p": 6278,
-       "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%2346+CHARMANDER+PSA+9+MINT+UNLIMITED+BASE+SET&LH_Sold=1&LH_Complete=1#2026-09-13-6278"
       }
      ],
      "pricedOn": "2026-09-27"
@@ -145,7 +145,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON GAME #46 CHARMANDER",
-   "salesScrapedAt": "2026-09-27T06:05:25+00:00",
+   "salesScrapedAt": "2026-09-27T10:06:39+03:00",
    "confidence": "high",
    "pricedOn": "2026-09-27"
   },
@@ -331,7 +331,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON GAME #63 SQUIRTLE",
-   "salesScrapedAt": "2026-09-27T06:05:25+00:00",
+   "salesScrapedAt": "2026-09-27T10:06:39+03:00",
    "confidence": "high",
    "pricedOn": "2026-09-27"
   },
@@ -433,8 +433,8 @@
      "source": "ebay",
      "confidence": "high",
      "effective": "high",
-     "n": 42,
-     "nBO": 7,
+     "n": 45,
+     "nBO": 10,
      "lastSale": "2026-09-24",
      "ageDays": null,
      "spread": {
@@ -497,7 +497,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON GAME #44 BULBASAUR",
-   "salesScrapedAt": "2026-09-27T06:05:25+00:00",
+   "salesScrapedAt": "2026-09-27T10:06:39+03:00",
    "confidence": "high",
    "pricedOn": "2026-09-27"
   },
@@ -527,8 +527,8 @@
      "source": "ebay",
      "confidence": "high",
      "effective": "high",
-     "n": 40,
-     "nBO": 8,
+     "n": 46,
+     "nBO": 9,
      "lastSale": "2026-09-20",
      "ageDays": null,
      "spread": {
@@ -743,7 +743,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON GAME #4 CHARIZARD-HOLO",
-   "salesScrapedAt": "2026-09-27T06:05:25+00:00",
+   "salesScrapedAt": "2026-09-27T10:06:39+03:00",
    "confidence": "high",
    "pricedOn": "2026-09-27"
   },
