@@ -762,6 +762,25 @@ writeSales("base1-12", { "9": [sale("2026-09-20", 5000), sale("2026-09-19", 5000
   check("an RTF answer with search-text headers imports",
     fromRtf.ok && r3.some((x) => x.d === "2026-08-25" && x.p === 40100) && r3.some((x) => x.d === "2026-08-12" && x.bo) && m3.market === 5512,
     JSON.stringify(fromRtf));
+  /* the real second answer, 27.09: no headers on the graded sections, bare
+     "svp-044 raw" headers, and an Ancient Mew price 3.5x off the day before */
+  {
+    const wl9 = JSON.parse(readFileSync(join(ROOT, "data", "watchlist.json"), "utf8")).cards;
+    const d9 = mkdtempSync(join(tmpdir(), "pf-manual9-"));
+    writeFileSync(join(d9, "latest.json"), JSON.stringify({ cards: { "miscp-001": { grades: { raw: 11739 } }, "svp-044": { grades: { raw: 5540 } } } }));
+    const txt = readFileSync(join(ROOT, "scripts", "fixtures", "answer-2026-09-27-headerless.txt"), "utf8");
+    const r9 = MC.importAnswer(txt, wl9, { dataDir: d9, readOn: "2026-09-27", log: quiet });
+    const s9 = (id, g) => JSON.parse(readFileSync(join(d9, "sales", `${id}.json`), "utf8")).grades[g];
+    check("headerless rows are placed by the card their title names",
+      s9("psa-154146687@jp", "1").length === 5 && s9("base5-73", "9").length === 7 && s9("psa-77452905@jp", "7").length === 6);
+    check("'PSA CGC 9' is placed nowhere — it is not a PSA 9", s9("base5-73", "9").every((x) => !/cgc/i.test(x.t)));
+    check("a bare 'svp-044 raw' header with its price below is read",
+      JSON.parse(readFileSync(join(d9, "market", "svp-044.json"), "utf8")).market === 5576);
+    check("a single's price that moved more than 2x is held back",
+      r9.held.includes("miscp-001") && !existsSync(join(d9, "market", "miscp-001.json")));
+    MC.importAnswer(txt, wl9, { dataDir: d9, readOn: "2026-09-27", log: quiet, accept: true });
+    check("--accept takes it", JSON.parse(readFileSync(join(d9, "market", "miscp-001.json"), "utf8")).market === 3343);
+  }
   const empty = MC.importAnswer("## base1-4 1\n## svp-044 raw\n", wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
   check("an empty answer is refused", !empty.ok);
 }

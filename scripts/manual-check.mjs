@@ -7,6 +7,7 @@
  *   node scripts/manual-check.mjs prompt              # print the prompt to paste
  *   node scripts/manual-check.mjs prompt <id> …       # only these cards (e.g. the ones an answer missed)
  *   node scripts/manual-check.mjs import answer.txt   # read the answer into data/
+ *                                     [--accept]      # take a single's price that moved more than 2×
  *   node scripts/build-snapshot.mjs                   # then build, commit, push
  *
  * Why manual: eBay blocks an automated browser, even a visible, signed-in one
@@ -31,7 +32,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { searchUrl, filterRows, mergeSales, gradedGrades, localIso } from "./scrape-ebay-sold.mjs";
+import { searchUrl, filterRows, mergeSales, gradedGrades, localIso, gradeRe, distinctiveTokens } from "./scrape-ebay-sold.mjs";
 import { valueGrade } from "./providers/ebay-sales.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -112,24 +113,45 @@ export function resolveHeader(line, watchlist) {
   return raws.length === 1 ? { id: raws[0].id, grade: "raw" } : null;
 }
 
+/* A sale row with no usable header above it (the extension sometimes drops
+   them, and separates cards by a blank line only) goes to the one graded card
+   whose name it contains, at a grade that card holds. Two candidates or none
+   and the row is not read: a guessed card is the wrong-Togepi mistake again. */
+export function cardForTitle(title, watchlist) {
+  const low = String(title).toLowerCase();
+  const hits = [];
+  for (const c of watchlist) {
+    if (!c.name) continue;
+    const words = distinctiveTokens(c.name);
+    if (!words.length || words.some((w) => !low.includes(w))) continue;
+    for (const g of gradedGrades(c)) if (gradeRe(g).test(title)) hits.push({ id: c.id, grade: g });
+  }
+  return hits.length === 1 ? hits[0] : null;
+}
+
 export function parseAnswer(text, readOn, watchlist = []) {
   const [yy, mm] = readOn.split("-").map(Number);
   const pages = {}, market = {}, unknown = [];
-  let cur = null, n = 0;
+  let cur = null, n = 0, unplaced = 0;
   for (const raw of rtfToText(String(text)).split(/\r?\n/)) {
     const line = raw.replace(/^\s*[*•-]\s+/, "").trim();
     if (!line) continue;
-    if (/^#/.test(line) || /^\*\*[^*]+\*\*$/.test(line)) {
+    /* a header: "## …", a bold line, or a bare line that opens with a
+       watchlist id and a grade ("svp-044 raw (Charmander, ungraded)") —
+       which may carry its own "Market $…" on the same line */
+    const bare = line.match(/^(\S+)\s+(raw|\d+(?:\.5)?)\b/i);
+    const bareHeader = bare && watchlist.some((c) => c.id === bare[1]);
+    if (/^#/.test(line) || /^\*\*[^*]+\*\*$/.test(line) || bareHeader) {
       cur = resolveHeader(line, watchlist);
       if (!cur) { unknown.push(line); continue; }
       if (cur.grade !== "raw") pages[cur.id] ||= { grade: cur.grade, rows: [] };
-      continue;
-    }
-    if (!cur) continue;
-    if (cur.grade === "raw") {
-      const m = line.match(/market[^$\d]*\$\s*([\d,]+(?:\.\d{1,2})?)/i);
+      const m = cur.grade === "raw" && line.match(/market[^$\d]*\$\s*([\d,]+(?:\.\d{1,2})?)/i);
       if (m) market[cur.id] = Math.round(Number(m[1].replace(/,/g, "")) * 100);
       continue;
+    }
+    if (cur?.grade === "raw") {
+      const m = line.match(/market[^$\d]*\$\s*([\d,]+(?:\.\d{1,2})?)/i);
+      if (m) { market[cur.id] = Math.round(Number(m[1].replace(/,/g, "")) * 100); continue; }
     }
     /* the asked-for "Mon D · $price · [BO ·] title", or a markdown table row
        "| Sep 20 | $100.00 | Yes | title |", which is what the extension
@@ -154,11 +176,18 @@ export function parseAnswer(text, readOn, watchlist = []) {
     if (!dm || !MONTHS[dm[1].toLowerCase()]) continue;
     /* a sale from a later month than the read is last year's */
     const year = MONTHS[dm[1].toLowerCase()] > mm ? yy - 1 : yy;
+    /* under a graded header, a row stays there if it names that card;
+       otherwise (no header, or a single's header above) it is placed by title */
+    const curCard = cur && cur.grade !== "raw" ? watchlist.find((c) => c.id === cur.id) : null;
+    const named = curCard?.name && distinctiveTokens(curCard.name).every((w) => title.toLowerCase().includes(w));
+    const to = named ? cur : cardForTitle(title, watchlist);
+    if (!to) { unplaced++; continue; }
+    pages[to.id] ||= { grade: to.grade, rows: [] };
     n++;
-    pages[cur.id].rows.push({ title, price, caption: `Sold ${dm[1]} ${dm[2]}, ${year}`,
+    pages[to.id].rows.push({ title, price, caption: `Sold ${dm[1]} ${dm[2]}, ${year}`,
       text: title + (bo ? " Best offer accepted" : ""), href: `https://www.ebay.com/itm/7${String(n).padStart(11, "0")}` });
   }
-  return { pages, market, unknown };
+  return { pages, market, unknown, unplaced };
 }
 
 /* no item link is captured by a manual read: each sale links to a sold search
@@ -171,9 +200,19 @@ function seedUrl(s) {
   return `${u}#${s.d}-${s.p}`;
 }
 
-export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = new Date(), log = console.log } = {}) {
-  const { pages, market, unknown } = parseAnswer(text, readOn, watchlist);
+/* the last raw price this card had: its previous reading, else the latest snapshot */
+function lastRaw(dataDir, id) {
+  const mk = join(dataDir, "market", `${id}.json`);
+  if (existsSync(mk)) { try { const v = JSON.parse(readFileSync(mk, "utf8")).market; if (v > 0) return v; } catch { /* fall through */ } }
+  const latest = join(dataDir, "latest.json");
+  if (existsSync(latest)) { try { const v = JSON.parse(readFileSync(latest, "utf8")).cards?.[id]?.grades?.raw; if (v > 0) return v; } catch { /* none */ } }
+  return null;
+}
+
+export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = new Date(), log = console.log, accept = false } = {}) {
+  const { pages, market, unknown, unplaced } = parseAnswer(text, readOn, watchlist);
   for (const u of unknown) log(`  a section whose card could not be told — its rows were not read: ${u}`);
+  if (unplaced) log(`  ${unplaced} row(s) with no header named no single watchlist card — not read`);
   const rowsRead = Object.values(pages).reduce((a, p) => a + p.rows.length, 0);
   if (!rowsRead && !Object.keys(market).length) {
     return { ok: false, why: "nothing read — no sale rows and no market price. The answer must keep the `## <cardId> <grade>` headers from the prompt, with one sale per line under each (or a table). An empty check is an alert, not a price." };
@@ -195,9 +234,21 @@ export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = ne
     log(`  ${card.name} PSA ${pg.grade}: ${pg.rows.length} rows → ${sales.length} kept${why ? ` (dropped ${why})` : ""}` +
       ` → ${v ? `$${(v.value / 100).toFixed(2)} (${v.metrics.confidence}, ${v.metrics.n} clean in 90d)` : "no price"}`);
   }
+  const held = [];
   for (const [id, pennies] of Object.entries(market)) {
     const card = watchlist.find((c) => c.id === id);
     if (!card) { log(`  skip ${id}: not on the watchlist`); continue; }
+    /* A single's price does not triple or third in a day. Ancient Mew read
+       $33.43 on 27.09 against $117.39 the day before: more likely the wrong
+       printing or the wrong figure on the page than the market. Held back
+       unless the owner confirms it with --accept. */
+    const was = lastRaw(dataDir, id);
+    if (was && (pennies > was * 2 || pennies * 2 < was) && !accept) {
+      log(`  HELD ${card.name} raw: $${(pennies / 100).toFixed(2)} against $${(was / 100).toFixed(2)} last time — ` +
+        `check ${card.tcgPlayerId ? tcgplayerUrl(card.tcgPlayerId) : "the page"}, then re-run with --accept if it is right`);
+      held.push(id);
+      continue;
+    }
     const doc = { cardId: id, tcgPlayerId: card.tcgPlayerId ?? null,
       url: card.tcgPlayerId ? tcgplayerUrl(card.tcgPlayerId) : null, readAt: at, market: pennies };
     writeFileSync(join(dataDir, "market", `${id}.json`), JSON.stringify(doc, null, 1) + "\n");
@@ -213,7 +264,7 @@ export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = ne
      silence there reads as "checked, nothing new" */
   const missing = watchlist.filter((c) => (gradedGrades(c).length && c.psaTitle && !pages[c.id]) ||
     (!gradedGrades(c).length && c.tcgPlayerId && market[c.id] == null)).map((c) => c.id);
-  return { ok: true, graded: Object.keys(pages).length, raw: Object.keys(market).length, missing };
+  return { ok: true, graded: Object.keys(pages).length, raw: Object.keys(market).length - held.length, missing, held };
 }
 
 async function main(argv) {
@@ -228,7 +279,7 @@ async function main(argv) {
   }
   if (cmd === "import" && argv[1]) {
     const readOn = localIso().slice(0, 10);
-    const r = importAnswer(readFileSync(argv[1], "utf8"), watchlist, { readOn });
+    const r = importAnswer(readFileSync(argv[1], "utf8"), watchlist, { readOn, accept: argv.includes("--accept") });
     if (!r.ok) { console.error(`ABORT: ${r.why}`); process.exit(1); }
     console.log(`\nread ${r.graded} graded card(s) and ${r.raw} raw price(s). Next:\n` +
       "  node scripts/build-snapshot.mjs && git add data scripts/fixtures && git commit -m 'prices: manual check' && git push");
