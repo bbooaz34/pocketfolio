@@ -750,6 +750,18 @@ writeSales("base1-12", { "9": [sale("2026-09-20", 5000), sale("2026-09-19", 5000
   check("a table answer imports too, with its Best Offer column",
     table.ok && t2.some((x) => x.d === "2026-09-05" && !x.bo) && t2.some((x) => x.d === "2026-09-02" && x.bo));
   check("a card the answer skipped is named", table.missing.includes("svp-044"), table.missing.join(","));
+  /* the real first answer: TextEdit RTF, and headers that echo the search */
+  const rtf = "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2870\n{\\fonttbl\\f0\\fswiss\\fcharset0 Helvetica;}\n{\\colortbl;\\red255\\green255\\blue255;}\n" +
+    "\\f0\\fs24 \\cf0 # 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1\\\n" +
+    "Aug 25 \\'b7 $401.00 \\'b7 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1\\\n" +
+    "Aug 12 \\'b7 $449.99 \\'b7 BO \\'b7 1999 Base Set Charizard Holo 4/102 PSA 1 PR\\\n" +
+    "# Charmander, ungraded (TCGplayer 512035)\\\nMarket $55.12\\\n}";
+  const fromRtf = MC.importAnswer(rtf, wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
+  const r3 = JSON.parse(readFileSync(join(dir, "sales", "base1-4.json"), "utf8")).grades["1"];
+  const m3 = JSON.parse(readFileSync(join(dir, "market", "svp-044.json"), "utf8"));
+  check("an RTF answer with search-text headers imports",
+    fromRtf.ok && r3.some((x) => x.d === "2026-08-25" && x.p === 40100) && r3.some((x) => x.d === "2026-08-12" && x.bo) && m3.market === 5512,
+    JSON.stringify(fromRtf));
   const empty = MC.importAnswer("## base1-4 1\n## svp-044 raw\n", wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
   check("an empty answer is refused", !empty.ok);
 }

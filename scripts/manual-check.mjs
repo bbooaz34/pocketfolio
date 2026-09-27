@@ -67,15 +67,63 @@ export function promptText(watchlist) {
 const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
 
 /** The answer text → { pages: {id: {grade, rows}}, market: {id: pennies} }. */
-export function parseAnswer(text, readOn) {
+/* TextEdit saves a pasted answer as RTF: "·" arrives as \'b7, each line ends
+   in a backslash, and the text sits inside font and colour groups. Enough of
+   RTF to get the plain text back; `textutil -convert txt` does it properly. */
+export function rtfToText(rtf) {
+  if (!/^\s*\{\\rtf/.test(rtf)) return rtf;
+  const cp1252 = { 0x80: "€", 0x91: "‘", 0x92: "’", 0x93: "“", 0x94: "”", 0x96: "–", 0x97: "—" };
+  return rtf
+    .replace(/\{\\(?:fonttbl|colortbl|\*|stylesheet|info)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, "")
+    .replace(/\\'([0-9a-f]{2})/gi, (_, h) => { const c = parseInt(h, 16); return cp1252[c] ?? String.fromCharCode(c); })
+    .replace(/\\u(-?\d+)\??/g, (_, d) => String.fromCharCode((Number(d) + 65536) % 65536))
+    .replace(/\\\r?\n/g, "\n")
+    .replace(/\\(par|line)\b ?/g, "\n")
+    .replace(/\\[a-z]+-?\d* ?/gi, "")
+    .replace(/\\([{}\\])/g, "$1")
+    .replace(/[{}]/g, "");
+}
+
+const normWords = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+/* A section header → { id, grade } on the watchlist, or null. The prompt asks
+   for "## <cardId> <grade>", but the extension may echo the search instead:
+   "# 1999 POKEMON GAME #46 CHARMANDER PSA 9". That is the card's label plus a
+   grade — unambiguous, so it is matched against every label form. */
+export function resolveHeader(line, watchlist) {
+  const h = line.replace(/^#+\s*/, "").replace(/[*`]/g, "").replace(/^\d+[.)]\s+/, "").trim();
+  const byId = h.match(/^(\S+)\s+(raw|\d+(?:\.5)?)\b/i);
+  if (byId && watchlist.some((c) => c.id === byId[1])) return { id: byId[1], grade: byId[2].toLowerCase() };
+  const low = normWords(h);
+  const g = [...h.matchAll(/PSA\s*(10|[1-9](?:\.5)?)(?![\d.])/gi)].map((m) => m[1]).at(-1);
+  if (g) {
+    const hits = watchlist.filter((c) => gradedGrades(c).includes(g) &&
+      [c.psaTitle, ...[].concat(c.psaTitleAlt || [])].filter(Boolean).some((l) => low.includes(normWords(l))));
+    if (hits.length === 1) return { id: hits[0].id, grade: g };
+    const named = watchlist.filter((c) => gradedGrades(c).includes(g) && c.name &&
+      normWords(c.name).split(" ").every((w) => low.split(" ").includes(w)));
+    if (named.length === 1) return { id: named[0].id, grade: g };
+    return null;
+  }
+  const raws = watchlist.filter((c) => !gradedGrades(c).length &&
+    ((c.tcgPlayerId && h.includes(String(c.tcgPlayerId))) ||
+     (c.name && normWords(c.name).split(" ").every((w) => low.split(" ").includes(w)))));
+  return raws.length === 1 ? { id: raws[0].id, grade: "raw" } : null;
+}
+
+export function parseAnswer(text, readOn, watchlist = []) {
   const [yy, mm] = readOn.split("-").map(Number);
-  const pages = {}, market = {};
+  const pages = {}, market = {}, unknown = [];
   let cur = null, n = 0;
-  for (const raw of String(text).split(/\r?\n/)) {
+  for (const raw of rtfToText(String(text)).split(/\r?\n/)) {
     const line = raw.replace(/^\s*[*•-]\s+/, "").trim();
     if (!line) continue;
-    const h = line.match(/^#+\s*(\S+)\s+(raw|\d+(?:\.5)?)\b/i);
-    if (h) { cur = { id: h[1].replace(/[*`]/g, ""), grade: h[2].toLowerCase() }; if (cur.grade !== "raw") pages[cur.id] ||= { grade: cur.grade, rows: [] }; continue; }
+    if (/^#/.test(line) || /^\*\*[^*]+\*\*$/.test(line)) {
+      cur = resolveHeader(line, watchlist);
+      if (!cur) { unknown.push(line); continue; }
+      if (cur.grade !== "raw") pages[cur.id] ||= { grade: cur.grade, rows: [] };
+      continue;
+    }
     if (!cur) continue;
     if (cur.grade === "raw") {
       const m = line.match(/market[^$\d]*\$\s*([\d,]+(?:\.\d{1,2})?)/i);
@@ -109,7 +157,7 @@ export function parseAnswer(text, readOn) {
     pages[cur.id].rows.push({ title, price, caption: `Sold ${dm[1]} ${dm[2]}, ${year}`,
       text: title + (bo ? " Best offer accepted" : ""), href: `https://www.ebay.com/itm/7${String(n).padStart(11, "0")}` });
   }
-  return { pages, market };
+  return { pages, market, unknown };
 }
 
 /* no item link is captured by a manual read: each sale links to a sold search
@@ -123,7 +171,8 @@ function seedUrl(s) {
 }
 
 export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = new Date(), log = console.log } = {}) {
-  const { pages, market } = parseAnswer(text, readOn);
+  const { pages, market, unknown } = parseAnswer(text, readOn, watchlist);
+  for (const u of unknown) log(`  a section whose card could not be told — its rows were not read: ${u}`);
   const rowsRead = Object.values(pages).reduce((a, p) => a + p.rows.length, 0);
   if (!rowsRead && !Object.keys(market).length) {
     return { ok: false, why: "nothing read — no sale rows and no market price. The answer must keep the `## <cardId> <grade>` headers from the prompt, with one sale per line under each (or a table). An empty check is an alert, not a price." };
