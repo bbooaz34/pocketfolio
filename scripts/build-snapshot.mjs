@@ -34,6 +34,7 @@ import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { valueSales, readSales } from "./providers/ebay-sales.mjs";
+import { readMarket } from "./providers/tcgplayer-market.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DATA = join(ROOT, "data");
@@ -66,9 +67,10 @@ const PPT_HISTORY_DAYS = Number(process.env.PPT_HISTORY_DAYS || 180);
 const HIST = join(DATA, "history");
 
 const SALES = join(DATA, "sales");
-const haveSales = existsSync(SALES) && readdirSync(SALES).some((f) => f.endsWith(".json"));
+const MARKET = join(DATA, "market");
+const haveSales = [SALES, MARKET].some((d) => existsSync(d) && readdirSync(d).some((f) => f.endsWith(".json")));
 if (!PC_TOKEN && !PPT_TOKEN && !haveSales) {
-  console.error("need PC_TOKEN and/or PPT_TOKEN, or data/sales from scripts/scrape-ebay-sold.mjs");
+  console.error("need PC_TOKEN and/or PPT_TOKEN, or data/sales / data/market from the manual check");
   process.exit(1);
 }
 
@@ -688,6 +690,29 @@ function stripUntitled(card, entry) {
   return Object.keys(entry.grades || {}).length > 0;
 }
 
+/* Raw prices from the manual check's TCGplayer reading (data/market). It
+   overrides any provider's raw, because it is the same number read at the source. */
+function applyMarket(entries, prev) {
+  let used = 0;
+  for (const card of watchlist) {
+    const { doc } = readMarket(DATA, card.id);
+    if (!doc) continue;
+    const was = prev?.cards?.[card.id];
+    const e = entries.get(card.id) || {
+      pcId: null, tcgPlayerId: doc.tcgPlayerId ?? was?.tcgPlayerId ?? null,
+      name: card.name, set: card.setName || null, number: card.number || null,
+      image: card.image ?? was?.image ?? null,
+      grades: {}, metrics: {}, salesVolume: null, confidence: "low",
+    };
+    e.grades.raw = doc.market;
+    (e.metrics ||= {}).raw = { source: "tcgplayer", pricedOn: today, readAt: doc.readAt, url: doc.url ?? null };
+    entries.set(card.id, e);
+    used++;
+    console.log(`  ${card.id} <- TCGplayer market $${(doc.market / 100).toFixed(2)} (read ${doc.readAt})`);
+  }
+  if (used) console.log(`TCGplayer market: ${used} raw price(s) from the manual check`);
+}
+
 function applyEbaySales(entries, prev) {
   let used = 0;
   const notUsed = [];
@@ -746,6 +771,7 @@ for (const [, e] of entries) {
   }
 }
 applyEbaySales(entries, prev);
+applyMarket(entries, prev);
 
 /* A grade today's sources did not answer keeps yesterday's value, flagged —
    the same rule as a whole card, one grade at a time. */
@@ -797,8 +823,17 @@ const count = Object.keys(cards).length;
 console.log(`priced ${fresh} fresh + ${carried} carried = ${count}/${watchlist.length} watchlist cards`);
 
 if (fresh === 0) {
-  console.error("ABORT: nothing priced today — not writing a snapshot of carried values only");
-  process.exit(1);
+  /* With a provider configured, nothing priced is a failure. Without one, the
+     prices come from the owner's manual check, and a day without a fresh
+     read is normal. No snapshot is written either way (a day of carried
+     values would read as a day of prices), but only the first case fails
+     the job. The app's banner says when the latest values are old. */
+  if (PC_TOKEN || PPT_TOKEN) {
+    console.error("ABORT: nothing priced today — not writing a snapshot of carried values only");
+    process.exit(1);
+  }
+  console.log("nothing fresh today (no manual check within 48h) — no snapshot written, the last one stands");
+  process.exit(0);
 }
 
 const snapshot = {

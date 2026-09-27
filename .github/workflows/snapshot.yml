@@ -4,7 +4,10 @@
 # so deploy-pages.yml never sees the data commit — the gh-pages mirror is a
 # step of this job instead.
 #
-# Secrets: PRICECHARTING_TOKEN (optional but primary), PPT_TOKEN (fallback).
+# Secrets: PRICECHARTING_TOKEN (optional). PPT_TOKEN is no longer passed: the
+# subscription was cancelled on 27.09, and prices now come from the owner's
+# manual check (data/sales, data/market). A day with no fresh read writes no
+# snapshot and does not fail.
 name: price snapshot
 on:
   # 20:00 UTC. NOT because the provider has an evening batch — it does not.
@@ -35,7 +38,6 @@ jobs:
       - run: node scripts/build-snapshot.mjs
         env:
           PC_TOKEN:  ${{ secrets.PRICECHARTING_TOKEN }}
-          PPT_TOKEN: ${{ secrets.PPT_TOKEN }}
       - run: node scripts/prune-snapshots.mjs
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
