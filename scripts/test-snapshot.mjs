@@ -552,6 +552,35 @@ check("today's raw series still grows when graded history is missing",
   check("real page: every Boss's Way sale kept is 1st Edition", bw.every((x) => /1st|first/i.test(x.t)));
 }
 
+/* ---- the owner's second read, 27.09: broader searches for the Base Set
+   cards, so the page carries Butterflies, Zapdos, bundles and French
+   Salamèches the filters must refuse, and the newer "BASE SET UNLIMITED"
+   label that the label search never reached ---- */
+{
+  const fx = JSON.parse(readFileSync(join(ROOT, "scripts", "fixtures", "ebay-2026-09-27.json"), "utf8"));
+  const wl = JSON.parse(readFileSync(join(ROOT, "data", "watchlist.json"), "utf8")).cards;
+  const { valueGrade } = await import(join(ROOT, "scripts", "providers", "ebay-sales.mjs"));
+  const want = { "base1-63": 8300, "base1-44": 4200, "base1-4": 38000, "psa-154146687@jp": 8000,
+    "base5-73": 3600, "psa-77452905@jp": 13075, "base1-46": 6278 };
+  const kept = {};
+  for (const [id, pg] of Object.entries(fx.pages)) {
+    const card = wl.find((c) => c.id === id);
+    kept[id] = Scraper.filterRows(pg.rows, card, pg.grade).sales;
+    const r = valueGrade(kept[id], fx.capturedOn);
+    check(`27.09 read: ${card.name} PSA ${pg.grade} = $${want[id] / 100}`, r?.value === want[id],
+      `$${(r?.value ?? 0) / 100} from ${kept[id].length} kept of ${pg.rows.length}`);
+  }
+  const all = Object.values(kept).flat();
+  check("27.09 read: no other Pokémon, bundle, or other language survives",
+    all.every((x) => !/butterfree|zapdos|charmeleon|blastoise|pikachu|salameche|italian|spanish|korean|\b\d+x\b|lot/i.test(x.t) || /blastoise/i.test(x.t) && x.bo),
+    all.filter((x) => /butterfree|zapdos|charmeleon|pikachu|salameche|italian|spanish|korean/i.test(x.t)).map((x) => x.t).join(" | "));
+  check("27.09 read: the newer 'BASE SET UNLIMITED' label is read, with the three 19–20.09 Charizards",
+    [["2026-09-20", 40000], ["2026-09-20", 33289], ["2026-09-19", 38000]]
+      .every(([d, p]) => kept["base1-4"].some((x) => x.d === d && x.p === p)));
+  check("27.09 read: 'PSA 9/10?' on a starter lot is not a PSA 9",
+    !all.some((x) => /9\/10/.test(x.t)));
+}
+
 /* ---- psaTitle from the cert page: PSA's fields, in label order ---- */
 {
   const { parseCertText, titleOf } = await import(join(ROOT, "scripts", "fill-psa-titles.mjs"));

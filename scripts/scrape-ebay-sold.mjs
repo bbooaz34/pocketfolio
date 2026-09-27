@@ -65,7 +65,8 @@ export function gradeRe(g) {
   const esc = String(g).replace(".", "\\.");
   /* PSA's condition words may sit between the brand and the number: "PSA MINT 9" */
   const cond = "(?:(?:GEM\\s*)?(?:MINT|MT)|NM[-\\s]?MT|NM|EX[-\\s]?MT|EX|VG[-\\s]?EX|VG|GOOD|GD|FAIR|FR|POOR|PR)?";
-  return new RegExp(`PSA\\s*${cond}\\s*${esc}(\\b|\\.0)(?!\\d|\\.5)`, "i");
+  /* "PSA 9/10?" says neither — a starter lot hedging its grades */
+  return new RegExp(`PSA\\s*${cond}\\s*${esc}(\\b|\\.0)(?!\\d|\\.5|\\s*\\/\\s*\\d)`, "i");
 }
 
 /* words on every PSA label, or too short to tell one card from another */
@@ -79,7 +80,8 @@ export function distinctiveTokens(psaTitle) {
     .filter((w) => w.length >= 3 && !/^\d+$/.test(w) && !STOP.has(w)))];
 }
 
-const LOT = /\blot\b|bundle|set of|x\d/i;
+/* "3x … Charizard 4 Blastoise 2 Venusaur 15" is a bundle as surely as "x3" */
+const LOT = /\blot\b|bundle|set of|x\d|\b\d+x\b/i;
 const OTHER_LANG = /italian|french|german|spanish|japanese|portuguese|dutch|korean|chinese/i;
 const QUALIFIER = /\b(OC|MK|MC|ST|PD)\b/;
 /* Only an ACCEPTED offer hides the real price. "or Best Offer" on a sold row
@@ -145,8 +147,16 @@ export function normalizeUrl(href) {
  */
 export function filterRows(rows, card, grade) {
   const want = gradeRe(grade);
-  const tokens = distinctiveTokens(card.psaTitle);
-  const need = Math.min(2, tokens.length);
+  /* PSA has printed the same card under more than one label: the 1999
+     Charizard is "POKEMON GAME #4" on older slabs and "POKEMON BASE SET
+     UNLIMITED #4" on newer ones, and the three 19–20.09 sales the provider
+     never had were all titled the newer way. A listing may match any of the
+     card's label forms. */
+  const labels = [card.psaTitle, ...[].concat(card.psaTitleAlt || [])].filter(Boolean)
+    .map((l) => { const t = distinctiveTokens(l); return { t, need: Math.min(2, t.length) }; });
+  /* and whatever else it says, it must name THIS card: a broad search pads
+     the page with Charmeleons and Zapdos that share every set word */
+  const nameTokens = card.name ? distinctiveTokens(card.name) : [];
   const english = !card.language || card.language === "english";
   const notOurs = PRINTINGS.filter(([, re]) => !re.test(card.psaTitle)).map(([, re]) => re);
   /* a label's year names the print run: "2000 POKEMON GAME BASE II #4
@@ -160,7 +170,8 @@ export function filterRows(rows, card, grade) {
     const t = cleanTitle(r.title);
     if (!want.test(t)) { dropped.grade++; continue; }
     const low = t.toLowerCase();
-    if (tokens.filter((w) => low.includes(w)).length < need) { dropped.tokens++; continue; }
+    if (nameTokens.some((w) => !low.includes(w)) ||
+        !labels.some(({ t: lt, need }) => lt.filter((w) => low.includes(w)).length >= need)) { dropped.tokens++; continue; }
     if (notOurs.some((re) => re.test(t))) { dropped.printing++; continue; }
     const years = t.match(YEARS);
     if (ourYear && years && !years.includes(ourYear)) { dropped.printing++; continue; }

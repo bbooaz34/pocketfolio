@@ -1,5 +1,5 @@
 {
-  "comment": "Cards the daily snapshot job prices (POCKETFOLIO-PRICING.md §3). The app is backendless, so CI cannot know what users hold — add the cards you own here (Settings lists the ones missing and copies these rows for you). `id` is the pokemontcg.io card id the app stores on holdings. `setTotal` is the printed set size (the 102 in 4/102): a row from a set of another size is rejected, because a card number alone matched Base Set 2 for a Base Set Charizard. `setMatch` is a fragment the matched row's set name must contain — promos carry no `x/y` numbering, so it is the only guard against binding to a same-named card from another set. `pptSetId` pins PPT's own set id when a name search keeps landing on the wrong printing. `image` pins a picture when the provider has no usable scan — the Japanese catalog is missing many, and a reprint that shares the artwork beats an empty box; it never changes what is priced. `pcQuery` overrides the auto-built PriceCharting search. A JAPANESE print gets its own entry: the English id with an `@jp` suffix plus `language: \"japanese\"` — the app reads the @jp snapshot entry for holdings flagged as Japanese slabs. GRADED prices come from eBay's own sold listings (scripts/scrape-ebay-sold.mjs, TASK-ebay-direct.md): `grades` lists the grades held, `cert` is the PSA certificate, and `psaTitle` is the PSA label title copied VERBATIM from the cert page on psacard.com — it is the eBay search string, because sellers copy it from the slab, and it carries the edition (1ST EDITION) with it. A graded card with no `psaTitle` is not searched and gets no graded price: never make one up from the card name.",
+  "comment": "Cards the daily snapshot job prices (POCKETFOLIO-PRICING.md §3). The app is backendless, so CI cannot know what users hold — add the cards you own here (Settings lists the ones missing and copies these rows for you). `id` is the pokemontcg.io card id the app stores on holdings. `setTotal` is the printed set size (the 102 in 4/102): a row from a set of another size is rejected, because a card number alone matched Base Set 2 for a Base Set Charizard. `setMatch` is a fragment the matched row's set name must contain — promos carry no `x/y` numbering, so it is the only guard against binding to a same-named card from another set. `pptSetId` pins PPT's own set id when a name search keeps landing on the wrong printing. `image` pins a picture when the provider has no usable scan — the Japanese catalog is missing many, and a reprint that shares the artwork beats an empty box; it never changes what is priced. `pcQuery` overrides the auto-built PriceCharting search. A JAPANESE print gets its own entry: the English id with an `@jp` suffix plus `language: \"japanese\"` — the app reads the @jp snapshot entry for holdings flagged as Japanese slabs. GRADED prices come from eBay's own sold listings (scripts/scrape-ebay-sold.mjs, TASK-ebay-direct.md): `grades` lists the grades held, `cert` is the PSA certificate, and `psaTitle` is the PSA label title copied VERBATIM from the cert page on psacard.com — it is the eBay search string, because sellers copy it from the slab, and it carries the edition (1ST EDITION) with it. A graded card with no `psaTitle` is not searched and gets no graded price: never make one up from the card name. `psaTitleAlt` lists other label forms PSA has printed for the same card (newer Base Set slabs read 'POKEMON BASE SET UNLIMITED' where older ones read 'POKEMON GAME'); a listing may match any of them.",
   "cards": [
     {
       "id": "base1-46",
@@ -14,7 +14,10 @@
         "9"
       ],
       "edition": "unlimited",
-      "psaTitle": "1999 POKEMON GAME #46 CHARMANDER"
+      "psaTitle": "1999 POKEMON GAME #46 CHARMANDER",
+      "psaTitleAlt": [
+        "1999 POKEMON BASE SET UNLIMITED #46 CHARMANDER"
+      ]
     },
     {
       "id": "base1-63",
@@ -29,7 +32,10 @@
         "9"
       ],
       "edition": "unlimited",
-      "psaTitle": "1999 POKEMON GAME #63 SQUIRTLE"
+      "psaTitle": "1999 POKEMON GAME #63 SQUIRTLE",
+      "psaTitleAlt": [
+        "1999 POKEMON BASE SET UNLIMITED #63 SQUIRTLE"
+      ]
     },
     {
       "id": "base1-44",
@@ -44,7 +50,10 @@
         "9"
       ],
       "edition": "unlimited",
-      "psaTitle": "1999 POKEMON GAME #44 BULBASAUR"
+      "psaTitle": "1999 POKEMON GAME #44 BULBASAUR",
+      "psaTitleAlt": [
+        "1999 POKEMON BASE SET UNLIMITED #44 BULBASAUR"
+      ]
     },
     {
       "id": "base1-4",
@@ -59,7 +68,10 @@
         "1"
       ],
       "edition": "unlimited",
-      "psaTitle": "1999 POKEMON GAME #4 CHARIZARD-HOLO"
+      "psaTitle": "1999 POKEMON GAME #4 CHARIZARD-HOLO",
+      "psaTitleAlt": [
+        "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO"
+      ]
     },
     {
       "id": "psa-154146687@jp",
