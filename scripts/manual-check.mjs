@@ -5,6 +5,7 @@
  * extension), and this turns what they read into data/.
  *
  *   node scripts/manual-check.mjs prompt              # print the prompt to paste
+ *   node scripts/manual-check.mjs prompt <id> …       # only these cards (e.g. the ones an answer missed)
  *   node scripts/manual-check.mjs import answer.txt   # read the answer into data/
  *   node scripts/build-snapshot.mjs                   # then build, commit, push
  *
@@ -218,14 +219,23 @@ export function importAnswer(text, watchlist, { dataDir = DATA, readOn, now = ne
 async function main(argv) {
   const watchlist = JSON.parse(readFileSync(join(DATA, "watchlist.json"), "utf8")).cards;
   const cmd = argv[0];
-  if (cmd === "prompt") { console.log(promptText(watchlist)); return; }
+  if (cmd === "prompt") {
+    const only = argv.slice(1);
+    const unknown = only.filter((id) => !watchlist.some((c) => c.id === id));
+    if (unknown.length) { console.error(`not on the watchlist: ${unknown.join(", ")}`); process.exit(1); }
+    console.log(promptText(only.length ? watchlist.filter((c) => only.includes(c.id)) : watchlist));
+    return;
+  }
   if (cmd === "import" && argv[1]) {
     const readOn = localIso().slice(0, 10);
     const r = importAnswer(readFileSync(argv[1], "utf8"), watchlist, { readOn });
     if (!r.ok) { console.error(`ABORT: ${r.why}`); process.exit(1); }
     console.log(`\nread ${r.graded} graded card(s) and ${r.raw} raw price(s). Next:\n` +
       "  node scripts/build-snapshot.mjs && git add data scripts/fixtures && git commit -m 'prices: manual check' && git push");
-    if (r.missing.length) console.log(`\nnot in the answer (kept as they were): ${r.missing.join(", ")}`);
+    if (r.missing.length) {
+      console.log(`\nnot in the answer (kept as they were): ${r.missing.join(", ")}` +
+        `\nto read just those: node scripts/manual-check.mjs prompt ${r.missing.join(" ")} > prompt.txt`);
+    }
     return;
   }
   console.error("usage: node scripts/manual-check.mjs prompt | import <answer.txt>");
