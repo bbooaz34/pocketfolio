@@ -1,0 +1,37 @@
+For each section below, open the link(s) and report what the page shows, under the exact `## …` header I give.
+
+For eBay links: list every sold result on page one, one per line, as `Mon D · $price · title`, with `BO · ` before the title when the result says "Best offer accepted" (not for "or Best Offer"). If the page has a "Results matching fewer words" divider, stop at it. Don't click into listings or go past page one.
+For TCGplayer links: the product's latest sales, one per line, as `M/D/YY · condition · $price` (e.g. `9/27/26 · NM Holofoil · $107.99`).
+Wait about 5 seconds between links. If a site shows a security check, stop and tell me.
+
+## base1-46 9   (Charmander PSA 9)
+https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%2346+CHARMANDER+PSA+9&LH_Sold=1&LH_Complete=1&_sop=13
+https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%2346+CHARMANDER+PSA+9&LH_Sold=1&LH_Complete=1&_sop=13
+
+## base1-63 9   (Squirtle PSA 9)
+https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%2363+SQUIRTLE+PSA+9&LH_Sold=1&LH_Complete=1&_sop=13
+https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%2363+SQUIRTLE+PSA+9&LH_Sold=1&LH_Complete=1&_sop=13
+
+## base1-44 9   (Bulbasaur PSA 9)
+https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%2344+BULBASAUR+PSA+9&LH_Sold=1&LH_Complete=1&_sop=13
+https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%2344+BULBASAUR+PSA+9&LH_Sold=1&LH_Complete=1&_sop=13
+
+## base1-4 1   (Charizard PSA 1)
+https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%234+CHARIZARD+HOLO+PSA+1&LH_Sold=1&LH_Complete=1&_sop=13
+https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD+HOLO+PSA+1&LH_Sold=1&LH_Complete=1&_sop=13
+
+## psa-154146687@jp 1   (Togepi PSA 1)
+https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD+SILVER+TO+A+NEW+WORLD+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1&_sop=13
+
+## base5-73 9   (The Boss's Way PSA 9)
+https://www.ebay.com/sch/i.html?_nkw=2000+POKEMON+ROCKET+%2373+THE+BOSS%27S+WAY+1ST+EDITION+PSA+9&LH_Sold=1&LH_Complete=1&_sop=13
+
+## psa-77452905@jp 7   (Misty's Tears PSA 7)
+https://www.ebay.com/sch/i.html?_nkw=1998+POKEMON+JAPANESE+HANADA+CITY+GYM+DECK+MISTY%27S+TEARS+PSA+7&LH_Sold=1&LH_Complete=1&_sop=13
+
+## miscp-001 raw   (Ancient Mew, ungraded)
+https://www.tcgplayer.com/product/108589
+
+## svp-044 raw   (Charmander, ungraded)
+https://www.tcgplayer.com/product/512035
+
