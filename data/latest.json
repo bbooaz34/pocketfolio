@@ -1,6 +1,6 @@
 {
  "date": "2026-09-29",
- "builtAt": "2026-09-29T09:02:46.377Z",
+ "builtAt": "2026-09-29T23:27:09.126Z",
  "source": "ebay+tcgplayer",
  "cards": {
   "base1-46": {
@@ -1315,28 +1315,6 @@
    "confidence": "high",
    "pricedOn": "2026-09-29"
   },
-  "miscp-001": {
-   "pcId": null,
-   "tcgPlayerId": "108589",
-   "name": "Ancient Mew",
-   "set": "Miscellaneous Cards & Products",
-   "number": null,
-   "image": "https://tcgplayer-cdn.tcgplayer.com/product/108589_in_400x400.jpg",
-   "grades": {
-    "raw": 10900
-   },
-   "metrics": {
-    "raw": {
-     "source": "tcgplayer",
-     "pricedOn": "2026-09-29",
-     "readAt": "2026-09-27T20:05:11+00:00",
-     "url": "https://www.tcgplayer.com/product/108589"
-    }
-   },
-   "salesVolume": null,
-   "confidence": "low",
-   "pricedOn": "2026-09-29"
-  },
   "svp-044": {
    "pcId": null,
    "tcgPlayerId": "512035",
@@ -1358,6 +1336,30 @@
    "salesVolume": null,
    "confidence": "low",
    "pricedOn": "2026-09-29"
+  },
+  "miscp-001": {
+   "pcId": null,
+   "tcgPlayerId": "108589",
+   "name": "Ancient Mew",
+   "set": "Miscellaneous Cards & Products",
+   "number": null,
+   "image": "https://tcgplayer-cdn.tcgplayer.com/product/108589_in_400x400.jpg",
+   "grades": {
+    "raw": 10900
+   },
+   "metrics": {
+    "raw": {
+     "source": "carried",
+     "pricedOn": "2026-09-27",
+     "readAt": "2026-09-27T20:05:11+00:00",
+     "url": "https://www.tcgplayer.com/product/108589",
+     "carried": true
+    }
+   },
+   "salesVolume": null,
+   "confidence": "low",
+   "pricedOn": "2026-09-27",
+   "carried": true
   }
  }
 }
