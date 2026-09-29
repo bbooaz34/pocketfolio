@@ -1,6 +1,6 @@
 {
  "date": "2026-09-29",
- "builtAt": "2026-09-29T00:12:21.092Z",
+ "builtAt": "2026-09-29T09:02:46.377Z",
  "source": "ebay+tcgplayer",
  "cards": {
   "base1-46": {
@@ -14,7 +14,7 @@
     "6": 2500,
     "7": 2706,
     "8": 3438,
-    "9": 6999,
+    "9": 5700,
     "10": 33500,
     "raw": 318
    },
@@ -81,15 +81,20 @@
      "source": "ebay",
      "confidence": "high",
      "effective": "high",
-     "n": 38,
+     "n": 39,
      "nBO": 15,
-     "lastSale": "2026-09-24",
+     "lastSale": "2026-09-28",
      "ageDays": null,
      "spread": {
-      "low": 5700,
+      "low": 4300,
       "high": 7426
      },
      "used": [
+      {
+       "d": "2026-09-28",
+       "p": 4300,
+       "url": "https://www.ebay.com/sch/i.html?_nkw=POKEMON+BASE+UNLIMITED+CHARMANDER+%2346+PSA+9+VERY+NICE%21%21%21%21%21&LH_Sold=1&LH_Complete=1#2026-09-28-4300"
+      },
       {
        "d": "2026-09-24",
        "p": 5700,
@@ -109,11 +114,6 @@
        "d": "2026-09-16",
        "p": 7426,
        "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%2346+BASE+SET+UNLIMITED+CHARMANDER+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-16-7426"
-      },
-      {
-       "d": "2026-09-15",
-       "p": 6999,
-       "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Base+Set+CHARMANDER+%2346+PSA+9+MINT+Vintage+WOTC&LH_Sold=1&LH_Complete=1#2026-09-15-6999"
       }
      ],
      "pricedOn": "2026-09-29"
@@ -145,7 +145,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON GAME #46 CHARMANDER",
-   "salesScrapedAt": "2026-09-27T10:06:39+03:00",
+   "salesScrapedAt": "2026-09-29T09:02:46+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-29"
   },
@@ -273,7 +273,7 @@
      "ageDays": null,
      "spread": {
       "low": 5300,
-      "high": 10591
+      "high": 10597
      },
      "used": [
       {
@@ -293,8 +293,8 @@
       },
       {
        "d": "2026-09-17",
-       "p": 10591,
-       "url": "https://www.ebay.com/sch/i.html?_nkw=Pok%C3%A9mon+TCG+Squirtle+63%2F102+Base+Set+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-17-10591"
+       "p": 10597,
+       "url": "https://www.ebay.com/sch/i.html?_nkw=Pok%C3%A9mon+TCG+Squirtle+63%2F102+Base+Set+PSA+9&LH_Sold=1&LH_Complete=1#2026-09-17-10597"
       },
       {
        "d": "2026-09-16",
@@ -331,7 +331,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON GAME #63 SQUIRTLE",
-   "salesScrapedAt": "2026-09-27T10:06:39+03:00",
+   "salesScrapedAt": "2026-09-29T09:02:46+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-29"
   },
@@ -439,7 +439,7 @@
      "ageDays": null,
      "spread": {
       "low": 4100,
-      "high": 9935
+      "high": 9941
      },
      "used": [
       {
@@ -464,8 +464,8 @@
       },
       {
        "d": "2026-09-18",
-       "p": 9935,
-       "url": "https://www.ebay.com/sch/i.html?_nkw=PSA+9+MINT+1999+BASE+SET+POK%C3%89MON+BULBASAUR+44%2F102+%2344+WOTC+TCG+GRADED+CARD&LH_Sold=1&LH_Complete=1#2026-09-18-9935"
+       "p": 9941,
+       "url": "https://www.ebay.com/sch/i.html?_nkw=PSA+9+MINT+1999+BASE+SET+POK%C3%89MON+BULBASAUR+44%2F102+%2344+WOTC+TCG+GRADED+CARD&LH_Sold=1&LH_Complete=1#2026-09-18-9941"
       }
      ],
      "pricedOn": "2026-09-29"
@@ -497,7 +497,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON GAME #44 BULBASAUR",
-   "salesScrapedAt": "2026-09-27T10:06:39+03:00",
+   "salesScrapedAt": "2026-09-29T09:02:46+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-29"
   },
@@ -509,7 +509,7 @@
    "number": "4",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/42382_in_400x400.jpg",
    "grades": {
-    "1": 38000,
+    "1": 38500,
     "2": 27200,
     "3": 29000,
     "4": 32156,
@@ -527,9 +527,9 @@
      "source": "ebay",
      "confidence": "high",
      "effective": "high",
-     "n": 46,
-     "nBO": 9,
-     "lastSale": "2026-09-20",
+     "n": 47,
+     "nBO": 10,
+     "lastSale": "2026-09-27",
      "ageDays": null,
      "spread": {
       "low": 33289,
@@ -537,14 +537,19 @@
      },
      "used": [
       {
+       "d": "2026-09-27",
+       "p": 38500,
+       "url": "https://www.ebay.com/sch/i.html?_nkw=Pokemon+Charizard+Holo+Base+Set+Unlimited+4%2F102+PSA+1+GREAT+Appeals&LH_Sold=1&LH_Complete=1#2026-09-27-38500"
+      },
+      {
        "d": "2026-09-20",
        "p": 40000,
        "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-20-40000"
       },
       {
        "d": "2026-09-20",
-       "p": 39740,
-       "url": "https://www.ebay.com/sch/i.html?_nkw=Charizard+Holo+4%2F102+Game+Pokemon+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-20-39740"
+       "p": 39764,
+       "url": "https://www.ebay.com/sch/i.html?_nkw=Charizard+Holo+4%2F102+Game+Pokemon+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-20-39764"
       },
       {
        "d": "2026-09-20",
@@ -555,11 +560,6 @@
        "d": "2026-09-19",
        "p": 38000,
        "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-19-38000"
-      },
-      {
-       "d": "2026-09-16",
-       "p": 35500,
-       "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+CHARIZARD-HOLO+%234+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-16-35500"
       }
      ],
      "pricedOn": "2026-09-29"
@@ -743,7 +743,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON GAME #4 CHARIZARD-HOLO",
-   "salesScrapedAt": "2026-09-27T10:06:39+03:00",
+   "salesScrapedAt": "2026-09-29T09:02:46+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-29"
   },
@@ -924,7 +924,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI",
-   "salesScrapedAt": "2026-09-27T20:05:11+00:00",
+   "salesScrapedAt": "2026-09-29T09:02:46+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-29"
   },
@@ -1038,7 +1038,7 @@
       {
        "d": "2026-07-22",
        "p": 5995,
-       "url": "https://www.ebay.com/sch/i.html?_nkw=Pok%C3%A9mon+Team+Rocket+1st+Edition+The+Boss%E2%80%99s+Way+73%2F82+PSA+9+MINT%21+WOTC%21&LH_Sold=1&LH_Complete=1#2026-07-22-5995"
+       "url": "https://www.ebay.com/sch/i.html?_nkw=Pok%C3%A9mon+Team+Rocket+1st+Edition+The+Boss%27s+Way+73%2F82+PSA+9+MINT%21+WOTC%21&LH_Sold=1&LH_Complete=1#2026-07-22-5995"
       }
      ],
      "pricedOn": "2026-09-29"
@@ -1070,7 +1070,7 @@
    },
    "salesVolume": null,
    "psaTitle": "2000 POKEMON ROCKET #73 THE BOSS'S WAY 1ST EDITION",
-   "salesScrapedAt": "2026-09-27T20:05:11+00:00",
+   "salesScrapedAt": "2026-09-29T09:02:46+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-29"
   },
@@ -1311,7 +1311,7 @@
    },
    "salesVolume": null,
    "psaTitle": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS",
-   "salesScrapedAt": "2026-09-27T20:05:11+00:00",
+   "salesScrapedAt": "2026-09-29T09:02:46+00:00",
    "confidence": "high",
    "pricedOn": "2026-09-29"
   },
@@ -1345,13 +1345,13 @@
    "number": "044",
    "image": "https://tcgplayer-cdn.tcgplayer.com/product/512035_in_400x400.jpg",
    "grades": {
-    "raw": 5522
+    "raw": 4876
    },
    "metrics": {
     "raw": {
      "source": "tcgplayer",
      "pricedOn": "2026-09-29",
-     "readAt": "2026-09-27T20:05:11+00:00",
+     "readAt": "2026-09-29T09:02:46+00:00",
      "url": "https://www.tcgplayer.com/product/512035"
     }
    },

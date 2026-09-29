@@ -202,9 +202,22 @@ export function mergeSales(prev, card, grade, sales, scrapedAt) {
   doc.scrapedAt = scrapedAt;
   /* A sale seeded from a manual read has no listing url of its own (it links
      to the search). When a real read finds the same date and price, that
-     listing replaces it — the same sale must not count twice. */
-  const seen = new Set(sales.map((s) => `${s.d}|${s.p}`));
-  const kept = (doc.grades[grade] || []).filter((s) => /\/itm\//.test(s.url) || !seen.has(`${s.d}|${s.p}`));
+     listing replaces it — the same sale must not count twice.
+
+     The price has to be matched loosely, because a listing priced in another
+     currency converts to a slightly different figure on each read. Reading
+     the same six pages on 27.09 and again on 29.09 produced three pairs —
+     Charizard $397.40/$397.64, Squirtle $105.91/$105.97, Bulbasaur
+     $99.35/$99.41 — each the same date and the same title, each 0.06%
+     apart, and each counted twice. That took Squirtle's median of five from
+     $61 to $100. A genuine second copy sells at a visibly different price:
+     two Bulbasaurs went on 18.09 under one title at $41.00 and $42.00, 2.4%
+     apart, and those are two sales. SAME_SALE sits between the two. */
+  const SAME_SALE = 0.01;
+  const same = (a, b) => a.d === b.d && (a.p === b.p ||
+    (a.t === b.t && Math.abs(a.p - b.p) <= SAME_SALE * Math.max(a.p, b.p)));
+  const kept = (doc.grades[grade] || []).filter(
+    (s) => /\/itm\//.test(s.url) || !sales.some((x) => same(x, s)));
   const byUrl = new Map(kept.map((s) => [s.url, s]));
   for (const s of sales) {
     const old = byUrl.get(s.url);

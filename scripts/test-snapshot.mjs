@@ -491,6 +491,30 @@ check("today's raw series still grows when graded history is missing",
       { d: "2026-09-21", p: 40000, bo: false, t: "seed", url: "https://www.ebay.com/sch/i.html?_nkw=x#seed-1", seeded: true },
       { d: "2026-09-01", p: 30000, bo: false, t: "seed", url: "https://www.ebay.com/sch/i.html?_nkw=x#seed-2", seeded: true }] } },
     card, "1", sales, "2026-09-27T04:00:00+03:00");
+  /* The same foreign-currency listing converts to a slightly different figure
+     on each read, so an exact price match misses it and the sale lands twice.
+     Three such pairs turned up on 29.09; one of them moved Squirtle's median
+     of five from $61 to $100. */
+  const drifted = Scraper.mergeSales({ grades: { "1": [
+      { d: "2026-09-20", p: 39740, bo: false, t: "Charizard Holo 4/102 Game Pokemon PSA 1",
+        url: "https://www.ebay.com/sch/i.html?_nkw=x#seed-9", seeded: true }] } },
+    card, "1", [{ d: "2026-09-20", p: 39764, bo: false, t: "Charizard Holo 4/102 Game Pokemon PSA 1",
+                  url: "https://www.ebay.com/itm/222222222222" }], "2026-09-29T04:00:00+03:00");
+  check("the same listing read twice at a drifted price counts once",
+    drifted.grades["1"].length === 1 && drifted.grades["1"][0].p === 39764,
+    drifted.grades["1"].map((x) => `${x.d}:${x.p}`).join(","));
+
+  /* but two copies that genuinely sold the same day under one title are two
+     sales: Bulbasaur went at $41.00 and $42.00 on 18.09, 2.4% apart. */
+  const twoCopies = Scraper.mergeSales({ grades: { "1": [
+      { d: "2026-09-18", p: 4100, bo: false, t: "BULBASAUR PSA 9",
+        url: "https://www.ebay.com/sch/i.html?_nkw=x#seed-a", seeded: true }] } },
+    card, "1", [{ d: "2026-09-18", p: 4200, bo: false, t: "BULBASAUR PSA 9",
+                  url: "https://www.ebay.com/itm/333333333333" }], "2026-09-29T04:00:00+03:00");
+  check("two copies sold the same day under one title stay two sales",
+    twoCopies.grades["1"].length === 2,
+    twoCopies.grades["1"].map((x) => `${x.d}:${x.p}`).join(","));
+
   check("a real listing replaces the seeded sale it matches, and only that one",
     seeded.grades["1"].filter((x) => x.d === "2026-09-21" && x.p === 40000).length === 1 &&
     seeded.grades["1"].some((x) => x.url.endsWith("#seed-2")),
