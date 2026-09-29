@@ -468,15 +468,27 @@ check("today's raw series still grows when graded history is missing",
   check("titles lose the 'Opens in a new window' tail", sales[0].t === "1999 POKEMON GAME #4 CHARIZARD-HOLO PSA 1", sales[0].t);
   check("urls are the bare item link", urls.includes("https://www.ebay.com/itm/111111111111"), urls.join(" "));
   check("sold date and pennies parsed", sales[0].d === "2026-09-21" && sales[0].p === 40000);
+  const NOT_OURS = ' -"1st edition" -"shadowless" -"base set 2"';
   check("the search keeps the label's words and drops its commas and dots",
     new URL(Scraper.searchUrl("1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI", "1")).searchParams.get("_nkw") ===
-      "1999 POKEMON JAPANESE GOLD SILVER TO A NEW WORLD TOGEPI PSA 1");
+      "1999 POKEMON JAPANESE GOLD SILVER TO A NEW WORLD TOGEPI PSA 1" + NOT_OURS);
   check("a hyphen in the label is not an eBay exclusion",
     new URL(Scraper.searchUrl("1999 POKEMON GAME #4 CHARIZARD-HOLO", "1")).searchParams.get("_nkw") ===
-      "1999 POKEMON GAME #4 CHARIZARD HOLO PSA 1");
-  check("the search is the label title verbatim, plus the grade",
+      "1999 POKEMON GAME #4 CHARIZARD HOLO PSA 1" + NOT_OURS);
+
+  /* Page one is the whole sample, so a printing we would throw away is a slot
+     stolen from a sale we would keep. The search asks eBay to leave out
+     exactly what filterRows would drop — and no more: a label that names a
+     printing keeps it. */
+  check("the search leaves out the printings the label does not name",
     new URL(Scraper.searchUrl("2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY", "9")).searchParams.get("_nkw") ===
-      "2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY PSA 9");
+      "2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY PSA 9 -\"shadowless\" -\"base set 2\"",
+    new URL(Scraper.searchUrl("2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY", "9")).searchParams.get("_nkw"));
+  check("the exclusions match what filterRows would drop",
+    Scraper.printingExclusions("2000 POKEMON ROCKET 1ST EDITION THE BOSS'S WAY").join(",") === "shadowless,base set 2" &&
+    Scraper.printingExclusions("1999 POKEMON GAME #46 CHARMANDER").join(",") === "1st edition,shadowless,base set 2" &&
+    Scraper.printingExclusions("1999 POKEMON GAME SHADOWLESS #46 CHARMANDER").join(",") === "1st edition,base set 2",
+    Scraper.printingExclusions("1999 POKEMON GAME SHADOWLESS #46 CHARMANDER").join(","));
 
   const prevDoc = { cardId: "base1-4", psaTitle: card.psaTitle, scrapedAt: "2026-09-20T04:00:00+03:00",
     grades: { "1": [{ d: "2026-07-23", p: 37559, bo: false, t: "old", url: "https://www.ebay.com/itm/999999999999" },

@@ -45,7 +45,15 @@ export const PROFILE_DIR = join(homedir(), ".pocketfolio", "chrome-profile");
 
 /* ---------------- pure helpers (tested offline) ---------------- */
 
-export function searchUrl(psaTitle, grade) {
+/* The printings this card is NOT, by its own label — the same rule filterRows
+   applies to the rows that come back, so the search asks for what we would
+   keep anyway. A label that names a printing keeps it: The Boss's Way is
+   "… THE BOSS'S WAY 1ST EDITION", so 1st edition is not excluded for it. */
+export function printingExclusions(psaTitle) {
+  return PRINTINGS.filter(([, re]) => !re.test(String(psaTitle || ""))).map(([name]) => name);
+}
+
+export function searchUrl(psaTitle, grade, printingsFrom = psaTitle) {
   const u = new URL("https://www.ebay.com/sch/i.html");
   /* the label's words, verbatim — but not its punctuation. "GOLD, SILVER,
      TO A NEW WORLD... TOGEPI" returned nothing at all on 26.09 while the
@@ -53,7 +61,14 @@ export function searchUrl(psaTitle, grade) {
      goes too: to eBay "-HOLO" can read as "without holo", which would hide
      exactly the CHARIZARD-HOLO listings we want. */
   const words = String(psaTitle).replace(/[.,-]+/g, " ").replace(/\s+/g, " ").trim();
-  u.searchParams.set("_nkw", `${words} PSA ${grade}`);
+  /* …and then, deliberately, the minus signs eBay does read as exclusions.
+     Page one is the whole sample, so a printing we would throw away is a
+     slot stolen from a sale we would keep: of 107 Charizard rows read on
+     29.09, 39 were 1st edition at another grade and 11 more were the wrong
+     printing. Excluded AFTER the punctuation strip above, which would
+     otherwise eat the very hyphens that make them exclusions. */
+  const minus = printingExclusions(printingsFrom).map((name) => ` -"${name}"`).join("");
+  u.searchParams.set("_nkw", `${words} PSA ${grade}${minus}`);
   u.searchParams.set("LH_Sold", "1");
   u.searchParams.set("LH_Complete", "1");
   u.searchParams.set("_sop", "13");

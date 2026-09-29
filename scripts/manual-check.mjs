@@ -45,6 +45,7 @@ export function promptText(watchlist) {
     "For each section below, open the link(s) and report what the page shows, under the exact `## …` header I give.",
     "",
     "For eBay links: list every sold result on page one, one per line, as `Mon D · $price · title`, with `BO · ` before the title when the result says \"Best offer accepted\" (not for \"or Best Offer\"). If the page has a \"Results matching fewer words\" divider, stop at it. Don't click into listings or go past page one.",
+    "The links already tell eBay to leave out the printings each card is not — a `-\"1st edition\"`, `-\"shadowless\"` or `-\"base set 2\"` at the end of the search. Leave those in; they are what keeps page one full of the printing we actually hold. If eBay slips one through anyway, skip that row: a result naming a printing its header does not name is a different card, whatever its price.",
     "For TCGplayer links: the product's latest sales, one per line, as `M/D/YY · condition · $price` (e.g. `9/27/26 · NM Holofoil · $107.99`).",
     "Wait about 5 seconds between links. If a site shows a security check, stop and tell me.",
     "",
@@ -54,7 +55,10 @@ export function promptText(watchlist) {
     if (graded.length && card.psaTitle) {
       for (const g of graded) {
         out.push(`## ${card.id} ${g}   (${card.name} PSA ${g})`);
-        for (const t of [card.psaTitle, ...[].concat(card.psaTitleAlt || [])]) out.push(searchUrl(t, g));
+        /* the printings to exclude come from the card's PRIMARY label, which
+           is what filterRows judges the rows by — an alt label phrases the
+           same card and must not widen or narrow what the search asks for */
+        for (const t of [card.psaTitle, ...[].concat(card.psaTitleAlt || [])]) out.push(searchUrl(t, g, card.psaTitle));
         out.push("");
       }
     } else if ([].concat(card.grades || []).includes("raw") && card.tcgPlayerId) {
