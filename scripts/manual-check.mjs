@@ -194,10 +194,17 @@ export function parseAnswer(text, readOn, watchlist = []) {
     } else {
       const parts = line.split(/\s+·\s+/);
       if (parts.length < 3) continue;
+      /* the asked-for place for the flag is after the price, but a reader who
+         is scanning a page naturally writes it first — "BO · Sep 11 · $79.99 ·
+         …". Both are read. Before this, a leading BO pushed the date into
+         parts[1], the date match failed, and the row was dropped without a
+         word: on 01.10 that would have silently lost 17 of Charmander's 46. */
+      const lead = parts[0].toUpperCase() === "BO";
+      if (lead) parts.shift();
       const rest = parts.slice(2);
       [d, price] = parts;
-      bo = rest[0]?.toUpperCase() === "BO";
-      title = (bo ? rest.slice(1) : rest).join(" · ");
+      bo = lead || rest[0]?.toUpperCase() === "BO";
+      title = (rest[0]?.toUpperCase() === "BO" ? rest.slice(1) : rest).join(" · ");
     }
     const dm = d.match(/^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})$/);
     if (!dm || !MONTHS[dm[1].toLowerCase()]) continue;

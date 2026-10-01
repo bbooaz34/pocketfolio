@@ -3,12 +3,20 @@
  "grades": {
   "1": [
    {
+    "d": "2026-09-30",
+    "p": 39999,
+    "bo": false,
+    "t": "1999 POKEMON GAME #4 CHARIZARD-HOLO PSA 1",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-30-39999",
+    "seeded": "2026-10-01"
+   },
+   {
     "d": "2026-09-28",
     "p": 37500,
     "bo": true,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-28-37500",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-09-27",
@@ -24,7 +32,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-20-40000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-09-20",
@@ -48,7 +56,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-19-38000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-09-16",
@@ -56,7 +64,7 @@
     "bo": false,
     "t": "1999 POKEMON GAME CHARIZARD-HOLO #4 PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+CHARIZARD-HOLO+%234+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-16-35500",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-09-16",
@@ -72,7 +80,7 @@
     "bo": true,
     "t": "1999 POKEMON GAME #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-08-45000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-09-06",
@@ -80,7 +88,7 @@
     "bo": false,
     "t": "1999 POKEMON GAME #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-06-39000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-09-05",
@@ -88,7 +96,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-05-35000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-09-05",
@@ -96,7 +104,7 @@
     "bo": false,
     "t": "PSA 1 PR 1999 Base Set Charizard 4/102 Holo Foil Pokemon WOTC Unlimited",
     "url": "https://www.ebay.com/sch/i.html?_nkw=PSA+1+PR+1999+Base+Set+Charizard+4%2F102+Holo+Foil+Pokemon+WOTC+Unlimited&LH_Sold=1&LH_Complete=1#2026-09-05-39999",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-09-02",
@@ -104,7 +112,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-02-35000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-30",
@@ -120,7 +128,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-29-35500",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-28",
@@ -128,7 +136,7 @@
     "bo": true,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-28-40000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-26",
@@ -136,7 +144,7 @@
     "bo": false,
     "t": "1999 POKEMON GAME CHARIZARD-HOLO #4 PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+CHARIZARD-HOLO+%234+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-26-32000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-25",
@@ -144,7 +152,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-25-40100",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-25",
@@ -152,7 +160,7 @@
     "bo": true,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-25-55000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-25",
@@ -160,7 +168,7 @@
     "bo": false,
     "t": "PSA 1 1999 Pokemon Game Charizard Holo 4/102 Base Set Unlimited WOTC Vintage",
     "url": "https://www.ebay.com/sch/i.html?_nkw=PSA+1+1999+Pokemon+Game+Charizard+Holo+4%2F102+Base+Set+Unlimited+WOTC+Vintage&LH_Sold=1&LH_Complete=1#2026-08-25-39900",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-21",
@@ -168,7 +176,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-21-39500",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-16",
@@ -176,7 +184,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-16-39999",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-15",
@@ -184,15 +192,15 @@
     "bo": false,
     "t": "1999 Pokemon Charizard Holo Base Set Unlimited 4/102 PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Charizard+Holo+Base+Set+Unlimited+4%2F102+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-15-44995",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-13",
-    "p": 47718,
+    "p": 47754,
     "bo": false,
     "t": "1999 Pokemon Game Holo #4 Charizard PR PSA 1",
-    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+Holo+%234+Charizard+PR+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-13-47718",
-    "seeded": "2026-09-29"
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+Holo+%234+Charizard+PR+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-13-47754",
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-12",
@@ -208,7 +216,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-10-38500",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-09",
@@ -216,7 +224,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-09-37000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-08",
@@ -224,7 +232,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-08-37000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-08",
@@ -232,7 +240,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-08-41100",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-06",
@@ -240,7 +248,7 @@
     "bo": false,
     "t": "161192956 Charizard 1999 Pokemon Game Unlimited #4/102 Holo PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=161192956+Charizard+1999+Pokemon+Game+Unlimited+%234%2F102+Holo+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-06-45000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-04",
@@ -248,7 +256,7 @@
     "bo": false,
     "t": "1999 Pokemon Charizard Holo Base Set Unlimited 4/102 PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Charizard+Holo+Base+Set+Unlimited+4%2F102+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-04-44999",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-03",
@@ -256,7 +264,15 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-03-38500",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
+   },
+   {
+    "d": "2026-08-03",
+    "p": 39945,
+    "bo": false,
+    "t": "1999 Pokemon Charizard Holo Base Set Unlimited #4 PSA 1",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Charizard+Holo+Base+Set+Unlimited+%234+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-03-39945",
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-03",
@@ -272,7 +288,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-02-40000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-02",
@@ -280,7 +296,7 @@
     "bo": false,
     "t": "1999 POKEMON GAME #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-02-40000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-08-01",
@@ -288,7 +304,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-01-37000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-31",
@@ -296,7 +312,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-31-37000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-31",
@@ -304,7 +320,7 @@
     "bo": true,
     "t": "1999 Pokemon Game #4 Charizard-Holo PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+%234+Charizard-Holo+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-31-40000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-30",
@@ -312,7 +328,7 @@
     "bo": false,
     "t": "1999 Pokemon Game #4 Charizard-Holo PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+%234+Charizard-Holo+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-30-41999",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-28",
@@ -320,7 +336,7 @@
     "bo": true,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-28-57777",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-28",
@@ -336,7 +352,7 @@
     "bo": true,
     "t": "1999 POKEMON GAME #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+GAME+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-27-40000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-26",
@@ -344,7 +360,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-26-35500",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-26",
@@ -352,15 +368,15 @@
     "bo": false,
     "t": "1999 Pokemon Game #4 Charizard-Holo PSA 1 4/102 English Holo",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+%234+Charizard-Holo+PSA+1+4%2F102+English+Holo&LH_Sold=1&LH_Complete=1#2026-07-26-23050",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-25",
-    "p": 40920,
+    "p": 40753,
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4/102 CHARIZARD HOLO RARE PSA 1",
-    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234%2F102+CHARIZARD+HOLO+RARE+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-25-40920",
-    "seeded": "2026-09-29"
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234%2F102+CHARIZARD+HOLO+RARE+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-25-40753",
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-25",
@@ -368,7 +384,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-25-38000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-23",
@@ -376,7 +392,7 @@
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-23-41000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-23",
@@ -400,7 +416,7 @@
     "bo": false,
     "t": "1999 Pokemon Game #4 Charizard-Holo PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+%234+Charizard-Holo+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-19-37999",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-17",
@@ -416,7 +432,7 @@
     "bo": false,
     "t": "1999 Pokemon Game #4 Charizard Holo PSA 1 PR",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Game+%234+Charizard+Holo+PSA+1+PR&LH_Sold=1&LH_Complete=1#2026-07-15-32000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-12",
@@ -424,15 +440,15 @@
     "bo": true,
     "t": "1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234+CHARIZARD-HOLO+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-12-35000",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-11",
-    "p": 34218,
+    "p": 34078,
     "bo": false,
     "t": "1999 POKEMON BASE SET UNLIMITED #4/102 CHARIZARD HOLO RARE PSA 1",
-    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234%2F102+CHARIZARD+HOLO+RARE+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-11-34218",
-    "seeded": "2026-09-29"
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+BASE+SET+UNLIMITED+%234%2F102+CHARIZARD+HOLO+RARE+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-11-34078",
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-06",
@@ -440,7 +456,7 @@
     "bo": false,
     "t": "1999 Pokemon Base Set Charizard Holo #4 Unlimited PSA 1 LOW POP",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+Pokemon+Base+Set+Charizard+Holo+%234+Unlimited+PSA+1+LOW+POP&LH_Sold=1&LH_Complete=1#2026-07-06-30500",
-    "seeded": "2026-09-29"
+    "seeded": "2026-10-01"
    },
    {
     "d": "2026-07-05",
@@ -461,6 +477,6 @@
   ]
  },
  "psaTitle": "1999 POKEMON GAME #4 CHARIZARD-HOLO",
- "scrapedAt": "2026-09-29T09:02:46+00:00",
+ "scrapedAt": "2026-10-01T10:11:12+00:00",
  "note": "Seeded from the owner reading eBay sold searches in their own Chrome on 26.09 and 27.09 (scripts/fixtures/). No item links were captured: each sale links to a sold search for its own title. A real read replaces a seeded sale with its listing."
 }

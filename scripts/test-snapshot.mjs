@@ -783,6 +783,24 @@ writeSales("base1-12", { "9": [sale("2026-09-20", 5000), sale("2026-09-19", 5000
     "| Sep 2 | $350.00 | Yes | 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1 |",
   ].join("\n"), wl, { dataDir: dir, readOn: "2026-09-27", log: quiet });
   const t2 = JSON.parse(readFileSync(join(dir, "sales", "base1-4.json"), "utf8")).grades["1"];
+  /* A reader scanning a page writes the flag where they see it. Before this
+     was read, a leading BO pushed the date into parts[1], the date match
+     failed, and the row vanished with no message at all. */
+  {
+    const lead = [
+      "## base1-4 1",
+      "BO · Sep 11 · $79.99 · 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
+      "Sep 10 · $400.00 · BO · 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
+      "Sep 9 · $390.00 · 1999 POKEMON BASE SET UNLIMITED #4 CHARIZARD-HOLO PSA 1",
+    ].join("\n");
+    const d2 = mkdtempSync(join(tmpdir(), "pf-manual-bo-"));
+    MC.importAnswer(lead, wl, { dataDir: d2, readOn: "2026-10-01", log: quiet });
+    const rows = JSON.parse(readFileSync(join(d2, "sales", "base1-4.json"), "utf8")).grades["1"];
+    check("a Best Offer flag written before the date is read, not dropped",
+      rows.length === 3 && rows.filter((x) => x.bo).length === 2,
+      rows.map((x) => `${x.d}:${x.p}${x.bo ? "bo" : ""}`).join(","));
+  }
+
   check("a table answer imports too, with its Best Offer column",
     table.ok && t2.some((x) => x.d === "2026-09-05" && !x.bo) && t2.some((x) => x.d === "2026-09-02" && x.bo));
   check("a card the answer skipped is named", table.missing.includes("svp-044"), table.missing.join(","));
