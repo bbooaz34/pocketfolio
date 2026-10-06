@@ -16,7 +16,7 @@
     "bo": false,
     "t": "THE BOSS'S WAY PSA 9 2000 POKEMON TEAM ROCKET FIRST 1ST EDITION #73/82 MINT 5227",
     "url": "https://www.ebay.com/sch/i.html?_nkw=THE+BOSS%27S+WAY+PSA+9+2000+POKEMON+TEAM+ROCKET+FIRST+1ST+EDITION+%2373%2F82+MINT+5227&LH_Sold=1&LH_Complete=1#2026-09-17-9299",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-09-04",
@@ -32,7 +32,7 @@
     "bo": true,
     "t": "Graded - 2000 POKEMON ROCKET 73/82 THE BOSS'S WAY 1ST EDITION - PSA MINT 9",
     "url": "https://www.ebay.com/sch/i.html?_nkw=Graded+-+2000+POKEMON+ROCKET+73%2F82+THE+BOSS%27S+WAY+1ST+EDITION+-+PSA+MINT+9&LH_Sold=1&LH_Complete=1#2026-08-30-6000",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-08-14",
@@ -40,7 +40,7 @@
     "bo": false,
     "t": "2000 POKEMON ROCKET 1ST EDITION #73 THE BOSS'S WAY PSA 9",
     "url": "https://www.ebay.com/sch/i.html?_nkw=2000+POKEMON+ROCKET+1ST+EDITION+%2373+THE+BOSS%27S+WAY+PSA+9&LH_Sold=1&LH_Complete=1#2026-08-14-3600",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-08-12",
@@ -48,7 +48,7 @@
     "bo": false,
     "t": "2000 Pokemon Team Rocket 1st Edition #73/82 The Boss's Way PSA 9 MINT",
     "url": "https://www.ebay.com/sch/i.html?_nkw=2000+Pokemon+Team+Rocket+1st+Edition+%2373%2F82+The+Boss%27s+Way+PSA+9+MINT&LH_Sold=1&LH_Complete=1#2026-08-12-2240",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-08-05",
@@ -56,7 +56,7 @@
     "bo": false,
     "t": "2000 POKEMON ROCKET 1ST EDITION #73 THE BOSS'S WAY PSA 9",
     "url": "https://www.ebay.com/sch/i.html?_nkw=2000+POKEMON+ROCKET+1ST+EDITION+%2373+THE+BOSS%27S+WAY+PSA+9&LH_Sold=1&LH_Complete=1#2026-08-05-3200",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-07-22",
@@ -77,6 +77,6 @@
   ]
  },
  "psaTitle": "2000 POKEMON ROCKET #73 THE BOSS'S WAY 1ST EDITION",
- "scrapedAt": "2026-10-01T10:11:12+00:00",
+ "scrapedAt": "2026-10-06T12:49:58+00:00",
  "note": "Seeded from the owner reading eBay sold searches in their own Chrome on 26.09 and 27.09 (scripts/fixtures/). No item links were captured: each sale links to a sold search for its own title. A real read replaces a seeded sale with its listing."
 }

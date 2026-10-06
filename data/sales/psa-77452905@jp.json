@@ -3,12 +3,20 @@
  "grades": {
   "7": [
    {
+    "d": "2026-10-03",
+    "p": 14000,
+    "bo": false,
+    "t": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS PSA 7",
+    "url": "https://www.ebay.com/sch/i.html?_nkw=1998+POKEMON+JAPANESE+HANADA+CITY+GYM+DECK+MISTY%27S+TEARS+PSA+7&LH_Sold=1&LH_Complete=1#2026-10-03-14000",
+    "seeded": "2026-10-06"
+   },
+   {
     "d": "2026-08-19",
     "p": 13000,
     "bo": true,
     "t": "Pokemon TCG Misty's Tears Trainer Hanada City Gym Deck Japanese 1998 PSA 7",
     "url": "https://www.ebay.com/sch/i.html?_nkw=Pokemon+TCG+Misty%27s+Tears+Trainer+Hanada+City+Gym+Deck+Japanese+1998+PSA+7&LH_Sold=1&LH_Complete=1#2026-08-19-13000",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-08-13",
@@ -16,7 +24,7 @@
     "bo": false,
     "t": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS PSA 7",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1998+POKEMON+JAPANESE+HANADA+CITY+GYM+DECK+MISTY%27S+TEARS+PSA+7&LH_Sold=1&LH_Complete=1#2026-08-13-12500",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-08-02",
@@ -24,7 +32,7 @@
     "bo": false,
     "t": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS PSA 7",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1998+POKEMON+JAPANESE+HANADA+CITY+GYM+DECK+MISTY%27S+TEARS+PSA+7&LH_Sold=1&LH_Complete=1#2026-08-02-12900",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-07-23",
@@ -32,7 +40,7 @@
     "bo": true,
     "t": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS PSA 7",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1998+POKEMON+JAPANESE+HANADA+CITY+GYM+DECK+MISTY%27S+TEARS+PSA+7&LH_Sold=1&LH_Complete=1#2026-07-23-14000",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-07-17",
@@ -40,7 +48,7 @@
     "bo": false,
     "t": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS PSA 7",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1998+POKEMON+JAPANESE+HANADA+CITY+GYM+DECK+MISTY%27S+TEARS+PSA+7&LH_Sold=1&LH_Complete=1#2026-07-17-13250",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-07-10",
@@ -48,7 +56,7 @@
     "bo": false,
     "t": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS PSA 7",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1998+POKEMON+JAPANESE+HANADA+CITY+GYM+DECK+MISTY%27S+TEARS+PSA+7&LH_Sold=1&LH_Complete=1#2026-07-10-14599",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-06-28",
@@ -61,6 +69,6 @@
   ]
  },
  "psaTitle": "1998 POKEMON JAPANESE HANADA CITY GYM DECK MISTY'S TEARS",
- "scrapedAt": "2026-10-01T10:11:12+00:00",
+ "scrapedAt": "2026-10-06T12:49:58+00:00",
  "note": "Seeded from the owner reading eBay sold searches in their own Chrome on 26.09 and 27.09 (scripts/fixtures/). No item links were captured: each sale links to a sold search for its own title. A real read replaces a seeded sale with its listing."
 }

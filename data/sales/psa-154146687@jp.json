@@ -8,7 +8,7 @@
     "bo": false,
     "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD%2C+SILVER%2C+TO+A+NEW+WORLD...+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-21-6000",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-09-08",
@@ -16,7 +16,7 @@
     "bo": false,
     "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD%2C+SILVER%2C+TO+A+NEW+WORLD...+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1#2026-09-08-4601",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-08-08",
@@ -24,7 +24,7 @@
     "bo": false,
     "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD%2C+SILVER%2C+TO+A+NEW+WORLD...+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1#2026-08-08-10000",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-07-26",
@@ -32,7 +32,7 @@
     "bo": false,
     "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD%2C+SILVER%2C+TO+A+NEW+WORLD...+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-26-20000",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    },
    {
     "d": "2026-07-24",
@@ -40,11 +40,11 @@
     "bo": true,
     "t": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI PSA 1",
     "url": "https://www.ebay.com/sch/i.html?_nkw=1999+POKEMON+JAPANESE+GOLD%2C+SILVER%2C+TO+A+NEW+WORLD...+TOGEPI+PSA+1&LH_Sold=1&LH_Complete=1#2026-07-24-20000",
-    "seeded": "2026-10-01"
+    "seeded": "2026-10-06"
    }
   ]
  },
  "psaTitle": "1999 POKEMON JAPANESE GOLD, SILVER, TO A NEW WORLD... TOGEPI",
- "scrapedAt": "2026-10-01T10:11:12+00:00",
+ "scrapedAt": "2026-10-06T12:49:58+00:00",
  "note": "Seeded from the owner reading eBay sold searches in their own Chrome on 26.09 and 27.09 (scripts/fixtures/). No item links were captured: each sale links to a sold search for its own title. A real read replaces a seeded sale with its listing."
 }

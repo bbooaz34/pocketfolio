@@ -2,39 +2,39 @@
  "cardId": "miscp-001",
  "tcgPlayerId": "108589",
  "url": "https://www.tcgplayer.com/product/108589",
- "readAt": "2026-10-01T10:11:12+00:00",
- "market": 11472,
- "basis": "nm-median-4",
+ "readAt": "2026-10-06T12:49:58+00:00",
+ "market": 11949,
+ "basis": "nm-median-2",
  "sales": [
   {
-   "d": "2026-10-01",
+   "d": "2026-10-06",
+   "cond": "NM",
+   "what": "NM Holofoil",
+   "p": 10900
+  },
+  {
+   "d": "2026-10-06",
    "cond": "DMG",
    "what": "DMG Holofoil",
-   "p": 3336
+   "p": 3708
   },
   {
-   "d": "2026-09-30",
+   "d": "2026-10-06",
    "cond": "NM",
    "what": "NM Holofoil",
-   "p": 11314
+   "p": 12998
   },
   {
-   "d": "2026-09-30",
-   "cond": "NM",
-   "what": "NM Holofoil",
-   "p": 11738
+   "d": "2026-10-06",
+   "cond": "DMG",
+   "what": "DMG Holofoil",
+   "p": 3700
   },
   {
-   "d": "2026-09-30",
-   "cond": "NM",
-   "what": "NM Holofoil",
-   "p": 11630
-  },
-  {
-   "d": "2026-09-30",
-   "cond": "NM",
-   "what": "NM Holofoil",
-   "p": 10799
+   "d": "2026-10-05",
+   "cond": "DMG",
+   "what": "DMG Holofoil",
+   "p": 5499
   }
  ]
 }
